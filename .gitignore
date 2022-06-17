@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+#Usul ignores
+/bin-intermediate
+.vs
+*.pdb
+*.exp
