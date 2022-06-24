@@ -1,32 +1,39 @@
 #include "uspch.h"
 #include "Application.h"
-#include "Usul/Events/ApplicationEvent.h"
-#include "Usul/Log.h"
+#include <GLFW/glfw3.h>
+#include "Usul\Events\ApplicationEvent.h"
 
 namespace Usul
 {
 	Application::Application()
 	{
+		m_Window = std::unique_ptr<Window>(Window::Create());
+		m_Window->SetEventCallback(BIND_EVENT_CALLBK_FN(Application::OnEvent));
 	}
 
 	Application::~Application()
 	{
 	}
+	void Application::OnEvent(Event& e)
+	{
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<WindowCloseEvent>(BIND_EVENT_CALLBK_FN(Application::OnWindowClose));
+
+		US_CORE_TRACE("{0}", e);
+	}
 	void Application::Run()
 	{
-		WindowResizeEvent e(1280, 720);
-		if (e.IsInCategory(EventCategoryApplication))
+		while (m_Running)
 		{
-			US_TRACE(e);
+			glClearColor(1, 0, 1, 1);
+			glClear(GL_COLOR_BUFFER_BIT);
+			m_Window->OnUpdate();
 		}
-		if (e.IsInCategory(EventCategoryInput))
-		{
-			US_TRACE(e);
-		}
-		while (true)
-		{
-
-		}
+	}
+	bool Application::OnWindowClose(WindowCloseEvent& e)
+	{
+		m_Running = false;
+		return true;
 	}
 }
 

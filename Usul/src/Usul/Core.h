@@ -11,3 +11,13 @@
 #endif
 
 #define BIT(x) (1 << x)
+
+#ifdef US_ENABLE_ASSERTS
+#define US_ASSERT(x, ...) { if(!(x)) { US_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+#define US_CORE_ASSERT(x, ...) { if(!(x)) { US_CORE_ERROR("Assertion Failed: {0}", __VA_ARGS__); __debugbreak(); } }
+#else
+#define US_ASSERT(x, ...)
+#define US_CORE_ASSERT(x, ...)
+#endif
+
+#define BIND_EVENT_CALLBK_FN(x) std::bind(&x,this,std::placeholders::_1)
