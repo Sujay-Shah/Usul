@@ -49,8 +49,8 @@ namespace Usul {
 		{
 			return GetCategoryFlags() & category;
 		}
-	protected:
-		bool m_Handled = false;
+
+		bool Handled = false;
 
 	};
 
@@ -71,7 +71,7 @@ namespace Usul {
 			if (m_Event.GetEventType() == T::GetStaticType())
 			{
 				//TODO : find a better way to pass in the ref
-				m_Event.m_Handled = func(*(T*)&m_Event);
+				m_Event.Handled = func(*(T*)&m_Event);
 				return true;
 			}
 			return false;

@@ -40,6 +40,12 @@
     <ClInclude Include="src\Usul\Events\MouseEvent.h">
       <Filter>Usul\Events</Filter>
     </ClInclude>
+    <ClInclude Include="src\Usul\Layer.h">
+      <Filter>Usul</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Usul\LayerStack.h">
+      <Filter>Usul</Filter>
+    </ClInclude>
     <ClInclude Include="src\Usul\Log.h">
       <Filter>Usul</Filter>
     </ClInclude>
@@ -53,6 +59,12 @@
       <Filter>Platform\Windows</Filter>
     </ClCompile>
     <ClCompile Include="src\Usul\Application.cpp">
+      <Filter>Usul</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Usul\Layer.cpp">
+      <Filter>Usul</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Usul\LayerStack.cpp">
       <Filter>Usul</Filter>
     </ClCompile>
     <ClCompile Include="src\Usul\Log.cpp">
