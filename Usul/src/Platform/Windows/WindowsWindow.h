@@ -1,6 +1,7 @@
 #pragma once
 #include "Usul/Window.h"
-#include <GLFW/glfw3.h>
+
+class GLFWwindow;
 namespace Usul
 {
 	class WindowsWindow : public Window

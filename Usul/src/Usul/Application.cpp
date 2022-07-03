@@ -1,9 +1,9 @@
 #include "uspch.h"
 #include "Application.h"
-#include <GLFW/glfw3.h>
 #include "Usul\Events\ApplicationEvent.h"
 #include "Events/Event.h"
 #include "Layer.h"
+#include <glad/glad.h>
 
 namespace Usul
 {
