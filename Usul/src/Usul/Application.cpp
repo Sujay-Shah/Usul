@@ -4,11 +4,16 @@
 #include "Events/Event.h"
 #include "Layer.h"
 #include <glad/glad.h>
+#include "Input.h"
 
 namespace Usul
 {
+	Application* Application::s_Instance = nullptr;
 	Application::Application()
 	{
+		US_CORE_ASSERT(!s_Instance, "Application already exists!")	
+		s_Instance = this;
+
 		m_Window = std::unique_ptr<Window>(Window::Create());
 		m_Window->SetEventCallback(BIND_EVENT_CALLBK_FN(Application::OnEvent));
 	}
@@ -43,6 +48,9 @@ namespace Usul
 			{
 				layer->OnUpdate();
 			}
+
+			auto [x, y] = Input::GetMousePosition();
+			US_CORE_TRACE("{ 0 }, {1}", x, y);
 			m_Window->OnUpdate();
 		}
 	}

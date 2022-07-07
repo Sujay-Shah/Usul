@@ -1,5 +1,6 @@
 workspace "Usul"
 	architecture "x64"
+	startproject "Sandbox"
 
 	configurations
 	{
@@ -14,14 +15,20 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["GLFW"] = "Usul/vendor/GLFW/include"
 IncludeDir["Glad"] = "Usul/vendor/Glad/include"
+IncludeDir["ImGui"] = "Usul/vendor/imgui/include"
 
-include "Usul/vendor/GLFW"
-include "Usul/vendor/Glad"
+group "Dependencies"
+	include "Usul/vendor/GLFW"
+	include "Usul/vendor/Glad"
+	include "Usul/vendor/imgui"
+
+group ""
 
 project "Usul"
 	location "Usul"
 	kind "SharedLib"
 	language "C++"
+	staticruntime "off"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-intermediate/" .. outputdir .. "/%{prj.name}")
@@ -40,19 +47,20 @@ project "Usul"
 		"%{prj.name}/vendor/spdlog/include",
 		"%{prj.name}/src",
 		"%{IncludeDir.GLFW}",
-		"%{IncludeDir.Glad}"
+		"%{IncludeDir.Glad}",
+		"%{IncludeDir.ImGui}"
 	}
 
 	links 
 	{ 
 		"GLFW",
 		"Glad",
+		"ImGui",
 		"opengl32.lib"
 	}
 
 	filter "system:windows"
 		cppdialect "C++17"
-		staticruntime "On"
 		systemversion "latest"
 
 		defines
@@ -62,19 +70,26 @@ project "Usul"
 			"GLFW_INCLUDE_NONE"
 		}
 
+		postbuildcommands
+		{
+			--("{COPY} ../bin/" .. outputdir.. "/Usul/*.dll ../bin/"..outputdir.."/Sandbox")
+			("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox/\"")
+			--("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
+		}
+
 	filter "configurations:Debug"
 		defines "US_DEBUG"
 		symbols "On"
-		buildoptions "/MDd"
+		runtime "Debug"
 	
 	filter "configurations:Release"
 	defines "US_RELEASE"
-	buildoptions "/MD"
+	runtime "Release"
 	optimize "On"
 
 	filter "configurations:Dist"
 	defines "US_DIST"
-	buildoptions "/MD"
+	runtime "Release"
 	optimize "On"
 
 
@@ -105,7 +120,6 @@ project "Sandbox"
 
 	filter "system:windows"
 		cppdialect "C++17"
-		staticruntime "On"
 		systemversion "latest"
 
 		defines
@@ -113,22 +127,17 @@ project "Sandbox"
 			"US_PLATFORM_WINDOWS"
 		}
 
-		postbuildcommands
-		{
-			{"{COPY} ../bin/" .. outputdir.. "/Usul/*.dll ../bin/"..outputdir.."/Sandbox"}
-		}
-
 	filter "configurations:Debug"
 		defines "US_DEBUG"
-		buildoptions "/MDd"
+		runtime "Debug"
 		symbols "On"
 	
 	filter "configurations:Release"
 	defines "US_RELEASE"
-	buildoptions "/MD"
+	runtime "Release"
 	optimize "On"
 
 	filter "configurations:Dist"
 	defines "US_DIST"
-	buildoptions "/MD"
+	runtime "Release"
 	optimize "On"

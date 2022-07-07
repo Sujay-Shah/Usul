@@ -5,10 +5,13 @@
 #include "Usul/Events/MouseEvent.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "WindowsInput.h"
 
 namespace Usul {
 
 	static bool s_GLFWInitialized = false;
+
+	Input* Input::s_Instance = new WindowsInput();
 
 	static void GLFWErrorCallback(int error, const char* description)
 	{
