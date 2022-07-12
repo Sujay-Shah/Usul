@@ -61,6 +61,8 @@
     <ClInclude Include="src\uspch.h" />
     <ClInclude Include="src\Usul\Input.h" />
     <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
+    <ClInclude Include="src\Usul\KeyCodes.h" />
+    <ClInclude Include="src\Usul\MouseButtonKeyCodes.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\ImGui\ImGuiLayer.cpp">

@@ -160,9 +160,11 @@
     <ClInclude Include="src\Usul\Events\KeyEvent.h" />
     <ClInclude Include="src\Usul\Events\MouseEvent.h" />
     <ClInclude Include="src\Usul\Input.h" />
+    <ClInclude Include="src\Usul\KeyCodes.h" />
     <ClInclude Include="src\Usul\Layer.h" />
     <ClInclude Include="src\Usul\LayerStack.h" />
     <ClInclude Include="src\Usul\Log.h" />
+    <ClInclude Include="src\Usul\MouseButtonKeyCodes.h" />
     <ClInclude Include="src\Usul\Window.h" />
     <ClInclude Include="src\uspch.h" />
     <ClInclude Include="src\Platform\Windows\WindowsInput.h" />
