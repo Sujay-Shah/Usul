@@ -3,7 +3,7 @@
 namespace Usul
 {
 	class Layer;
-	class LayerStack
+	class USUL_API LayerStack
 	{
 	public:
 		LayerStack();

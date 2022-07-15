@@ -7,6 +7,7 @@
 #include "Usul/Input.h"
 #include "Usul/KeyCodes.h"
 #include "Usul/MouseButtonKeyCodes.h"
+#include "Usul/Events/KeyEvent.h"
 
 //----EntryPoint----//
 #include "Usul/EntryPoint.h"
