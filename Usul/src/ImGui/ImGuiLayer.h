@@ -16,8 +16,12 @@ namespace Usul
 
 		void OnDetach() override;
 
-	private:
+		virtual void OnImGuiRender() override;
 
+		void Begin();
+		void End();
+	private:
+		float m_time = 0.0f;
 	};
 }
 

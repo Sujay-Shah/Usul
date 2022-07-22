@@ -15,7 +15,7 @@ outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 IncludeDir = {}
 IncludeDir["GLFW"] = "Usul/vendor/GLFW/include"
 IncludeDir["Glad"] = "Usul/vendor/Glad/include"
-IncludeDir["ImGui"] = "Usul/vendor/imgui/include"
+IncludeDir["ImGui"] = "Usul/vendor/imgui"
 IncludeDir["glm"] = "Usul/vendor/glm"
 
 group "Dependencies"
@@ -27,15 +27,21 @@ group ""
 
 project "Usul"
 	location "Usul"
-	kind "SharedLib"
+	kind "StaticLib"
 	language "C++"
-	staticruntime "off"
+	cppdialect "C++17"
+	staticruntime "on"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-intermediate/" .. outputdir .. "/%{prj.name}")
 
 	pchheader "uspch.h"
 	pchsource "Usul/src/uspch.cpp"
+
+	defines
+	{
+		"_CRT_SECURE_NO_WARNINGS"
+	}
 
 	files
 	{
@@ -64,7 +70,7 @@ project "Usul"
 	}
 
 	filter "system:windows"
-		cppdialect "C++17"
+		
 		systemversion "latest"
 
 		defines
@@ -74,33 +80,28 @@ project "Usul"
 			"GLFW_INCLUDE_NONE"
 		}
 
-		postbuildcommands
-		{
-			--("{COPY} ../bin/" .. outputdir.. "/Usul/*.dll ../bin/"..outputdir.."/Sandbox")
-			("{COPY} %{cfg.buildtarget.relpath} \"../bin/" .. outputdir .. "/Sandbox/\"")
-			--("{COPY} %{cfg.buildtarget.relpath} ../bin/" .. outputdir .. "/Sandbox")
-		}
-
 	filter "configurations:Debug"
 		defines "US_DEBUG"
-		symbols "On"
+		symbols "on"
 		runtime "Debug"
 	
 	filter "configurations:Release"
 	defines "US_RELEASE"
 	runtime "Release"
-	optimize "On"
+	optimize "on"
 
 	filter "configurations:Dist"
 	defines "US_DIST"
 	runtime "Release"
-	optimize "On"
+	optimize "on"
 
 
 project "Sandbox"
 	location "Sandbox"
 	kind "ConsoleApp"
 	language "C++"
+	cppdialect "C++17"
+	staticruntime "on"
 
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-intermediate/" .. outputdir .. "/%{prj.name}")
@@ -115,6 +116,7 @@ project "Sandbox"
 	{
 		"Usul/vendor/spdlog/include",
 		"Usul/src",
+		"Usul/vendor",
 		"%{IncludeDir.glm}"
 	}
 
@@ -124,7 +126,6 @@ project "Sandbox"
 	}
 
 	filter "system:windows"
-		cppdialect "C++17"
 		systemversion "latest"
 
 		defines
@@ -135,14 +136,14 @@ project "Sandbox"
 	filter "configurations:Debug"
 		defines "US_DEBUG"
 		runtime "Debug"
-		symbols "On"
+		symbols "on"
 	
 	filter "configurations:Release"
 	defines "US_RELEASE"
 	runtime "Release"
-	optimize "On"
+	optimize "on"
 
 	filter "configurations:Dist"
 	defines "US_DIST"
 	runtime "Release"
-	optimize "On"
+	optimize "on"

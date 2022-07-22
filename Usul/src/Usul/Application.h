@@ -7,6 +7,7 @@
 namespace Usul
 {
 	class WindowCloseEvent;
+	class ImGuiLayer;
 
 	class USUL_API Application
 	{
@@ -27,7 +28,7 @@ namespace Usul
 		bool m_Running = true;
 
 		static Application* s_Instance;
-
+		ImGuiLayer* m_ImGuiLayer;
 		LayerStack m_LayerStack;
 	};
 

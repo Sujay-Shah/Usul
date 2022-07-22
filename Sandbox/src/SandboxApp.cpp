@@ -1,4 +1,5 @@
 #include <Usul.h>
+#include "imgui/imgui.h"
 
 class ExampleLayer : public Usul::Layer
 {
@@ -16,6 +17,12 @@ public:
 		
 	}
 
+	virtual void OnImGuiRender() override
+	{
+		ImGui::Begin("Test");
+		ImGui::Text("Hello World");
+		ImGui::End();
+	}
 
 	void OnEvent(Usul::Event & event) override
 	{

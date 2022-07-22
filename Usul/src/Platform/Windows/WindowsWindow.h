@@ -1,7 +1,9 @@
 #pragma once
 #include "Usul/Window.h"
+#include "Renderer/GraphicsContext.h"
 
-class GLFWwindow;
+struct GLFWwindow;
+
 namespace Usul
 {
 	class WindowsWindow : public Window
@@ -26,7 +28,7 @@ namespace Usul
 		virtual void Shutdown();
 	private:
 		GLFWwindow* m_Window;
-
+		GraphicsContext* m_context;
 		struct WindowData
 		{
 			std::string Title;

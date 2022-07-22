@@ -3,9 +3,10 @@
 #include "Usul/Events/ApplicationEvent.h"
 #include "Usul/Events/KeyEvent.h"
 #include "Usul/Events/MouseEvent.h"
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "WindowsInput.h"
+
+#include "Platform/OpenGL/OpenGLContext.h"
 
 namespace Usul {
 
@@ -52,9 +53,9 @@ namespace Usul {
 		}
 
 		m_Window = glfwCreateWindow((int)props.Width, (int)props.Height, m_Data.Title.c_str(), nullptr, nullptr);
-		glfwMakeContextCurrent(m_Window);
-		int status = gladLoadGLLoader(GLADloadproc(glfwGetProcAddress));
-		US_CORE_ASSERT(status, "Failed to initialize Glad!");
+		
+		m_context = new OpenGLContext(m_Window);
+		m_context->Init();
 
 		glfwSetWindowUserPointer(m_Window, &m_Data);
 		SetVSync(true);
@@ -150,7 +151,7 @@ namespace Usul {
 	void WindowsWindow::OnUpdate()
 	{
 		glfwPollEvents();
-		glfwSwapBuffers(m_Window);
+		m_context->SwapBuffers();
 	}
 
 	void WindowsWindow::SetVSync(bool enabled)

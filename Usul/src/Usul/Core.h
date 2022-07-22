@@ -1,10 +1,14 @@
 #pragma once
 
 #ifdef US_PLATFORM_WINDOWS
-	#ifdef US_BUILD_DLL
-		#define USUL_API __declspec(dllexport)
+	#if US_DYNAMIC_LINK
+		#ifdef US_BUILD_DLL
+			#define USUL_API __declspec(dllexport)
+		#else
+			#define USUL_API __declspec(dllimport)
+		#endif
 	#else
-		#define USUL_API __declspec(dllimport)
+	#define USUL_API
 	#endif
 #else
 	#error Usul support only windows for now!
