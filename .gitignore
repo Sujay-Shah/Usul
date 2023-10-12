@@ -36,3 +36,6 @@
 .vs
 *.pdb
 *.exp
+cmake-build-debug
+.idea
+.DS_Store

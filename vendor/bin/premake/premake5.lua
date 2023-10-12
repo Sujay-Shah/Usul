@@ -74,8 +74,8 @@ project "Sandbox"
 
 	includedirs 
 	{
-		"Usul/vendor/spdlog/include",
-		"Usul/src"
+		"usul/vendor/spdlog/include",
+		"usul/src"
 	}
 
 	links

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Usul/Core.h"
+#include "usul/Core.h"
 
 namespace Usul
 {

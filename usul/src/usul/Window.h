@@ -1,8 +1,8 @@
 #pragma once
 #include "uspch.h"
 
-#include "Usul/Core.h"
-#include "Usul/Events/Event.h"
+#include "usul/Core.h"
+#include "usul/Events/Event.h"
 
 namespace Usul {
 

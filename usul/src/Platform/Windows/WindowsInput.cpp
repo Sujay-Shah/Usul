@@ -1,6 +1,6 @@
 #include "uspch.h"
 #include "WindowsInput.h"
-#include "Usul/Application.h"
+#include "usul/Application.h"
 #include <GLFW/glfw3.h>
 
 namespace Usul

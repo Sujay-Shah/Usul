@@ -1,8 +1,8 @@
 #include "uspch.h"
 #include "WindowsWindow.h"
-#include "Usul/Events/ApplicationEvent.h"
-#include "Usul/Events/KeyEvent.h"
-#include "Usul/Events/MouseEvent.h"
+#include "usul/Events/ApplicationEvent.h"
+#include "usul/Events/KeyEvent.h"
+#include "usul/Events/MouseEvent.h"
 #include <GLFW/glfw3.h>
 #include "WindowsInput.h"
 

@@ -2,7 +2,7 @@
 #include "ImGuiLayer.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "backends/imgui_impl_glfw.h"
-#include "Usul/Application.h"
+#include "usul/Application.h"
 #include "GLFW/glfw3.h"
 
 namespace Usul
