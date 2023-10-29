@@ -31,11 +31,27 @@
 *.out
 *.app
 
-#Usul ignores
-/bin-intermediate
-.vs
-*.pdb
-*.exp
-cmake-build-debug
-.idea
-.DS_Store
+# visual studio stuff
+.vs/
+
+# vscode junk
+.vscode/
+*.code-workspace
+*.json
+
+# other junk
+.DS_STORE
+
+# build files
+**/bin/
+bin_int/
+build/
+out/
+bin_terminal/
+bin_xcode/
+
+**/CMakeFiles/
+**/Debug/
+*.sln
+*.vcxproj
+*.vcxproj.*

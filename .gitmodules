@@ -1,12 +1,12 @@
-[submodule "usul/vendor/spdlog"]
-	path = usul/vendor/spdlog
-	url = https://github.com/gabime/spdlog.git
-[submodule "usul/vendor/GLFW"]
-	path = usul/vendor/GLFW
+[submodule "Engine/vendor/spdlog"]
+	path = Engine/vendor/spdlog
+	url = https://github.com/gabime/spdlog
+[submodule "Engine/vendor/imgui"]
+	path = Engine/vendor/imgui
+	url = https://github.com/ocornut/imgui
+[submodule "Engine/vendor/glm"]
+	path = Engine/vendor/glm
+	url = https://github.com/g-truc/glm
+[submodule "Engine/vendor/glfw"]
+	path = Engine/vendor/glfw
 	url = https://github.com/glfw/glfw.git
-[submodule "usul/vendor/imgui"]
-	path = usul/vendor/imgui
-	url = https://github.com/ocornut/imgui.git
-[submodule "usul/vendor/glm"]
-	path = usul/vendor/glm
-	url = https://github.com/g-truc/glm.git

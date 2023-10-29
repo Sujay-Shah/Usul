@@ -1,2 +1,0 @@
-#pragma
-#include "uspch.h"
