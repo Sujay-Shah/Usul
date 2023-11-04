@@ -1,7 +1,6 @@
+//#include "../EnginePCH.h"
 #include "ShaderOpenGL.h"
-#include "Logging.h"
-#include "EngineDefines.h"
-
+#include "Engine/Core/Logging.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <filesystem>
 
@@ -18,7 +17,7 @@ namespace Engine
             return GL_FRAGMENT_SHADER;
         }
         
-        ENGINE_ASSERT(false, "Invalid shader type: {0}", type);
+        ENGINE_WARN(false, "Invalid shader type: {0}", type);
     }
 
     ShaderOpenGL::ShaderOpenGL(const std::string& fileName)
@@ -64,7 +63,7 @@ namespace Engine
     {
         std::string result;
         std::ifstream in(filename, std::ios::in | std::ios::binary);
-        ENGINE_ASSERT(in, "Error reading shader file: {0}", filename);
+        ENGINE_ASSERT(in, "Error reading shader file");
         
         in.seekg(0, std::ios::end);
         result.resize(in.tellg());

@@ -1,6 +1,6 @@
 #include "OpenGL/RenderContextOpenGL.h"
-#include "Logging.h"
-#include "EngineDefines.h"
+#include "Engine/Core/Logging.h"
+#include "Engine/Core/EngineDefines.h"
 
 namespace Engine
 {

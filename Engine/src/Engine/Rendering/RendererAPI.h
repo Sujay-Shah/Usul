@@ -3,7 +3,7 @@
 
 #include <glm/glm.hpp>
 
-#include "Engine/EngineDefines.h"
+#include "Engine/Core/EngineDefines.h"
 #include "VertexArray.h"
 
 namespace Engine

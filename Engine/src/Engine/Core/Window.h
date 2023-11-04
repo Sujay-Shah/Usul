@@ -6,7 +6,7 @@
 
 #define DEFAULT_WINDOW_WIDTH 1280
 #define DEFAULT_WINDOW_HEIGHT 720
-#define DEFAULT_WINDOW_TITLE "GameEngine2D"
+#define DEFAULT_WINDOW_TITLE "Editor"
 
 namespace Engine
 {

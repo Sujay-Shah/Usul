@@ -1,7 +1,7 @@
 #include "CameraController.h"
 #include "OrthographicCamera.h"
-#include "EngineDefines.h"
-#include "Input.h"
+#include "Engine/Core/EngineDefines.h"
+#include "Engine/Core/Input.h"
 #include "Event/KeyCodes.h"
 
 namespace Engine
@@ -59,8 +59,8 @@ namespace Engine
     {
         EventDispatcher dispatcher(e);
 
-        dispatcher.Dispatch<MouseScrolledEvent>(BIND_FN(CameraController::OnScroll));
-        dispatcher.Dispatch<WindowResizeEvent>(BIND_FN(CameraController::OnResize));
+        dispatcher.Dispatch<MouseScrolledEvent>(ENGINE_BIND_EVENT_FN(CameraController::OnScroll));
+        dispatcher.Dispatch<WindowResizeEvent>(ENGINE_BIND_EVENT_FN(CameraController::OnResize));
     }
 
     bool CameraController::OnScroll(MouseScrolledEvent& e)

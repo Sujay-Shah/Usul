@@ -13,9 +13,9 @@ void Sandbox2D::OnAttach()
 {
     std::string path;
 #ifdef __APPLE__
-    path = "/Users/wesleypeters/Documents/random_code/GameEngine2D/Application/assets/";
+    path = "";
 #else
-    path = "C:/Users/wcp/source/projects/GameEngine2D/Application/assets/";
+    path = "assets/";
 #endif
 
     std::string checkerboard = "textures/Checkerboard.png";

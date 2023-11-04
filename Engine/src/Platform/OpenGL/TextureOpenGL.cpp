@@ -1,6 +1,6 @@
 #include "TextureOpenGL.h"
 
-#include "EngineDefines.h"
+#include "Engine/Core/EngineDefines.h"
 
 #include "stb_image.h"
 

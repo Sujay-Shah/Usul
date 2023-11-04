@@ -1,7 +1,7 @@
 #ifndef __INPUTGLFW_H__
 #define __INPUTGLFW_H__
 
-#include "Engine/Input.h"
+#include "Engine/Core/Input.h"
 
 namespace Engine
 {

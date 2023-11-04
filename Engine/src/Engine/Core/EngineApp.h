@@ -3,10 +3,10 @@
 
 #include "Window.h"
 
-#include "Engine/Layer.h"
-#include "Engine/LayerStack.h"
+#include "Engine/Core/Layer.h"
+#include "Engine/Core/LayerStack.h"
 #include "Engine/ImGui/ImGuiLayer.h"
-#include "Engine/EngineDefines.h"
+#include "Engine/Core/EngineDefines.h"
 
 #include "Event/Event.h"
 #include "Event/WindowEvent.h"

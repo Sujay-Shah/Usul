@@ -1,5 +1,5 @@
 #include "BufferOpenGL.h"
-#include "Logging.h"
+#include "Engine/Core/Logging.h"
 
 #include <glad/glad.h>
 

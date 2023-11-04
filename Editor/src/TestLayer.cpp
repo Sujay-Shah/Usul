@@ -58,9 +58,9 @@ Engine::Layer("Test Layer"), m_cameraController(1280.0f / 720.0f), m_cameraPosit
     
     std::string path;
     #ifdef __APPLE__
-            path = "/Users/wesleypeters/Documents/random_code/GameEngine2D/Application/assets/";
+            path = "";
     #else
-            path = "C:/Users/wcp/source/projects/GameEngine2D/Application/assets/";
+            path = "C:/Users/RIA/source/repos/Usul/Editor/assets/";
     #endif
     
     m_shaderLibrary.Add(Engine::Shader::Create(path+"shaders/SingleColor.glsl"));

@@ -3,12 +3,12 @@
 #include "examples/imgui_impl_opengl3.h"
 #include "examples/imgui_impl_glfw.h"
 
-#include "EngineApp.h"
+#include "Engine/Core/EngineApp.h"
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#define BIND_FN(x) std::bind(&x, this, std::placeholders::_1)
+//#define ENGINE_BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
 namespace Engine
 {

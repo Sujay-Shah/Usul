@@ -10,10 +10,16 @@ add_subdirectory( vendor/glad )
 add_subdirectory( vendor/spdlog )
 add_subdirectory( vendor/glfw )
 
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DENGINE_DEBUG")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DENGINE_DEBUG")
+
 # source code
 file(GLOB 
     SOURCES CONFIGURE_DEPENDS
+		/*.cpp
+		/*.h
         src/Engine/*.cpp 
+        src/Engine/Core/*.cpp 
         src/Engine/Rendering/*.cpp
         src/Engine/Rendering/Camera/*.cpp
         src/Engine/ImGui/*.cpp 

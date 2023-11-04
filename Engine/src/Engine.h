@@ -1,23 +1,25 @@
 #ifndef __ENGINE_H__
 #define __ENGINE_H__
 
-#include "Engine/EngineDefines.h"
+#include "Engine/Core/EngineDefines.h"
 
-#include "Engine/EngineApp.h"
+#include "Engine/Core/EngineApp.h"
 
-#include "Engine/Input.h"
+#include "Engine/Core/Input.h"
+#include "Engine/Core/Logging.h"
+#include "Engine/Core/Assert.h"
 
 #include "Engine/Event/Event.h"
 #include "Engine/Event/KeyCodes.h"
 #include "Engine/Event/MouseButtons.h"
 
-#include "Engine/Layer.h"
-#include "Engine/LayerStack.h"
+#include "Engine/Core/Layer.h"
+#include "Engine/Core/LayerStack.h"
 #include "Engine/ImGui/ImGuiLayer.h"
 
-#include "Engine/Logging.h"
 
-#include "Engine/Timestep.h"
+
+#include "Engine/Core/Timestep.h"
 
 #include "Rendering/Renderer.h"
 #include "Rendering/Renderer2D.h"

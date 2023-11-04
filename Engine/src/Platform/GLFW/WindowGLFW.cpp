@@ -3,7 +3,7 @@
 #include "Event/WindowEvent.h"
 #include "Event/MouseEvent.h"
 #include "Platform/OpenGL/RenderContextOpenGL.h"
-#include "EngineDefines.h"
+#include "Engine/Core/EngineDefines.h"
 
 namespace Engine
 {

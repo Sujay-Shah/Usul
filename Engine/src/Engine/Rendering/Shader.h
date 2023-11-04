@@ -1,7 +1,7 @@
 #ifndef __SHADER_H__
 #define __SHADER_H__
 
-#include "EngineDefines.h"
+#include "Engine/Core/EngineDefines.h"
 #include <glm/glm.hpp>
 
 namespace Engine

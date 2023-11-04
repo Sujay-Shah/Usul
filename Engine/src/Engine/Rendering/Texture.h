@@ -2,7 +2,7 @@
 #define __TEXTURE_H__
 
 #include <string>
-#include "EngineDefines.h"
+#include "Engine/Core/EngineDefines.h"
 
 namespace Engine
 {

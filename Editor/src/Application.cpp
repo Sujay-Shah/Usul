@@ -1,5 +1,5 @@
 #include <Engine.h>
-#include <Engine/EngineEntryPoint.h>
+#include <Engine/Core/EngineEntryPoint.h>
 
 #include "TestLayer.h"
 #include "Sandbox2D.h"

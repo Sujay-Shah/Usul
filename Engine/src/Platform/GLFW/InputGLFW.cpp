@@ -1,5 +1,5 @@
 #include "InputGLFW.h"
-#include "Engine/EngineApp.h"
+#include "Engine/Core/EngineApp.h"
 #include <GLFW/glfw3.h>
 
 namespace Engine

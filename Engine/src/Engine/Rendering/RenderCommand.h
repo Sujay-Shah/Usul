@@ -3,7 +3,7 @@
 
 #include "RendererAPI.h"
 
-#include "Engine/EngineDefines.h"
+#include "Engine/Core/EngineDefines.h"
 
 namespace Engine
 {

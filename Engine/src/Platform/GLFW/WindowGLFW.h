@@ -1,7 +1,7 @@
 #ifndef __WINDOWGLFW_H__
 #define __WINDOWGLFW_H__
 
-#include "Window.h"
+#include "Engine/Core/Window.h"
 #include "Event/Event.h"
 #include "Rendering/RenderContext.h"
 

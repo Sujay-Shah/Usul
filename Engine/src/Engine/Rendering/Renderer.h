@@ -1,7 +1,7 @@
 #ifndef __RENDERER_H__
 #define __RENDERER_H__
 
-#include "Engine/EngineDefines.h"
+#include "Engine/Core/EngineDefines.h"
 
 #include "RenderCommand.h"
 #include "Shader.h"

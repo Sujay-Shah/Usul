@@ -2,7 +2,7 @@
 #define __VERTEXARRAY_H__
 
 #include "Buffer.h"
-#include "Engine/EngineDefines.h"
+#include "Engine/Core/EngineDefines.h"
 namespace Engine
 {
     class VertexArray

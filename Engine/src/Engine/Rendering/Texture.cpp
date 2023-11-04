@@ -3,8 +3,8 @@
 #include "Renderer.h"
 #include "Platform/OpenGL/TextureOpenGL.h"
 
-#include "Logging.h"
-#include "EngineDefines.h"
+#include "Engine/Core/Logging.h"
+#include "Engine/Core/EngineDefines.h"
 
 namespace Engine
 {

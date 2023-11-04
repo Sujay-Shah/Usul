@@ -16,7 +16,7 @@ namespace Engine
         m_instance = this;
 
         m_window = Scope<Window>(Window::Create());
-        m_window->SetEventCallback(BIND_FN(EngineApp::OnEvent));
+        m_window->SetEventCallback(ENGINE_BIND_EVENT_FN(EngineApp::OnEvent));
         m_window->SetVsync(false);
         
         Renderer::Init();
@@ -55,8 +55,8 @@ namespace Engine
     void EngineApp::OnEvent(Event& e)
     {
         EventDispatcher dispatcher(e);
-        dispatcher.Dispatch<WindowCloseEvent>(BIND_FN(EngineApp::OnWindowCloseEvent));
-        dispatcher.Dispatch<WindowResizeEvent>(BIND_FN(EngineApp::OnWindowResizeEvent));
+        dispatcher.Dispatch<WindowCloseEvent>(ENGINE_BIND_EVENT_FN(EngineApp::OnWindowCloseEvent));
+        dispatcher.Dispatch<WindowResizeEvent>(ENGINE_BIND_EVENT_FN(EngineApp::OnWindowResizeEvent));
 
         for (auto it = m_layerStack.rbegin(); it != m_layerStack.rend(); ++it)
         {

@@ -48,9 +48,9 @@ namespace Engine
 
 		std::string path;
 #ifdef __APPLE__
-		path = "/Users/wesleypeters/Documents/random_code/GameEngine2D/Application/assets/";
+		path = "";
 #else
-		path = "C:/Users/wcp/source/projects/GameEngine2D/Application/assets/";
+		path = "C:/Users/RIA/source/repos/Usul/Editor/assets/";
 #endif
 
 		s_data->textureShader = Engine::Shader::Create(path + "shaders/Texture.glsl");

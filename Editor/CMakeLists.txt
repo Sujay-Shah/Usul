@@ -3,6 +3,7 @@ project (Editor)
 file(GLOB SOURCES
     "src/*.cpp"
     "src/**/*.cpp"
+    "src/**/*/*.cpp"
 )
 
 add_executable(Editor ${SOURCES})

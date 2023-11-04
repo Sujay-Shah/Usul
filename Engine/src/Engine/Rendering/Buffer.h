@@ -1,8 +1,8 @@
 #ifndef __BUFFER_H__
 #define __BUFFER_H__
 
-#include "Logging.h"
-#include "EngineDefines.h"
+#include "Engine/Core/Logging.h"
+#include "Engine/Core/EngineDefines.h"
 
 namespace Engine
 {

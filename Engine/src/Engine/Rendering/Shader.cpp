@@ -2,8 +2,8 @@
 #include "Renderer.h"
 #include "Platform/OpenGL/ShaderOpenGL.h"
 
-#include "Logging.h"
-#include "EngineDefines.h"
+#include "Engine/Core/Logging.h"
+#include "Engine/Core/EngineDefines.h"
 
 namespace Engine
 {
@@ -44,7 +44,7 @@ namespace Engine
 
     void ShaderLibrary::Add(const std::string& name, const Ref<Shader>& shader)
     {
-        ENGINE_ASSERT(!Exists(name), "Shader `{0}' already exists in library!", name);
+        ENGINE_ASSERT(!Exists(name) , "Shader already exists in library!");
         m_shaders[name] = shader;
     }
 
@@ -63,7 +63,7 @@ namespace Engine
 
     Ref<Shader> ShaderLibrary::Get(const std::string& name)
     {
-        ENGINE_ASSERT(Exists(name), "Shader `{0}' does not exist in library!", name);
+        ENGINE_CORE_ASSERT(Exists(name), "Shader does not exist in library!");
         return m_shaders[name];
     }
 }

@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "Logging.h"
+#include "Engine/Core/Logging.h"
 
 namespace Engine
 {

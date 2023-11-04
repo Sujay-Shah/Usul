@@ -1,5 +1,5 @@
 #include "OrthographicCamera.h"
-#include "Logging.h"
+#include "Engine/Core/Logging.h"
 namespace Engine
 {
     OrthographicCamera::OrthographicCamera()
