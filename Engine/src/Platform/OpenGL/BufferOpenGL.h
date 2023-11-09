@@ -17,6 +17,7 @@ namespace Engine
             virtual const BufferLayout& GetLayout() const override { return m_layout; }
             virtual void SetLayout(const BufferLayout& layout) override { m_layout = layout; }
 
+            virtual uint32_t GetSize() const override { return m_size; }
         private:
             uint32_t m_rendererID;
             BufferLayout m_layout;

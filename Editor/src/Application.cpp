@@ -3,14 +3,16 @@
 
 #include "TestLayer.h"
 #include "Sandbox2D.h"
+#include "LightingExample.h"
 
 class Application : public Engine::EngineApp
 {
     public:
         Application()
         {
+            PushLayer(new LightingExample());
             //PushLayer(new TestLayer());
-            PushLayer(new Sandbox2D());
+            //PushLayer(new Sandbox2D());
         }
 
         ~Application() {}

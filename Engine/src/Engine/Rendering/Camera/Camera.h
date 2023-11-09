@@ -30,7 +30,8 @@ namespace Engine
             inline const glm::mat4& GetViewMatrix() const { return m_data.view; }
             inline const glm::mat4& GetProjectionMatrix() const { return m_data.projection; }
             inline const glm::mat4& GetViewProjectionMatrix() const { return m_data.viewProjection; }
-        protected:
+            bool IsPerspective() { return m_type; }
+    protected:
             struct CameraData
             {
                 glm::vec3 pos;
@@ -51,6 +52,14 @@ namespace Engine
                 {}
             };
 
+            enum CameraType
+            {
+                Perspective,
+                Orthographic,
+                None
+            };
+
+            CameraType m_type;
             CameraData m_data;
     };
 }

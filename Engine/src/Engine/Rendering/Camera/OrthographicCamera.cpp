@@ -4,6 +4,7 @@ namespace Engine
 {
     OrthographicCamera::OrthographicCamera()
     {
+        m_type = CameraType::Orthographic;
         m_data.view = glm::mat4(1.0f);
         m_data.projection = glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
 
@@ -12,6 +13,7 @@ namespace Engine
 
     OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top)
     {
+        m_type = CameraType::Orthographic;
         m_data.view = glm::mat4(1.0f);
         m_data.projection = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
 
@@ -20,6 +22,7 @@ namespace Engine
 
     OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top, float nearClip, float farClip)
     {
+        m_type = CameraType::Orthographic;
         m_data.view = glm::mat4(1.0f);
 
         m_data.nearClip = nearClip;

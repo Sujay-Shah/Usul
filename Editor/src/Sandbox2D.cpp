@@ -34,10 +34,10 @@ void Sandbox2D::OnUpdate(const Engine::Timestep& ts)
     Engine::RenderCommand::Clear();
 
     Engine::Renderer2D::BeginScene(m_cameraController.GetCamera());
-    Engine::Renderer2D::DrawQuad(squarePos, { 0.8f, 0.8f }, squareColor);
+    Engine::Renderer2D::DrawQuad(squarePos, scale, squareColor);
     Engine::Renderer2D::DrawQuad({ 0.0f, -0.5f }, { 0.5f, 0.75f }, { 0.2f, 0.3f, 0.8f, 1.0f });
-    Engine::Renderer2D::DrawTexture({ 0.2f, 0.5f, -0.1f }, { 10.0f, 10.0f }, glm::vec4(1.0f), 10.0f, m_texture);
-    Engine::Renderer2D::DrawTexture({ 0.2f, 0.5f }, { 1.0f, 1.0f }, {1.0f, 0.8f, 0.8f, 1.0f}, 10.0f, m_texture);
+    //Engine::Renderer2D::DrawTexture({ 0.2f, 0.5f, -0.1f }, { 10.0f, 10.0f }, glm::vec4(1.0f), 10.0f, m_texture);
+    //Engine::Renderer2D::DrawTexture({ 0.2f, 0.5f }, { 1.0f, 1.0f }, {1.0f, 0.8f, 0.8f, 1.0f}, 10.0f, m_texture);
     Engine::Renderer2D::EndScene();
 
     Engine::Renderer::EndScene();
@@ -48,6 +48,7 @@ void Sandbox2D::OnImGuiRender()
     ImGui::Begin("Settings");
     ImGui::ColorEdit4("Square Color", glm::value_ptr(squareColor));
     ImGui::SliderFloat3("Square Position", glm::value_ptr(squarePos), -1.0f, 1.0f);
+    ImGui::SliderFloat("Square scale", glm::value_ptr(scale), 0.0f, 1.0f);
     ImGui::End();
 }
 

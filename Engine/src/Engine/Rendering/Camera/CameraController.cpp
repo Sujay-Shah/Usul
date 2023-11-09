@@ -1,15 +1,16 @@
 #include "CameraController.h"
-#include "OrthographicCamera.h"
+
 #include "Engine/Core/EngineDefines.h"
 #include "Engine/Core/Input.h"
 #include "Event/KeyCodes.h"
+#include "Event/MouseButtons.h"
 
 namespace Engine
 {
     CameraController::CameraController(float aspectRatio)
         :
         m_aspectRatio(aspectRatio),
-        m_camera(-aspectRatio * m_zoom, aspectRatio * m_zoom, -m_zoom, m_zoom)
+        m_camera(m_zoom, aspectRatio , 1.0f, 100.0f)
     {}
 
     void CameraController::SetPos(const glm::vec3& position)
@@ -24,22 +25,26 @@ namespace Engine
 
     void CameraController::OnUpdate(const Timestep& ts)
     {
+        float deltaTime = ts.GetTimeSeconds();
+        float velocity = cameraMoveSpeed * deltaTime;
+        glm::vec3 cameraPos = m_camera.GetPos();
+
         if (Input::IsKeyPressed(KEY_W) || Input::IsKeyPressed(KEY_UP))
         {
-            cameraPos.y += cameraMoveSpeed * ts.GetTimeSeconds();
+            cameraPos += m_camera.m_Front * velocity;
         }
         else if (Input::IsKeyPressed(KEY_S) || Input::IsKeyPressed(KEY_DOWN))
         {
-            cameraPos.y -= cameraMoveSpeed * ts.GetTimeSeconds();
+            cameraPos -= m_camera.m_Front * velocity;
         }
 
         if (Input::IsKeyPressed(KEY_A) || Input::IsKeyPressed(KEY_LEFT))
         {
-            cameraPos.x -= cameraMoveSpeed * ts.GetTimeSeconds();
+            cameraPos -= m_camera.m_Right * velocity;
         }
         else if (Input::IsKeyPressed(KEY_D) || Input::IsKeyPressed(KEY_RIGHT))
         {
-            cameraPos.x += cameraMoveSpeed * ts.GetTimeSeconds();
+            cameraPos += m_camera.m_Right * velocity;
         }
 
         if (Input::IsKeyPressed(KEY_Q))
@@ -50,9 +55,45 @@ namespace Engine
         {
             cameraRotation += cameraRotateSpeed * ts.GetTimeSeconds();
         }
+        
+        if (Input::IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+        {
+			std::pair<float, float> pos = Input::GetMousePos();
+            ENGINE_CORE_WARN("x : {0}, y : {1} ",pos.first,pos.second);
+			
+			if (m_first)
+			{
+                m_lastCursorPos = pos;
+                m_first = false;
+			}
+            //TODO: fix camera jumps and replace magic numbers
+			float xoffset = glm::clamp(pos.first - m_lastCursorPos.first,-100.0f,100.0f);
+			float yoffset = glm::clamp(m_lastCursorPos.second - pos.second, -100.0f, 100.0f); // reversed since y-coordinates go from bottom to top
+
+            ENGINE_CORE_WARN("xoffset : {0}, yoffset : {1} ", xoffset, yoffset);
+            m_lastCursorPos = pos;
+
+            xoffset *= SENSITIVITY;
+            yoffset *= SENSITIVITY;
+
+
+			m_camera.m_Yaw += xoffset;
+			m_camera.m_Pitch += yoffset;
+
+			if (m_camera.m_Pitch > 89.0f)
+			{
+				m_camera.m_Pitch = 89.0f;
+			}
+			if (m_camera.m_Pitch < -89.0f)
+			{
+				m_camera.m_Pitch = -89.0f;
+			}
+        }
+        
 
         m_camera.SetPos(cameraPos);
-        m_camera.SetRotation(cameraRotation);
+        //m_camera.SetRotation(cameraRotation);
+        //m_camera.Update();
     }
 
     void CameraController::OnEvent(Event& e)
@@ -67,16 +108,31 @@ namespace Engine
     {
         m_zoom -= e.GetYDiff() * 0.25f;
         m_zoom = std::max(m_zoom, 0.25f);
-        m_camera.SetProjection(-m_aspectRatio * m_zoom, m_aspectRatio * m_zoom, -m_zoom, m_zoom);
 
+        if (m_camera.IsPerspective())
+        {
+            m_camera.SetProjection (m_zoom);
+        }
+        else
+        {
+            //m_camera.SetProjection(-m_aspectRatio * m_zoom, m_aspectRatio * m_zoom, -m_zoom, m_zoom);
+        }
+        
         return false;
     }
 
     bool CameraController::OnResize(WindowResizeEvent& e)
     {
         m_aspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
-        m_camera.SetProjection(-m_aspectRatio * m_zoom, m_aspectRatio * m_zoom, -m_zoom, m_zoom);
-
+		if (m_camera.IsPerspective())
+		{
+            m_camera.SetProjection(m_zoom);
+		}
+        else
+        {
+            //m_camera.SetProjection(-m_aspectRatio * m_zoom, m_aspectRatio * m_zoom, -m_zoom, m_zoom);
+        }
+        
         return false;
     }
 }

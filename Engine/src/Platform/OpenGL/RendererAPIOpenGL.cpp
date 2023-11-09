@@ -23,7 +23,15 @@ namespace Engine
 
     void RendererAPIOpenGL::DrawIndexed(const Ref<VertexArray>& vertexArray)
     {
-        glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+        if (vertexArray->GetIndexBuffer().get())
+        {
+            glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
+        }
+		else
+		{
+            //TODO: add ability to handle drawing with just vertex buffers
+			glDrawArrays(GL_TRIANGLES, 0, vertexArray->GetVertexBuffers()[0]->GetSize());
+		}
     }
 
     void RendererAPIOpenGL::SetViewPort(uint32_t x, uint32_t y, uint32_t width, uint32_t height)

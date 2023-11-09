@@ -25,6 +25,7 @@ class Sandbox2D : public Engine::Layer
 
 		glm::vec4 squareColor = { 0.3f, 0.2f, 0.8f, 1.0f };
         glm::vec3 squarePos = {0.0f, 0.0f, 0.0f};
+		glm::vec2 scale = { 1.0f,1.0f };
 };
 
 #endif

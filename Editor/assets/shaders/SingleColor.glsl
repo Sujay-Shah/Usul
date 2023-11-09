@@ -6,22 +6,22 @@ layout(location = 0) in vec3 a_Position;
 uniform mat4 u_viewProjection;
 uniform mat4 u_transform;
 
-out vec3 v_position;
+//out vec3 v_position;
 
 void main()
 {
-    v_position = vec3(a_Position);
-    gl_Position = u_viewProjection * u_transform * vec4(a_Position, 1.0);
+   // v_position = vec3(a_Position);
+    gl_Position = vec4(a_Position, 1.0);//u_viewProjection * u_transform * vec4(a_Position, 1.0);
 }
 
 #type fragment
 #version 330
 
-layout(location = 0) out vec4 color;
+out vec4 color;
 
 uniform vec4 u_color;
 
 void main()
 {
-    color = u_color;
+    color  = vec4(1,0,0,1);//u_color;
 }

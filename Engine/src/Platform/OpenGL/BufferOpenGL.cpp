@@ -7,6 +7,7 @@ namespace Engine
 {
     VertexBufferOpenGL::VertexBufferOpenGL(float* vertices, uint32_t size)
     {
+        m_size = size;
         glGenBuffers(1, &m_rendererID);
         glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
         glBufferData(GL_ARRAY_BUFFER, size, vertices, GL_STATIC_DRAW);

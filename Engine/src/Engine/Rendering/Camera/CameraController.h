@@ -2,6 +2,7 @@
 #define __CAMERACONTROLLER_H__
 
 #include "OrthographicCamera.h"
+#include "PerspectiveCamera.h"
 #include "Event/Event.h"
 #include "Event/MouseEvent.h"
 #include "Event/WindowEvent.h"
@@ -30,14 +31,19 @@ namespace Engine
             bool OnResize(WindowResizeEvent& e);
         private:
             float m_aspectRatio; 
-            float m_zoom = 1.0f;
+            float m_zoom = 45.0f;
 
-            OrthographicCamera m_camera;
+            //TODO : add ability to handle both cameras
+            //OrthographicCamera m_camera;
+            PerspectiveCamera m_camera;
             glm::vec3 cameraPos = { 0.0f, 0.0f, 0.0f };
 
             float cameraMoveSpeed = 5.0f;
             float cameraRotateSpeed = 180.0f;
             float cameraRotation = 0.0f;
+
+            std::pair<float, float> m_lastCursorPos;
+            bool m_first = true;
     };
 }
 

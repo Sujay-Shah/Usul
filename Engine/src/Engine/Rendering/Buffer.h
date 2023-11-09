@@ -131,8 +131,10 @@ namespace Engine
 
             virtual const BufferLayout& GetLayout() const = 0;
             virtual void SetLayout(const BufferLayout& layout) = 0;
-
+            virtual uint32_t GetSize() const = 0;
             static Ref<VertexBuffer> Create(float* vertices, uint32_t size);
+        protected:
+        uint32_t m_size;
     };
 
     class IndexBuffer
