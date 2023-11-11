@@ -10,6 +10,8 @@
 
 #include <glm/glm.hpp>
 
+
+
 namespace Engine
 {
     class CameraController
@@ -21,7 +23,7 @@ namespace Engine
             const Camera& GetCamera() const { return m_camera; }
 
             void SetPos(const glm::vec3& position);
-            void SetRotation(float rotation);
+            void SetRotation(float pitch, float yaw, float roll=0.0f);
 
             void OnUpdate(const Timestep& ts);
 
@@ -43,7 +45,7 @@ namespace Engine
             float cameraRotation = 0.0f;
 
             std::pair<float, float> m_lastCursorPos;
-            bool m_first = true;
+            bool m_first = true; 
     };
 }
 

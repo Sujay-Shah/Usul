@@ -3,7 +3,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 LightingExample::LightingExample() :
-	Engine::Layer("LightExample"), m_cameraController(1280.0f / 720.0f), m_cameraPosition(-5.0f)
+	Engine::Layer("LightExample"), m_cameraController(1280.0f / 720.0f), m_cameraPosition(-5.0,0.0f,0.0f)
 {
 	std::string path = "C:/Users/RIA/source/repos/Usul/Editor/assets/";
 
@@ -110,6 +110,8 @@ LightingExample::LightingExample() :
 	m_shaderLibrary.Add(Engine::Shader::Create(path + "shaders/BasicLight.glsl"));
 	m_shaderLibrary.Add(Engine::Shader::Create(path+"shaders/CubeLight.glsl"));
 
+	m_cameraController.SetPos(m_cameraPosition);
+	m_cameraController.SetRotation(-3.05,5.0,0.0f);
 }
 
 void LightingExample::OnUpdate(const Engine::Timestep& ts)

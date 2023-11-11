@@ -28,7 +28,15 @@ namespace Engine
         shader->UploadUniformMat4("u_transform", transform);
         
         vertexArray->Bind();
-        RenderCommand::DrawIndexed(vertexArray);
+        if (vertexArray->GetIndexBuffer())
+        {
+            RenderCommand::DrawIndexed(vertexArray);
+        }
+        else
+        {
+            RenderCommand::DrawArrays(vertexArray);
+        }
+        
     }
 
     void Renderer::OnWindowResize(uint32_t width, uint32_t height)

@@ -27,15 +27,19 @@ namespace Engine
         {
             glDrawElements(GL_TRIANGLES, vertexArray->GetIndexBuffer()->GetCount(), GL_UNSIGNED_INT, nullptr);
         }
-		else
-		{
-            //TODO: add ability to handle drawing with just vertex buffers
-			glDrawArrays(GL_TRIANGLES, 0, vertexArray->GetVertexBuffers()[0]->GetSize());
-		}
     }
 
     void RendererAPIOpenGL::SetViewPort(uint32_t x, uint32_t y, uint32_t width, uint32_t height)
     {
         glViewport(x, y, width, height);
     }
+
+	void RendererAPIOpenGL::DrawArrays(const Ref<VertexArray>& vertexArray)
+	{
+        for (int i = 0; i<vertexArray->GetVertexBuffers().size();++i)
+        {
+		    glDrawArrays(GL_TRIANGLES, 0, vertexArray->GetVertexBuffers()[i]->GetSize());
+        }
+	}
+
 }

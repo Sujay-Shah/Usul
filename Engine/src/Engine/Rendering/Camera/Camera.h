@@ -19,7 +19,7 @@ namespace Engine
             void SetAspectRatio(float aspectRatio) { m_data.aspectRatio = aspectRatio; Update(); }
             void SetNear(float nearClip) { m_data.nearClip = nearClip; Update(); }
             void SetFar(float farClip) { m_data.farClip = farClip; Update(); }
-            void SetRotation(float rotation) { m_data.rotation = rotation; Update(); }
+            virtual void SetRotation(float pitch, float yaw, float roll=0.0f) { };
 
             inline const glm::vec3& GetPos() const { return m_data.pos; }
             inline const float GetFOV() const { return m_data.fov; }

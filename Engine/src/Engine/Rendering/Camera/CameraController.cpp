@@ -18,9 +18,9 @@ namespace Engine
         m_camera.SetPos(position);
     }
 
-    void CameraController::SetRotation(float rotation)
+    void CameraController::SetRotation(float pitch, float yaw, float roll)
     {
-        m_camera.SetRotation(rotation);
+        m_camera.SetRotation(pitch, yaw, roll);
     }
 
     void CameraController::OnUpdate(const Timestep& ts)
@@ -29,6 +29,7 @@ namespace Engine
         float velocity = cameraMoveSpeed * deltaTime;
         glm::vec3 cameraPos = m_camera.GetPos();
 
+#if !FIXED_CAM
         if (Input::IsKeyPressed(KEY_W) || Input::IsKeyPressed(KEY_UP))
         {
             cameraPos += m_camera.m_Front * velocity;
@@ -59,7 +60,7 @@ namespace Engine
         if (Input::IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
         {
 			std::pair<float, float> pos = Input::GetMousePos();
-            ENGINE_CORE_WARN("x : {0}, y : {1} ",pos.first,pos.second);
+            //ENGINE_CORE_WARN("x : {0}, y : {1} ",pos.first,pos.second);
 			
 			if (m_first)
 			{
@@ -67,10 +68,10 @@ namespace Engine
                 m_first = false;
 			}
             //TODO: fix camera jumps and replace magic numbers
-			float xoffset = glm::clamp(pos.first - m_lastCursorPos.first,-100.0f,100.0f);
-			float yoffset = glm::clamp(m_lastCursorPos.second - pos.second, -100.0f, 100.0f); // reversed since y-coordinates go from bottom to top
+			float xoffset = glm::clamp(pos.first - m_lastCursorPos.first,-50.0f,50.0f);
+			float yoffset = glm::clamp(m_lastCursorPos.second - pos.second, -50.0f, 50.0f); // reversed since y-coordinates go from bottom to top
 
-            ENGINE_CORE_WARN("xoffset : {0}, yoffset : {1} ", xoffset, yoffset);
+            //ENGINE_CORE_WARN("xoffset : {0}, yoffset : {1} ", xoffset, yoffset);
             m_lastCursorPos = pos;
 
             xoffset *= SENSITIVITY;
@@ -89,9 +90,45 @@ namespace Engine
 				m_camera.m_Pitch = -89.0f;
 			}
         }
-        
+		m_camera.SetPos(cameraPos);
 
-        m_camera.SetPos(cameraPos);
+#else
+        if (Input::IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+        {
+            std::pair<float, float> pos = Input::GetMousePos();
+            
+            float xoffset = SENSITIVITY * (pos.first - m_lastCursorPos.first);
+			float yoffset = SENSITIVITY * (m_lastCursorPos.second - pos.second); // reversed since y-coordinates go from bottom to top
+
+            m_camera.m_Radius += xoffset - yoffset;
+            ENGINE_WARN("Radius : {0}", m_camera.m_Radius);
+            m_camera.m_Radius = glm::clamp(m_camera.m_Radius, 5.0f, 500.0f);
+			//ENGINE_CORE_WARN("xoffset : {0}, yoffset : {1} ", xoffset, yoffset);
+			m_lastCursorPos = pos;
+        }
+        else if (Input::IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+			std::pair<float, float> pos = Input::GetMousePos();
+
+			float xoffset = SENSITIVITY * (pos.first - m_lastCursorPos.first);
+			float yoffset = SENSITIVITY * (m_lastCursorPos.second - pos.second);
+
+			m_camera.m_Yaw += xoffset;
+			m_camera.m_Pitch += yoffset;
+
+			if (m_camera.m_Pitch > 89.0f)
+			{
+				m_camera.m_Pitch = 89.0f;
+			}
+			if (m_camera.m_Pitch < -89.0f)
+			{
+				m_camera.m_Pitch = -89.0f;
+			}
+            m_lastCursorPos = pos;
+        }
+        m_camera.Update();
+#endif        
+
         //m_camera.SetRotation(cameraRotation);
         //m_camera.Update();
     }
