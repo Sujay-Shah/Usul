@@ -17,7 +17,8 @@ namespace Engine
             return GL_FRAGMENT_SHADER;
         }
         
-        ENGINE_WARN(false, "Invalid shader type: {0}", type);
+        ENGINE_WARN( "Invalid shader type: {0}", type);
+        return GL_INVALID_VALUE;
     }
 
     ShaderOpenGL::ShaderOpenGL(const std::string& fileName)

@@ -101,17 +101,20 @@ namespace Engine
 			float yoffset = SENSITIVITY * (m_lastCursorPos.second - pos.second); // reversed since y-coordinates go from bottom to top
 
             m_camera.m_Radius += xoffset - yoffset;
-            ENGINE_WARN("Radius : {0}", m_camera.m_Radius);
-            m_camera.m_Radius = glm::clamp(m_camera.m_Radius, 5.0f, 500.0f);
-			//ENGINE_CORE_WARN("xoffset : {0}, yoffset : {1} ", xoffset, yoffset);
+            //ENGINE_WARN("Radius : {0}", m_camera.m_Radius);
+            m_camera.m_Radius = glm::clamp(m_camera.m_Radius, 5.0f, 20.0f);
+			ENGINE_CORE_WARN("xoffset : {0}, yoffset : {1} ", xoffset, yoffset);
 			m_lastCursorPos = pos;
         }
         else if (Input::IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
         {
 			std::pair<float, float> pos = Input::GetMousePos();
 
-			float xoffset = SENSITIVITY * (pos.first - m_lastCursorPos.first);
-			float yoffset = SENSITIVITY * (m_lastCursorPos.second - pos.second);
+            //we clamp the offset values between -1,1 to prevent sudden jumps due to large old and new pos diff
+            float xoffset = glm::clamp(SENSITIVITY * (pos.first - m_lastCursorPos.first),-1.0f,1.0f);
+            float yoffset = glm::clamp(SENSITIVITY * (m_lastCursorPos.second - pos.second),-1.0f,1.0f);
+
+            //if(xoffset != 0 || yoffset!= 0) ENGINE_CORE_WARN("xoffset : {0}, yoffset : {1} ", xoffset, yoffset);
 
 			m_camera.m_Yaw += xoffset;
 			m_camera.m_Pitch += yoffset;

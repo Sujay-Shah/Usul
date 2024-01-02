@@ -4,6 +4,9 @@ set( GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE )
 set( GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE )
 set( GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE )
 
+# for clion, to avoid cast from 'char*' to 'int' loses precision being treated as error
+set(CMAKE_CXX_FLAGS "-fpermissive")
+
 # add sub directories for projects with cmake support (currently glad, spdlog, GLFW)
 
 add_subdirectory( vendor/glad )
@@ -32,8 +35,9 @@ file(GLOB
         # must compile and link imgui directly to project
         vendor/imgui/*.cpp
 )
-
+message("sources : ${SOURCES}")
 # library creation
+
 add_library( Engine 
     STATIC 
         ${SOURCES}

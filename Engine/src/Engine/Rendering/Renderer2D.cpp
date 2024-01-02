@@ -50,7 +50,7 @@ namespace Engine
 #ifdef __APPLE__
 		path = "";
 #else
-		path = "C:/Users/RIA/source/repos/Usul/Editor/assets/";
+		path = "../Editor/assets/";
 #endif
 
 		s_data->textureShader = Engine::Shader::Create(path + "shaders/Texture.glsl");

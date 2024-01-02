@@ -5,7 +5,7 @@
 LightingExample::LightingExample() :
 	Engine::Layer("LightExample"), m_cameraController(1280.0f / 720.0f), m_cameraPosition(-5.0,0.0f,0.0f)
 {
-	std::string path = "C:/Users/RIA/source/repos/Usul/Editor/assets/";
+	std::string path = "../Editor/assets/";
 
 	float vertices[] = {
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -112,6 +112,8 @@ LightingExample::LightingExample() :
 
 	m_cameraController.SetPos(m_cameraPosition);
 	m_cameraController.SetRotation(-3.05,5.0,0.0f);
+
+    ENGINE_WARN("Camera Position : {0},{1},{2}",m_cameraPosition.x,m_cameraPosition.y,m_cameraPosition.z);
 }
 
 void LightingExample::OnUpdate(const Engine::Timestep& ts)

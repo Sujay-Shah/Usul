@@ -8,7 +8,7 @@ namespace Engine
 	const float YAW = -90.0f;
 	const float PITCH = 0.0f;
 	const float SPEED = 2.5f;
-	const float SENSITIVITY = 0.05f;
+	const float SENSITIVITY = 0.25f;
 	const float ZOOM = 45.0f;
 #define FIXED_CAM 1
     class PerspectiveCamera : public Camera
@@ -30,7 +30,7 @@ namespace Engine
             glm::vec3 m_Up;
             glm::vec3 m_Right;
 #if FIXED_CAM
-			float m_Radius;
+			float m_Radius = 11.0f;
 #endif         
     };      
 
