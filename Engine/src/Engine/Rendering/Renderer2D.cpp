@@ -47,11 +47,8 @@ namespace Engine
 		s_data->whiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 
 		std::string path;
-#ifdef __APPLE__
-		path = "";
-#else
+
 		path = "../Editor/assets/";
-#endif
 
 		s_data->textureShader = Engine::Shader::Create(path + "shaders/Texture.glsl");
 		s_data->textureShader->Bind();

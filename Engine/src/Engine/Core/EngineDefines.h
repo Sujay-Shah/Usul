@@ -8,7 +8,7 @@
 #ifdef ENGINE_DEBUG
 	#if defined(ENGINE_PLATFORM_WINDOWS)
 	#define ENGINE_DEBUGBREAK() __debugbreak()
-	#elif defined(ENGINE_PLATFORM_LINUX)
+	#elif defined(ENGINE_PLATFORM_LINUX) || defined(ENGINE_PLATFORM_MAC)
 	#include <signal.h>
 	#define ENGINE_DEBUGBREAK() raise(SIGTRAP)
 	#else

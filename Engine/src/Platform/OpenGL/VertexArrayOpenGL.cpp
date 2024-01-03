@@ -58,7 +58,7 @@ namespace Engine
         {
             ENGINE_WARN("glEnableVertexAttribArray({0})", index);
             glEnableVertexAttribArray(index);
-			ENGINE_WARN("glVertexAttribPointer( {0},{1}, {2},{3}, {4},{5})", index, element.GetElementCount(), ShaderTypeToOpenGLType(element.type), (int)element.normalized ? GL_TRUE : GL_FALSE, layout.GetStride(), (int)((char*)NULL + element.offset));
+			ENGINE_WARN("glVertexAttribPointer( {0},{1}, {2},{3}, {4},{5})", index, element.GetElementCount(), ShaderTypeToOpenGLType(element.type), (int)element.normalized ? GL_TRUE : GL_FALSE, layout.GetStride(), (int)((intptr_t)(char*)NULL + element.offset));
 
             glVertexAttribPointer(
                 index, 

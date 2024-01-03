@@ -96,9 +96,9 @@ namespace Engine
         if (Input::IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
         {
             std::pair<float, float> pos = Input::GetMousePos();
-            
-            float xoffset = SENSITIVITY * (pos.first - m_lastCursorPos.first);
-			float yoffset = SENSITIVITY * (m_lastCursorPos.second - pos.second); // reversed since y-coordinates go from bottom to top
+
+            float xoffset = glm::clamp(SENSITIVITY * (pos.first - m_lastCursorPos.first),-1.0f,1.0f);
+            float yoffset = glm::clamp(SENSITIVITY * (m_lastCursorPos.second - pos.second),-1.0f,1.0f); // reversed since y-coordinates go from bottom to top
 
             m_camera.m_Radius += xoffset - yoffset;
             //ENGINE_WARN("Radius : {0}", m_camera.m_Radius);
