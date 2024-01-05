@@ -41,6 +41,10 @@ message("sources : ${SOURCES}")
 add_library( Engine 
     STATIC 
         ${SOURCES}
+		src/Engine/Rendering/FrameBuffer.cpp
+		src/Engine/Rendering/FrameBuffer.h
+		src/Platform/OpenGL/OpenGLFrameBuffer.cpp
+		src/Platform/OpenGL/OpenGLFrameBuffer.h
 )
 target_link_libraries( Engine  
     PUBLIC

@@ -44,7 +44,7 @@ namespace Engine
             float cameraRotateSpeed = 180.0f;
             float cameraRotation = 0.0f;
 
-            std::pair<float, float> m_lastCursorPos;
+            glm::vec2 m_lastCursorPos;
             bool m_first = true; 
     };
 }

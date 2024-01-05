@@ -1,40 +1,40 @@
-#include "InputGLFW.h"
+#include "Engine/Core/Input.h"
 #include "Engine/Core/EngineApp.h"
 #include <GLFW/glfw3.h>
 
+
 namespace Engine
 {
-    Input* Input::m_instance = new InputGLFW();
-
-    bool InputGLFW::IsKeyPressedImpl(int keycode) const
+    bool Input::IsKeyPressed(const KeyCode key)
     {
-        auto window = static_cast<GLFWwindow*>(Engine::EngineApp::Get().GetWindow().GetWindow());
-        auto status = glfwGetKey(window, keycode);
-        return (status == GLFW_PRESS || status == GLFW_REPEAT);
+        auto* window = static_cast<GLFWwindow*>(EngineApp::Get().GetWindow().GetNativeWindow());
+        auto state = glfwGetKey(window, static_cast<int32_t>(key));
+        return state == GLFW_PRESS;
     }
 
-    bool InputGLFW::IsMouseButtonPressedImpl(int button) const
+    bool Input::IsMouseButtonPressed(const MouseCode button)
     {
-        auto window = static_cast<GLFWwindow*>(Engine::EngineApp::Get().GetWindow().GetWindow());
-        auto status = glfwGetMouseButton(window, button);
-        return status == GLFW_PRESS;
+        auto* window = static_cast<GLFWwindow*>(EngineApp::Get().GetWindow().GetNativeWindow());
+        auto state = glfwGetMouseButton(window, static_cast<int32_t>(button));
+        return state == GLFW_PRESS;
     }
 
-    std::pair<float, float> InputGLFW::GetMousePosImpl() const
+    glm::vec2 Input::GetMousePosition()
     {
-        auto window = static_cast<GLFWwindow*>(Engine::EngineApp::Get().GetWindow().GetWindow());
-        double x, y;
-        glfwGetCursorPos(window, &x, &y);
-        return {(float)x, (float)y};
+        auto* window = static_cast<GLFWwindow*>(EngineApp::Get().GetWindow().GetNativeWindow());
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+
+        return { (float)xpos, (float)ypos };
     }
 
-    float InputGLFW::GetMouseXImpl() const
+    float Input::GetMouseX()
     {
-        return GetMousePosImpl().first;
+        return GetMousePosition().x;
     }
 
-    float InputGLFW::GetMouseYImpl() const
+    float Input::GetMouseY()
     {
-        return GetMousePosImpl().second;
+        return GetMousePosition().y;
     }
 }

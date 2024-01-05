@@ -219,4 +219,9 @@ namespace Engine
 
         m_windowData.vsync = enabled;
     }
+
+    void* WindowGLFW::GetNativeWindow() const
+    {
+        return m_window;
+    }
 }

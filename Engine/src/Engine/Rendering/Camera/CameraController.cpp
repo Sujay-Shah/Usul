@@ -3,7 +3,7 @@
 #include "Engine/Core/EngineDefines.h"
 #include "Engine/Core/Input.h"
 #include "Event/KeyCodes.h"
-#include "Event/MouseButtons.h"
+#include "Event/MouseCodes.h"
 
 namespace Engine
 {
@@ -93,12 +93,12 @@ namespace Engine
 		m_camera.SetPos(cameraPos);
 
 #else
-        if (Input::IsMouseButtonPressed(MOUSE_BUTTON_RIGHT))
+        if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
         {
-            std::pair<float, float> pos = Input::GetMousePos();
+            glm::vec2 pos = Input::GetMousePosition();
 
-            float xoffset = glm::clamp(SENSITIVITY * (pos.first - m_lastCursorPos.first),-1.0f,1.0f);
-            float yoffset = glm::clamp(SENSITIVITY * (m_lastCursorPos.second - pos.second),-1.0f,1.0f); // reversed since y-coordinates go from bottom to top
+            float xoffset = glm::clamp(SENSITIVITY * (pos.x - m_lastCursorPos.x),-1.0f,1.0f);
+            float yoffset = glm::clamp(SENSITIVITY * (m_lastCursorPos.y - pos.y),-1.0f,1.0f); // reversed since y-coordinates go from bottom to top
 
             m_camera.m_Radius += xoffset - yoffset;
             //ENGINE_WARN("Radius : {0}", m_camera.m_Radius);
@@ -106,13 +106,13 @@ namespace Engine
 			ENGINE_CORE_WARN("xoffset : {0}, yoffset : {1} ", xoffset, yoffset);
 			m_lastCursorPos = pos;
         }
-        else if (Input::IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        else if (Input::IsMouseButtonPressed(Mouse::ButtonLeft))
         {
-			std::pair<float, float> pos = Input::GetMousePos();
+			glm::vec2 pos = Input::GetMousePosition();
 
             //we clamp the offset values between -1,1 to prevent sudden jumps due to large old and new pos diff
-            float xoffset = glm::clamp(SENSITIVITY * (pos.first - m_lastCursorPos.first),-1.0f,1.0f);
-            float yoffset = glm::clamp(SENSITIVITY * (m_lastCursorPos.second - pos.second),-1.0f,1.0f);
+            float xoffset = glm::clamp(SENSITIVITY * (pos.x - m_lastCursorPos.x),-1.0f,1.0f);
+            float yoffset = glm::clamp(SENSITIVITY * (m_lastCursorPos.y - pos.y),-1.0f,1.0f);
 
             //if(xoffset != 0 || yoffset!= 0) ENGINE_CORE_WARN("xoffset : {0}, yoffset : {1} ", xoffset, yoffset);
 

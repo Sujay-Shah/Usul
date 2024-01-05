@@ -25,7 +25,9 @@ namespace Engine
             inline void SetEventCallback(const std::function<void(Event&)>& callback) override { m_windowData.EventCallback = callback; }
             virtual void SetVsync(bool enabled) override;
 
-        private:
+            virtual void* GetNativeWindow() const override;
+
+    private:
             GLFWwindow* m_window = nullptr;
             WindowProps m_windowData;
             RenderContext* m_renderContext = nullptr;
