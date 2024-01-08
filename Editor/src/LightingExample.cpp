@@ -156,9 +156,14 @@ void LightingExample::OnUpdate(const Engine::Timestep& ts)
 
 void LightingExample::OnImGuiRender()
 {
-	ImGui::Begin("Setting");
-	ImGui::SliderFloat3("Light position", glm::value_ptr(m_lightPos), -10.0f, 10.0f);
-	ImGui::End();
+
+    ImGui::Begin("Setting");
+
+    ImGui::SliderFloat3("Light position", glm::value_ptr(m_lightPos), -10.0f, 10.0f);
+    ImGui::End();
+
+
+
 }
 
 void LightingExample::OnEvent(Engine::Event& e)

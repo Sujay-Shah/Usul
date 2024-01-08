@@ -60,7 +60,7 @@ Engine::Layer("Test Layer"), m_cameraController(1280.0f / 720.0f), m_cameraPosit
     #ifdef __APPLE__
             path = "";
     #else
-            path = "C:/Users/RIA/source/repos/Usul/Editor/assets/";
+            path = "../Editor/assets/";
     #endif
     
     m_shaderLibrary.Add(Engine::Shader::Create(path+"shaders/SingleColor.glsl"));
@@ -88,9 +88,11 @@ void TestLayer::OnUpdate(const Engine::Timestep& ts)
     Engine::Renderer::BeginScene(m_cameraController.GetCamera());
 
     // triangle
-    //Engine::Renderer::Submit(m_shaderMultiColor, m_triangleVA);
+    auto m_shader = m_shaderLibrary.Get("SingleColor");
+    m_shader->UploadUniformFloat3("u_color", squareColor);
+    Engine::Renderer::Submit(m_shader, m_triangleVA);
     
-    auto shader = m_shaderLibrary.Get("SingleColor");
+    /*auto shader = m_shaderLibrary.Get("SingleColor");
     shader->Bind();
     shader->UploadUniformFloat3("u_color", squareColor);
 
@@ -102,14 +104,14 @@ void TestLayer::OnUpdate(const Engine::Timestep& ts)
             glm::vec3 pos(x*0.11f, y*0.11f, 0.0f);
             Engine::Renderer::Submit(shader, m_squareVA, glm::translate(glm::mat4(1.0f), pos)*scale);
         }
-    }
+    }*/
 
-    m_texture->Bind();
+   /* m_texture->Bind();
     shader = m_shaderLibrary.Get("Texture");
     Engine::Renderer::Submit(shader, m_squareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
 
     m_logo->Bind();
-    Engine::Renderer::Submit(shader, m_squareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));
+    Engine::Renderer::Submit(shader, m_squareVA, glm::scale(glm::mat4(1.0f), glm::vec3(1.5f)));*/
 
     Engine::Renderer::EndScene();
 }

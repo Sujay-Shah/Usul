@@ -6,7 +6,8 @@ file(GLOB SOURCES
     "src/**/*/*.cpp"
 )
 
-add_executable(Editor ${SOURCES})
+add_executable(Editor ${SOURCES}
+        )
 
 target_link_libraries(Editor 
     PRIVATE 

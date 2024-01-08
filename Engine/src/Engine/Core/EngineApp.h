@@ -27,6 +27,7 @@ namespace Engine
             inline Window& GetWindow() const { return *m_window; }
             static EngineApp& Get() {return *m_instance; };
 
+            void Close();
         private:
             bool OnWindowCloseEvent(WindowCloseEvent& e);
             bool OnWindowResizeEvent(WindowResizeEvent& e);

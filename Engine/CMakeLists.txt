@@ -45,6 +45,7 @@ add_library( Engine
 		src/Engine/Rendering/FrameBuffer.h
 		src/Platform/OpenGL/OpenGLFrameBuffer.cpp
 		src/Platform/OpenGL/OpenGLFrameBuffer.h
+		EnginePCH.cpp
 )
 target_link_libraries( Engine  
     PUBLIC

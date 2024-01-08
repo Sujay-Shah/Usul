@@ -112,4 +112,8 @@ namespace Engine
         glBindTextureUnit(slot, m_rendererID);
         #endif
     }
+
+    uint32_t Texture2DOpenGL::GetRendererID() const {
+        return m_rendererID;
+    }
 }

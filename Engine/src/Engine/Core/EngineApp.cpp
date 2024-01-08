@@ -35,17 +35,32 @@ namespace Engine
 
             if (!m_isMinimized)
             {
+                //record draw calls in imgui layer frame buffer to display it in the viewport
+                m_imguiLayer->BindOrUnbindFrameBuffer(true);
                 for (Layer* layer : m_layerStack)
                 {
-                    layer->OnUpdate(timestep);
+                    //TODO: refactor this in future
+                    if(layer->GetName() == m_imguiLayer->GetCurrentExampleName())
+                    {
+                        layer->OnUpdate(timestep);
+                        break;
+                    }
                 }
+                m_imguiLayer->BindOrUnbindFrameBuffer(false);
             }
 
             m_imguiLayer->Begin();
             for (Layer* layer : m_layerStack)
             {
-                layer->OnImGuiRender();
+                if(layer->GetName() == m_imguiLayer->GetCurrentExampleName())
+                {
+                    layer->OnImGuiRender();
+                    break;
+                }
             }
+            //TODO: refactor this, currently we need to call imgui layer calls seperately as the LayerStack
+            // explicitly contains different examples
+            m_imguiLayer->OnImGuiRender();
             m_imguiLayer->End();
 
             m_window->Update();
@@ -69,6 +84,7 @@ namespace Engine
     void EngineApp::PushLayer(Layer* layer)
     {
         m_layerStack.PushLayer(layer);
+        m_imguiLayer->AddExample(layer->GetName());
         layer->OnAttach();
     }
 
@@ -96,5 +112,10 @@ namespace Engine
         Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
         return false;
+    }
+
+    void EngineApp::Close()
+    {
+        m_isRunning = false;
     }
 }
