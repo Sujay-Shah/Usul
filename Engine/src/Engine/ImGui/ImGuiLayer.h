@@ -30,6 +30,7 @@ namespace Engine
 
             void BindOrUnbindFrameBuffer(bool);
 
+            bool IsViewportFocused() const;
     private:
         //This is to run and switch examples on the fly
         std::vector<const char *> _Examples;

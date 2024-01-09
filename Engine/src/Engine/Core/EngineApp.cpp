@@ -118,4 +118,9 @@ namespace Engine
     {
         m_isRunning = false;
     }
+
+    ImGuiLayer *EngineApp::GetImGuiLayer() const
+    {
+        return m_imguiLayer;
+    }
 }

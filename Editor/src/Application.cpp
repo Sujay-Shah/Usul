@@ -13,7 +13,7 @@ class Application : public Engine::EngineApp
             //Push different examples
             PushLayer(new LightingExample());
             PushLayer(new TestLayer());
-            //PushLayer(new Sandbox2D());
+            PushLayer(new Sandbox2D());
         }
 
         ~Application() {}

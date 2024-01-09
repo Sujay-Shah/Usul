@@ -28,6 +28,8 @@ namespace Engine
             static EngineApp& Get() {return *m_instance; };
 
             void Close();
+
+            ImGuiLayer * GetImGuiLayer() const;
         private:
             bool OnWindowCloseEvent(WindowCloseEvent& e);
             bool OnWindowResizeEvent(WindowResizeEvent& e);

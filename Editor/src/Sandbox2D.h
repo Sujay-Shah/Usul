@@ -22,6 +22,7 @@ class Sandbox2D : public Engine::Layer
 		Engine::Ref<Engine::VertexArray> m_squareVA;
 
 		Engine::Ref<Engine::Texture2D> m_texture;
+		Engine::Ref<Engine::Texture2D> m_texture2;
 
 		glm::vec4 squareColor = { 0.3f, 0.2f, 0.8f, 1.0f };
         glm::vec3 squarePos = {0.0f, 0.0f, 0.0f};

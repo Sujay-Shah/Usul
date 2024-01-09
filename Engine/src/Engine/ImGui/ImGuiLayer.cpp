@@ -290,4 +290,9 @@ namespace Engine
         }
     }
 
+    bool ImGuiLayer::IsViewportFocused() const
+    {
+        return m_ViewportFocused;
+    }
+
 }

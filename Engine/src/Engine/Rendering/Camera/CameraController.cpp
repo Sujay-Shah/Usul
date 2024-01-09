@@ -4,6 +4,7 @@
 #include "Engine/Core/Input.h"
 #include "Event/KeyCodes.h"
 #include "Event/MouseCodes.h"
+#include "Engine/Core/EngineApp.h"
 
 namespace Engine
 {
@@ -25,6 +26,11 @@ namespace Engine
 
     void CameraController::OnUpdate(const Timestep& ts)
     {
+        EngineApp& app = EngineApp::Get();
+        if(app.GetImGuiLayer() && !app.GetImGuiLayer()->IsViewportFocused())
+        {
+            return;
+        }
         float deltaTime = ts.GetTimeSeconds();
         float velocity = cameraMoveSpeed * deltaTime;
         glm::vec3 cameraPos = m_camera.GetPos();
