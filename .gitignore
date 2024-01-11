@@ -56,3 +56,5 @@ bin_xcode/
 *.vcxproj
 *.vcxproj.*
 *.CmakeCache.txt
+*.idea/
+/cmake-*
