@@ -5,15 +5,15 @@
 #ifndef OPENGLFRAMEBUFFER_H
 #define OPENGLFRAMEBUFFER_H
 
-#include "Engine/Rendering/FrameBuffer.h"
+#include "Engine/Renderer/FrameBuffer.h"
 
 namespace Engine {
 
-    class OpenGLFramebuffer : public Framebuffer
+    class FrameBufferOpenGL : public Framebuffer
     {
     public:
-        OpenGLFramebuffer(const FramebufferSpecification& spec);
-        virtual ~OpenGLFramebuffer();
+        FrameBufferOpenGL(const FramebufferSpecification& spec);
+        virtual ~FrameBufferOpenGL();
 
         void Invalidate();
 

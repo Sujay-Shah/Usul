@@ -1,7 +1,7 @@
 #ifndef __TEXTUREOPENGL_H__
 #define __TEXTUREOPENGL_H__
 
-#include "Rendering/Texture.h"
+#include "Renderer/Texture.h"
 #include <glad/glad.h>
 
 namespace Engine

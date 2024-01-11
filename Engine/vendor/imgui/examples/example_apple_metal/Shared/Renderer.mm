@@ -108,7 +108,7 @@
             ImGui::End();
         }
 
-        // Rendering
+        // Renderer
         ImGui::Render();
         ImDrawData *drawData = ImGui::GetDrawData();
         ImGui_ImplMetal_RenderDrawData(drawData, commandBuffer, renderEncoder);

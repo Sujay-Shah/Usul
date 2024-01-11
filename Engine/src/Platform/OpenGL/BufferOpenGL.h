@@ -1,7 +1,7 @@
 #ifndef __BUFFEROPENGL_H__
 #define __BUFFEROPENGL_H__
 
-#include "Rendering/Buffer.h"
+#include "Renderer/Buffer.h"
 
 namespace Engine
 {

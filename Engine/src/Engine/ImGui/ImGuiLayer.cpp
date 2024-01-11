@@ -7,7 +7,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "Rendering/FrameBuffer.h"
+#include "Renderer/FrameBuffer.h"
 #include "Event/WindowEvent.h"
 
 //#define ENGINE_BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)

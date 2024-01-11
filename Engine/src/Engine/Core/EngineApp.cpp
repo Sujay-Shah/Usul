@@ -4,7 +4,7 @@
 #include "EngineDefines.h"
 #include "Platform/GLFW/TimeGLFW.h"
 #include "Timestep.h"
-#include "Rendering/Renderer.h"
+#include "Renderer/Renderer.h"
 
 namespace Engine
 {

@@ -4,7 +4,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
-#include "Rendering/RenderContext.h"
+#include "Renderer/RenderContext.h"
 
 struct GLFWwindow;
 

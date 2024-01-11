@@ -12,6 +12,7 @@ set(CMAKE_CXX_FLAGS "-fpermissive")
 add_subdirectory( vendor/glad )
 add_subdirectory( vendor/spdlog )
 add_subdirectory( vendor/glfw )
+add_subdirectory( vendor/assimp )
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DENGINE_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DENGINE_DEBUG")
@@ -22,9 +23,9 @@ file(GLOB
 		/*.cpp
 		/*.h
         src/Engine/*.cpp 
-        src/Engine/Core/*.cpp 
-        src/Engine/Rendering/*.cpp
-        src/Engine/Rendering/Camera/*.cpp
+        src/Engine/Core/*.cpp
+		src/Engine/Renderer/*.cpp
+		src/Engine/Renderer/Camera/*.cpp
         src/Engine/ImGui/*.cpp 
         src/Platform/OpenGL/*.cpp 
         src/Platform/GLFW/*.cpp 
@@ -41,10 +42,10 @@ message("sources : ${SOURCES}")
 add_library( Engine 
     STATIC 
         ${SOURCES}
-		src/Engine/Rendering/FrameBuffer.cpp
-		src/Engine/Rendering/FrameBuffer.h
-		src/Platform/OpenGL/OpenGLFrameBuffer.cpp
-		src/Platform/OpenGL/OpenGLFrameBuffer.h
+		src/Engine/Renderer/FrameBuffer.cpp
+		src/Engine/Renderer/FrameBuffer.h
+		src/Platform/OpenGL/FrameBufferOpenGL.cpp
+		src/Platform/OpenGL/FrameBufferOpenGL.h
 		EnginePCH.cpp
 )
 target_link_libraries( Engine  
@@ -52,6 +53,7 @@ target_link_libraries( Engine
         GLAD
         glfw
         spdlog
+		assimp
 )
 target_precompile_headers( Engine 
     PUBLIC 
@@ -71,4 +73,5 @@ target_include_directories( Engine
         vendor/glfw/include
         vendor/glad/include
         vendor/stb_image
+		vendor/assimp/include
 )

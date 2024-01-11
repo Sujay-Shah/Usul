@@ -3,7 +3,7 @@
 
 #include <glad/glad.h>
 
-#include "Rendering/Shader.h"
+#include "Renderer/Shader.h"
 
 namespace Engine
 {

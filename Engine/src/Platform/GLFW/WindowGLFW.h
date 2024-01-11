@@ -3,7 +3,7 @@
 
 #include "Engine/Core/Window.h"
 #include "Event/Event.h"
-#include "Rendering/RenderContext.h"
+#include "Renderer/RenderContext.h"
 
 struct GLFWwindow;
 

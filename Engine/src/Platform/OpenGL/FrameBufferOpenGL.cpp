@@ -1,5 +1,5 @@
 #include "../EnginePCH.h"
-#include "OpenGLFrameBuffer.h"
+#include "FrameBufferOpenGL.h"
 
 #include <glad/glad.h>
 
@@ -90,7 +90,7 @@ namespace Engine
 
     }
 
-    OpenGLFramebuffer::OpenGLFramebuffer(const FramebufferSpecification& spec)
+    FrameBufferOpenGL::FrameBufferOpenGL(const FramebufferSpecification& spec)
             : m_Specification(spec)
     {
         for (auto spec : m_Specification.Attachments.Attachments)
@@ -104,14 +104,14 @@ namespace Engine
         Invalidate();
     }
 
-    OpenGLFramebuffer::~OpenGLFramebuffer()
+    FrameBufferOpenGL::~FrameBufferOpenGL()
     {
         glDeleteFramebuffers(1, &m_RendererID);
         glDeleteTextures(m_ColorAttachments.size(), m_ColorAttachments.data());
         glDeleteTextures(1, &m_DepthAttachment);
     }
 
-    void OpenGLFramebuffer::Invalidate()
+    void FrameBufferOpenGL::Invalidate()
     {
         if (m_RendererID)
         {
@@ -178,18 +178,18 @@ namespace Engine
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void OpenGLFramebuffer::Bind()
+    void FrameBufferOpenGL::Bind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_RendererID);
         glViewport(0, 0, m_Specification.Width, m_Specification.Height);
     }
 
-    void OpenGLFramebuffer::Unbind()
+    void FrameBufferOpenGL::Unbind()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
-    void OpenGLFramebuffer::Resize(uint32_t width, uint32_t height)
+    void FrameBufferOpenGL::Resize(uint32_t width, uint32_t height)
     {
         if (width == 0 || height == 0 || width > s_MaxFramebufferSize || height > s_MaxFramebufferSize)
         {
@@ -202,7 +202,7 @@ namespace Engine
         Invalidate();
     }
 
-    int OpenGLFramebuffer::ReadPixel(uint32_t attachmentIndex, int x, int y)
+    int FrameBufferOpenGL::ReadPixel(uint32_t attachmentIndex, int x, int y)
     {
         ENGINE_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
 
@@ -213,7 +213,7 @@ namespace Engine
 
     }
 
-    void OpenGLFramebuffer::ClearAttachment(uint32_t attachmentIndex, int value)
+    void FrameBufferOpenGL::ClearAttachment(uint32_t attachmentIndex, int value)
     {
         ENGINE_CORE_ASSERT(attachmentIndex < m_ColorAttachments.size());
 

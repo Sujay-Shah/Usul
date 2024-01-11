@@ -21,15 +21,15 @@
 
 #include "Engine/Core/Timestep.h"
 
-//Rendering
-#include "Rendering/Renderer.h"
-#include "Rendering/Renderer2D.h"
-#include "Rendering/VertexArray.h"
-#include "Rendering/Shader.h"
-#include "Rendering/Texture.h"
-#include "Rendering/Camera/CameraController.h"
-#include "Rendering/FrameBuffer.h"
-#include "Rendering/Material.h"
+//Renderer
+#include "Renderer/Renderer.h"
+#include "Renderer/Renderer2D.h"
+#include "Renderer/VertexArray.h"
+#include "Renderer/Shader.h"
+#include "Renderer/Texture.h"
+#include "Renderer/Camera/CameraController.h"
+#include "Renderer/FrameBuffer.h"
+#include "Renderer/Material.h"
 
 
 #endif
