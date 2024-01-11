@@ -28,5 +28,5 @@ uniform float u_scale;
 
 void main()
 {
-    color = texture(u_texture, v_texCoord * u_scale) * u_color;
+    color = texture(u_texture, v_texCoord  );// * u_color;
 }

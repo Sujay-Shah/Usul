@@ -4,6 +4,7 @@
 #include "TestLayer.h"
 #include "Sandbox2D.h"
 #include "LightingExample.h"
+#include "MaterialExample.h"
 
 class Application : public Engine::EngineApp
 {
@@ -11,6 +12,7 @@ class Application : public Engine::EngineApp
         Application()
         {
             //Push different examples
+            PushLayer(new MaterialExample());
             PushLayer(new LightingExample());
             PushLayer(new TestLayer());
             PushLayer(new Sandbox2D());

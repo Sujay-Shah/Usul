@@ -1,6 +1,7 @@
 #include "LightingExample.h"
 #include "imgui.h"
 #include <glm/gtc/type_ptr.hpp>
+#include "Platform/GLFW/TimeGLFW.h"
 
 LightingExample::LightingExample() :
 	Engine::Layer("LightExample"), m_cameraController(1280.0f / 720.0f), m_cameraPosition(-5.0,0.0f,0.0f)
@@ -125,7 +126,9 @@ void LightingExample::OnUpdate(const Engine::Timestep& ts)
 
 	Engine::Renderer::BeginScene(m_cameraController.GetCamera());
 
-	
+    m_lightPos.x = 2.0f * sinf(Engine::GetTime());
+    m_lightPos.z = 2.0f * cosf(Engine::GetTime());
+
 	auto lightShader = m_shaderLibrary.Get("BasicLight");
 	lightShader->Bind();
 	lightShader->UploadUniformFloat3("objectColor", glm::vec3(1.0f, 0.6f, 0.3f));

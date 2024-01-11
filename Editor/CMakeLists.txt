@@ -7,7 +7,9 @@ file(GLOB SOURCES
 )
 
 add_executable(Editor ${SOURCES}
-        )
+        src/MaterialExample.cpp
+        src/MaterialExample.h
+)
 
 target_link_libraries(Editor 
     PRIVATE 

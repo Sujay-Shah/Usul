@@ -29,5 +29,7 @@
 #include "Rendering/Texture.h"
 #include "Rendering/Camera/CameraController.h"
 #include "Rendering/FrameBuffer.h"
+#include "Rendering/Material.h"
+
 
 #endif

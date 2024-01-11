@@ -1,11 +1,11 @@
 #ifndef Material_h__
 #define Material_h__
 
-class Texture;
-class Shader;
-
 namespace Engine
 {
+    class Texture;
+    class Shader;
+
     struct MaterialProperties
     {
         glm::vec3 ambient;
@@ -17,13 +17,37 @@ namespace Engine
 
 	class Material
 	{
+    public:
         Material();
+        Material(std::vector<std::string> texturePaths, Ref<Shader> shader);
         virtual ~Material();
-    private:
+
+        void Use();
+
+        const MaterialProperties & GetMaterialProperties() const;
         MaterialProperties m_materialProperty;
-        std::vector<Texture*> m_textures;
-        Shader* m_shader;
+
+    private:
+        std::vector<Ref<Texture>> m_textures;
+        Ref<Shader> m_shader;
 	};
+
+    class MaterialInstance
+    {
+    public:
+        MaterialInstance(Material& baseMaterial);
+
+        void SetInstanceProperties();
+
+        void Use();
+
+    private:
+        Material& m_baseMaterial;
+        MaterialProperties m_instanceProperties;
+    };
+
+
 }
+
 
 #endif // Material_h__

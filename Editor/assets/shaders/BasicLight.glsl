@@ -13,6 +13,7 @@ uniform mat4 projection;
 void main()
 {
     FragPos = vec3(model * vec4(aPos, 1.0));
+    //TODO: move this calculation to cpu side
     Normal = mat3(transpose(inverse(model))) * aNormal;  
     
     gl_Position = projection * view * vec4(FragPos, 1.0);
@@ -26,8 +27,14 @@ out vec4 FragColor;
 in vec3 Normal;  
 in vec3 FragPos;  
   
-uniform vec3 lightPos; 
-uniform vec3 viewPos; 
+uniform vec3 lightPos;
+
+/*We chose to do the lighting calculations in world space, but most people tend to prefer doing lighting in view space.
+An advantage of view space is that the viewer's position is always at (0,0,0) so you already got the position of the viewer for free.
+However calculating lighting in world space more intuitive for learning purposes.
+If you still want to calculate lighting in view space you want to transform all the relevant vectors with the view matrix as well (don't forget to change the normal matrix too).*/
+uniform vec3 viewPos;
+
 uniform vec3 lightColor;
 uniform vec3 objectColor;
 

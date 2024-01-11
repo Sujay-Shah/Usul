@@ -34,6 +34,7 @@ namespace Engine
 #endif
     }
 
+
     Texture2DOpenGL::Texture2DOpenGL(const std::string& path)
     :
     m_path(path)

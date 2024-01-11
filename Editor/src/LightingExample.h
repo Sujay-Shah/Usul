@@ -23,7 +23,7 @@ private:
 	Engine::CameraController m_cameraController;
 	glm::vec3 m_cameraPosition;
 
-	glm::vec3 m_lightPos = glm::vec3(2.2f, 2.0f, 2.0f);
+	glm::vec3 m_lightPos = glm::vec3(2.2f, 0.0f, 2.0f);
 
 };
 
