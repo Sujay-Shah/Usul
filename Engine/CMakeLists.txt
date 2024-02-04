@@ -17,6 +17,8 @@ add_subdirectory( vendor/assimp )
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DENGINE_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DENGINE_DEBUG")
 
+
+
 # source code
 file(GLOB 
     SOURCES CONFIGURE_DEPENDS
@@ -47,14 +49,27 @@ add_library( Engine
 		src/Platform/OpenGL/FrameBufferOpenGL.cpp
 		src/Platform/OpenGL/FrameBufferOpenGL.h
 		EnginePCH.cpp
+		src/Engine/Renderer/Mesh.h
+		src/Platform/OpenGL/MeshOpenGL.h
+		src/Platform/Vulkan/RendererAPIVulkan.h
+		src/Platform/Vulkan/RendererAPIVulkan.cpp
+		src/Platform/Vulkan/RenderContextVulkan.cpp
+		src/Platform/Vulkan/RenderContextVulkan.h
 )
+
+find_package(Vulkan REQUIRED)
+message($ENV{VULKAN_SDK})
+message(${Vulkan_INCLUDE_DIRS})
+
 target_link_libraries( Engine  
     PUBLIC
         GLAD
         glfw
         spdlog
 		assimp
+		${Vulkan_LIBRARIES}
 )
+
 target_precompile_headers( Engine 
     PUBLIC 
         EnginePCH.h
@@ -69,9 +84,11 @@ target_include_directories( Engine
         vendor/glm
 
         vendor/spdlog/include
+		${Vulkan_INCLUDE_DIRS}
     PRIVATE
         vendor/glfw/include
         vendor/glad/include
         vendor/stb_image
 		vendor/assimp/include
+
 )

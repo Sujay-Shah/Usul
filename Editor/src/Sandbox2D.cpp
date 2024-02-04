@@ -13,11 +13,6 @@ void Sandbox2D::OnAttach()
 {
     std::string path;
     path = "../Editor/assets/";
-
-    std::string logo = "textures/batman.png";
-    std::string checkerboard = "textures/Checkerboard.png";
-    m_texture = Engine::Texture2D::Create(path + checkerboard);
-    m_texture2 = Engine::Texture2D::Create(path + logo);
 }
 
 void Sandbox2D::OnDetach()
@@ -32,11 +27,10 @@ void Sandbox2D::OnUpdate(const Engine::Timestep& ts)
     Engine::RenderCommand::Clear();
 
     Engine::Renderer2D::BeginScene(m_cameraController.GetCamera());
-    //Engine::Renderer2D::DrawQuad(squarePos, scale, squareColor);
+    Engine::Renderer2D::DrawQuad(squarePos, scale, squareColor);
     //Engine::Renderer2D::DrawQuad({ 0.0f, -0.5f }, { 0.5f, 0.75f }, { 0.2f, 0.3f, 0.8f, 1.0f });
     //Engine::Renderer2D::DrawTexture({ 0.2f, 0.5f, -0.1f }, { 10.0f, 10.0f }, glm::vec4(1.0f), 10.0f, m_texture);
-    Engine::Renderer2D::DrawTexture(squarePos, scale, squareColor, 1.0f, m_texture2);
-    Engine::Renderer2D::EndScene();
+    //Engine::Renderer2D::DrawTexture(squarePos, scale, squareColor, 1.0f, m_texture2);
 
     Engine::Renderer::EndScene();
 }

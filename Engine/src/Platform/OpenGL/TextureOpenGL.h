@@ -22,6 +22,8 @@ namespace Engine
 
         uint32_t GetRendererID() const override;
 
+        const std::string & GetPath() const;
+
     private:
             std::string m_path;
 

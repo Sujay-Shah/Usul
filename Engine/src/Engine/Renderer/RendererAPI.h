@@ -14,7 +14,8 @@ namespace Engine
             enum class API
             {
                 None = 0,
-                OpenGL
+                OpenGL,
+                Vulkan
             };
         public:
             virtual void Init() = 0;

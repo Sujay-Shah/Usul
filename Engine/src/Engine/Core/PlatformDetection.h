@@ -42,4 +42,12 @@
 	#error "Unknown platform!"
 	#endif // End of platform detection
 
+     //TODO: refactor api selection
+#define API_VULKAN 1
+#define API_OPENGL 0
+
+#if API_VULKAN
+    #define GLFW_INCLUDE_VULKAN
+#endif //API_VULKAN
+
 #endif // PlatformDetection_h__

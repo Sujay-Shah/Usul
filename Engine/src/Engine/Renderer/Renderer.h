@@ -23,6 +23,8 @@ namespace Engine
             static void OnWindowResize(uint32_t width, uint32_t height);
 
             inline static RendererAPI::API Get() { return RendererAPI::GetAPI(); }
+
+            static void Cleanup();
         private:
             struct SceneData
             {

@@ -117,4 +117,8 @@ namespace Engine
     uint32_t Texture2DOpenGL::GetRendererID() const {
         return m_rendererID;
     }
+
+    const std::string & Texture2DOpenGL::GetPath() const {
+        return m_path;
+    }
 }

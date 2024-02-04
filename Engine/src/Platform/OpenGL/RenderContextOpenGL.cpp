@@ -29,4 +29,9 @@ namespace Engine
     {
         glfwSwapBuffers(m_windowHandle);
     }
+
+    void RenderContextOpenGL::Cleanup()
+    {
+
+    }
 }

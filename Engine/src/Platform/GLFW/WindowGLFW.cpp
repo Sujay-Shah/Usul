@@ -3,6 +3,7 @@
 #include "Event/WindowEvent.h"
 #include "Event/MouseEvent.h"
 #include "Platform/OpenGL/RenderContextOpenGL.h"
+#include "Platform/Vulkan/RenderContextVulkan.h"
 #include "Engine/Core/EngineDefines.h"
 
 namespace Engine
@@ -38,6 +39,10 @@ namespace Engine
                     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
         #endif
 
+#if API_VULKAN
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+#endif
+
         m_windowData = WindowProps(props);
 
         m_window = glfwCreateWindow(
@@ -51,8 +56,11 @@ namespace Engine
             m_windowData.width,
             m_windowData.height,
             m_windowData.title);
-
+#if API_OPENGL
         m_renderContext = new RenderContextOpenGL(m_window);
+#elif API_VULKAN
+        m_renderContext = new RenderContextVulkan(m_window);
+#endif
         m_renderContext->Init();
 
         glfwSetWindowUserPointer(m_window, &m_windowData);
@@ -77,6 +85,8 @@ namespace Engine
 
     void WindowGLFW::Destroy()
     {
+        m_renderContext->Cleanup();
+
         ENGINE_ERROR("Destroying window.");
         glfwDestroyWindow(m_window);
         ENGINE_ERROR("Terminating GLFW");

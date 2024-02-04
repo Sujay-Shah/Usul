@@ -6,6 +6,18 @@
 
 namespace Engine
 {
+    namespace TextureType
+    {
+        enum Type
+        {
+            Diffuse,
+            Specular,
+            NormalMap,
+            Num
+        };
+    }
+
+
     class Texture
     {
         public:
@@ -18,6 +30,11 @@ namespace Engine
             virtual void Bind(uint32_t slot = 0) const = 0;
 
             virtual uint32_t GetRendererID() const = 0;
+
+           TextureType::Type m_type;
+
+
+
     };
 
     class Texture2D : public Texture
@@ -25,8 +42,6 @@ namespace Engine
         public:
             static Ref<Texture2D> Create(uint32_t width, uint32_t height);
             static Ref<Texture2D> Create(const std::string& path);
-
-
     };
 }
 
