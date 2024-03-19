@@ -7,26 +7,37 @@
 
 #include "Renderer/Texture.h"
 #include "Renderer/Vertex.h"
+#include "Buffer.h"
+#include "Renderer.h"
 
 namespace Engine
 {
-    class Shader;
-    class Material;
-
     class Mesh
     {
     public:
 
-        virtual void Draw(Shader& shader){};
+        Mesh(std::vector<Vertex>& vertices, std::vector<uint32>& indices, std::vector<Ref<Texture2D>>& textures);
+
+        virtual void Draw(Ref<Shader> shader){};
 
         virtual ~Mesh(){};
 
-        std::vector<Vertex> m_vertices;
-        std::vector<unsigned int> m_indices;
+        static Ref<Mesh> CreateMesh(std::vector<Vertex> vertices, std::vector<uint32> indices, std::vector<Ref<Texture2D>> textures);
 
-    private:
-        Ref<Material> m_material;
+        std::vector<Vertex> m_vertices;
+        std::vector<uint32_t> m_indices;
+        std::vector<Ref<Texture2D>> m_textures;
+
+    protected:
+        Ref<VertexArray> m_vao;
+        Ref<VertexBuffer> m_vbo;
+        Ref<IndexBuffer> m_ibo;
+
+        virtual void SetupMesh(){};
     };
+
+
+
 
 } // Engine
 

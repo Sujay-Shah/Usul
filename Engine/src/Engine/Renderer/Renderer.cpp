@@ -28,14 +28,14 @@ namespace Engine
         shader->UploadUniformMat4("u_transform", transform);
         
         vertexArray->Bind();
-        if (vertexArray->GetIndexBuffer())
+        //if (vertexArray->GetIndexBuffer())
         {
             RenderCommand::DrawIndexed(vertexArray);
         }
-        else
+        /*else
         {
             RenderCommand::DrawArrays(vertexArray);
-        }
+        }*/
         
     }
 

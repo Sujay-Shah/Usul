@@ -8,7 +8,7 @@
 #include "Renderer/RenderContext.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <vulkan/vulkan.h>
+#include <vulkan/vulkan.hpp>
 
 struct GLFWwindow;
 
@@ -48,15 +48,37 @@ namespace Engine
 
            // void FillOutFeaturesAndProperties(Context* pContext);
         };
+
+        static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+                VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+                VkDebugUtilsMessageTypeFlagsEXT messageType,
+                const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+                void* pUserData) {
+
+            ENGINE_CORE_WARN("validation layer: {0}",pCallbackData->pMessage);
+
+            return VK_FALSE;
+        }
+
     private:
         GLFWwindow* m_windowHandle = nullptr;
 
+        bool checkValidationLayerSupport();
+        std::vector<const char *> getRequiredExtensions();
+        void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
+
+        void setupDebugMessenger();
+        void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
     public:
         VkInstance m_instance;
+        VkDebugUtilsMessengerEXT m_debugMessenger;
         VkDeviceCreateInfo m_DeviceCI;
         PhysicalDevices m_PhysicalDevices;
         size_t m_PhysicalDeviceIndex;
-
+        std::vector<const char*> m_validationLayers = {
+                "VK_LAYER_KHRONOS_validation"
+        };
+        const bool m_enableValidationLayers = true;
     };
 
 } // Engine

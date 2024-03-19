@@ -20,9 +20,10 @@ namespace Engine
         m_window->SetVsync(false);
         
         Renderer::Init();
-
+#if !API_VULKAN
         m_imguiLayer = new ImGuiLayer();
         PushOverlay(m_imguiLayer);
+#endif
     }
 
     void EngineApp::Run()
@@ -32,7 +33,7 @@ namespace Engine
             float time = GetTime();
             Timestep timestep = time - m_lastTime;
             m_lastTime = time;
-
+#if !API_VULKAN
             if (!m_isMinimized)
             {
                 //record draw calls in imgui layer frame buffer to display it in the viewport
@@ -62,7 +63,7 @@ namespace Engine
             // explicitly contains different examples
             m_imguiLayer->OnImGuiRender();
             m_imguiLayer->End();
-
+#endif
             m_window->Update();
         }
     }
@@ -84,7 +85,9 @@ namespace Engine
     void EngineApp::PushLayer(Layer* layer)
     {
         m_layerStack.PushLayer(layer);
+#if !API_VULKAN
         m_imguiLayer->AddExample(layer->GetName());
+#endif
         layer->OnAttach();
     }
 

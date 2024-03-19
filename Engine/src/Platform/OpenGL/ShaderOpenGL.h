@@ -34,6 +34,8 @@ namespace Engine
 
             virtual void UploadUniformMat3(const std::string& name, const glm::mat3& matrix) override;
             virtual void UploadUniformMat4(const std::string& name, const glm::mat4& matrix) override;
+
+            uint32_t GetRendererId() {return m_rendererID;}
         private:
             std::string ParseString(const std::string& filePath);
             std::string ReadFile(const std::string& filename);

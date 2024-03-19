@@ -55,6 +55,8 @@ add_library( Engine
 		src/Platform/Vulkan/RendererAPIVulkan.cpp
 		src/Platform/Vulkan/RenderContextVulkan.cpp
 		src/Platform/Vulkan/RenderContextVulkan.h
+		src/Engine/Renderer/Model.h
+		src/Engine/Renderer/Mesh.cpp
 )
 
 find_package(Vulkan REQUIRED)

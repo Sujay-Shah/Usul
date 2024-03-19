@@ -13,6 +13,7 @@ namespace Engine
             Diffuse,
             Specular,
             NormalMap,
+            HeightMap,
             Num
         };
     }
@@ -21,6 +22,12 @@ namespace Engine
     class Texture
     {
         public:
+
+            /*explicit Texture(std::string path)
+            :m_path(path)
+            {
+
+            }*/
             virtual ~Texture() = default;
 
             virtual uint32_t GetHeight() const = 0;
@@ -31,9 +38,13 @@ namespace Engine
 
             virtual uint32_t GetRendererID() const = 0;
 
-           TextureType::Type m_type;
+        TextureType::Type GetTextureType(){return m_type;}
 
+        std::string m_path;
+        TextureType::Type m_type;
+    protected:
 
+        uint32_t m_rendererID;
 
     };
 
@@ -42,6 +53,8 @@ namespace Engine
         public:
             static Ref<Texture2D> Create(uint32_t width, uint32_t height);
             static Ref<Texture2D> Create(const std::string& path);
+
+
     };
 }
 

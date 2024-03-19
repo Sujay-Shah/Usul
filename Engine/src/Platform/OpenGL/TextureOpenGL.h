@@ -25,7 +25,6 @@ namespace Engine
         const std::string & GetPath() const;
 
     private:
-            std::string m_path;
 
             uint32_t m_width, m_height;
             uint32_t m_rendererID;

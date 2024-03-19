@@ -3,6 +3,7 @@
 
 #include "Engine/Core/Logging.h"
 #include "Engine/Core/EngineDefines.h"
+#include "Vertex.h"
 
 namespace Engine
 {
@@ -133,6 +134,7 @@ namespace Engine
             virtual void SetLayout(const BufferLayout& layout) = 0;
             virtual uint32_t GetSize() const = 0;
             static Ref<VertexBuffer> Create(float* vertices, uint32_t size);
+            static Ref<VertexBuffer> Create(Vertex* vertices, uint32_t size);
         protected:
         uint32_t m_size;
     };

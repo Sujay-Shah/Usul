@@ -3,6 +3,7 @@
 
 #include "EngineApp.h"
 #include "Logging.h"
+#include <iostream>
 
 extern Engine::EngineApp* Engine::CreateApplication();
 
@@ -11,8 +12,15 @@ int main(int argc, char** argv)
     Engine::Log::Init();
     
     auto app = Engine::CreateApplication();
-    app->Run();
+    try {
+        app->Run();
+    }
+    catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+    }
+
     delete app;
+
     
     return 0;
 }

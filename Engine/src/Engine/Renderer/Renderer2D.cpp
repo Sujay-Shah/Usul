@@ -18,7 +18,10 @@ namespace Engine
 	void Renderer2D::Init()
 	{
 		s_data = new RenderData2D();
-
+       //TODO: remove after adding vulkan
+#if API_VULKAN
+return;
+#endif
 		s_data->vertexArray = Engine::VertexArray::Create();
 
 		float squareVertices[] =

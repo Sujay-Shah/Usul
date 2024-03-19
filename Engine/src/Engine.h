@@ -30,6 +30,6 @@
 #include "Renderer/Camera/CameraController.h"
 #include "Renderer/FrameBuffer.h"
 #include "Renderer/Material.h"
-
+#include "Renderer/Model.h"
 
 #endif

@@ -224,7 +224,7 @@ namespace Engine
         }
         else
         {
-            glfwSwapInterval(0);
+            //glfwSwapInterval(0);
         }
 
         m_windowData.vsync = enabled;

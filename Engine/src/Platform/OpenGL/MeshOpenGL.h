@@ -12,17 +12,14 @@ namespace Engine {
     class MeshOpenGL : public Mesh
     {
     public:
-        MeshOpenGL(std::vector<Vertex> vertices, std::vector<uint32> indices, std::vector<Texture2DOpenGL> textures);
+        MeshOpenGL(std::vector<Vertex> vertices, std::vector<uint32> indices, std::vector<Ref<Texture2D>> textures);
         ~MeshOpenGL();
 
-        void Draw(Shader &shader) override;
+        void Draw(Ref<Shader> shader) override;
 
-        std::vector<Texture2DOpenGL> m_textures;
-    private:
 
-        uint32 m_VAO, m_VBO, m_EBO;
-
-        void setupMesh();
+    protected:
+        void SetupMesh() override;
     };
 
 } // Engine

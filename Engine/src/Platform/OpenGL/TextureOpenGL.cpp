@@ -36,9 +36,8 @@ namespace Engine
 
 
     Texture2DOpenGL::Texture2DOpenGL(const std::string& path)
-    :
-    m_path(path)
     {
+        m_path = path;
         stbi_set_flip_vertically_on_load(1);
 
         int width, height, channels;
