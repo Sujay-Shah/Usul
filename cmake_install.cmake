@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/RIA/source/repos/Usul
+# Install script for directory: C:/Users/snsha/CLionProjects/Usul
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -34,12 +34,12 @@ endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("C:/Users/RIA/source/repos/Usul/Engine/cmake_install.cmake")
+  include("C:/Users/snsha/CLionProjects/Usul/Engine/cmake_install.cmake")
 endif()
 
 if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   # Include the install script for the subdirectory.
-  include("C:/Users/RIA/source/repos/Usul/Editor/cmake_install.cmake")
+  include("C:/Users/snsha/CLionProjects/Usul/Editor/cmake_install.cmake")
 endif()
 
 if(CMAKE_INSTALL_COMPONENT)
@@ -50,5 +50,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "C:/Users/RIA/source/repos/Usul/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "C:/Users/snsha/CLionProjects/Usul/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")

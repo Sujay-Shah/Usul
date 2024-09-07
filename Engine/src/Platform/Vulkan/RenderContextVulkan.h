@@ -9,11 +9,27 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <vulkan/vulkan.hpp>
+#include <optional>
 
 struct GLFWwindow;
 
 namespace Engine
 {
+
+    struct QueueFamilyIndices {
+        std::optional<uint32_t> graphicsFamily;
+        std::optional<uint32_t> presentFamily;
+
+        bool isComplete() {
+            return graphicsFamily.has_value() && presentFamily.has_value();
+        }
+    };
+
+    struct SwapChainSupportDetails {
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentModes;
+    };
 
     class RenderContextVulkan final : public RenderContext
     {
@@ -65,19 +81,41 @@ namespace Engine
 
         bool checkValidationLayerSupport();
         std::vector<const char *> getRequiredExtensions();
-        void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
+        void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
 
         void setupDebugMessenger();
         void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+        void pickPhysicalDevice();
+
+        bool isDeviceSuitable(VkPhysicalDevice device);
+        QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+        void createLogicalDevice();
+        void createSurface();
+
+        bool checkDeviceExtensionSupport(VkPhysicalDevice device);
+        SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+
     public:
         VkInstance m_instance;
         VkDebugUtilsMessengerEXT m_debugMessenger;
         VkDeviceCreateInfo m_DeviceCI;
         PhysicalDevices m_PhysicalDevices;
         size_t m_PhysicalDeviceIndex;
+        VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
+        //logical device
+        VkDevice m_logicalDevice;
+        VkQueue m_graphicsQueue;
+        VkQueue m_presentQueue;
+        VkSurfaceKHR m_surface;
+
         std::vector<const char*> m_validationLayers = {
                 "VK_LAYER_KHRONOS_validation"
         };
+
+        const std::vector<const char*> deviceExtensions = {
+                VK_KHR_SWAPCHAIN_EXTENSION_NAME
+        };
+
         const bool m_enableValidationLayers = true;
     };
 

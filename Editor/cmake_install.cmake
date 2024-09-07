@@ -1,4 +1,4 @@
-# Install script for directory: C:/Users/RIA/source/repos/Usul/Editor
+# Install script for directory: C:/Users/snsha/CLionProjects/Usul/Editor
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

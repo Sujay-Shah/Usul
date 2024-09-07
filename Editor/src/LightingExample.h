@@ -25,6 +25,8 @@ private:
 
 	glm::vec3 m_lightPos = glm::vec3(2.2f, 0.0f, 2.0f);
 
+    float m_specularExp = 32.0f;
+    float m_specularIntensity = 0.5f;
 };
 
 

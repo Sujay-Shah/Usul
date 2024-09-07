@@ -126,8 +126,8 @@ void LightingExample::OnUpdate(const Engine::Timestep& ts)
 
 	Engine::Renderer::BeginScene(m_cameraController.GetCamera());
 
-    m_lightPos.x = 2.0f * sinf(Engine::GetTime());
-    m_lightPos.z = 2.0f * cosf(Engine::GetTime());
+    //m_lightPos.x = 2.0f * sinf(Engine::GetTime());
+    //m_lightPos.z = 2.0f * cosf(Engine::GetTime());
 
 	auto lightShader = m_shaderLibrary.Get("BasicLight");
 	lightShader->Bind();
@@ -135,12 +135,15 @@ void LightingExample::OnUpdate(const Engine::Timestep& ts)
 	lightShader->UploadUniformFloat3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
 	lightShader->UploadUniformFloat3("lightPos", m_lightPos);// glm::vec3(m_lightPos.x, m_lightPos.y, m_lightPos.z));
 	lightShader->UploadUniformFloat3("viewPos", m_cameraPosition);
-	
+    lightShader->UploadUniformFloat("specularExp",m_specularExp);
+    lightShader->UploadUniformFloat("specularStrength",m_specularIntensity);
+
 	lightShader->UploadUniformMat4("projection", m_cameraController.GetCamera().GetProjectionMatrix());
 	lightShader->UploadUniformMat4("view", m_cameraController.GetCamera().GetViewMatrix());
-	
-	
-	lightShader->UploadUniformMat4("model", glm::mat4(1.0f));
+
+    glm::mat4 cubeModel = glm::mat4(1.0f);
+    cubeModel = glm::scale(cubeModel, glm::vec3(3.0f));
+	lightShader->UploadUniformMat4("model", cubeModel);
 	Engine::Renderer::Submit(lightShader, m_cubeVA);
 
 	auto LightcubeShader = m_shaderLibrary.Get("CubeLight");
@@ -148,7 +151,7 @@ void LightingExample::OnUpdate(const Engine::Timestep& ts)
 	
 	glm::mat4 model = glm::mat4(1.0f);
 	model = glm::translate(model, m_lightPos);
-	model = glm::scale(model, glm::vec3(0.5f)); // a smaller cube
+	model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
 
 	LightcubeShader->UploadUniformMat4("model", model);
 	LightcubeShader->UploadUniformMat4("projection", m_cameraController.GetCamera().GetProjectionMatrix());
@@ -163,6 +166,8 @@ void LightingExample::OnImGuiRender()
     ImGui::Begin("Setting");
 
     ImGui::SliderFloat3("Light position", glm::value_ptr(m_lightPos), -10.0f, 10.0f);
+    ImGui::SliderFloat("Specular Intensity", &m_specularIntensity, 0.0f, 1.0f);
+    ImGui::SliderFloat("Specular Exponent", &m_specularExp, 1.0f, 512.0f);
     ImGui::End();
 
 

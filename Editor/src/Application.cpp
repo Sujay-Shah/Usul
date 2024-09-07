@@ -1,8 +1,8 @@
 #include <Engine.h>
 #include <Engine/Core/EngineEntryPoint.h>
 
-#include "TestLayer.h"
-#include "Sandbox2D.h"
+#include "TextureDemo.h"
+#include "TriangleDemo.h"
 #include "LightingExample.h"
 #include "MaterialExample.h"
 #include "ModelExample.h"
@@ -16,9 +16,9 @@ class Application : public Engine::EngineApp
             //Push different example
             //PushLayer(new MaterialExample());
 #if API_OPENGL
-            //PushLayer(new LightingExample());
-            //PushLayer(new TestLayer());
-            //PushLayer(new Sandbox2D());
+            PushLayer(new LightingExample());
+            PushLayer(new TextureDemo());
+            PushLayer(new TriangleDemo());
             PushLayer(new ModelExample(_path));
 #else
             PushLayer(new VulkanExample());

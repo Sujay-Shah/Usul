@@ -46,8 +46,10 @@
 #define API_VULKAN 0
 #define API_OPENGL 1
 
+#define GLFW_INCLUDE_VULKAN
+
 #if API_VULKAN
-    #define GLFW_INCLUDE_VULKAN
+
 #endif //API_VULKAN
 
 #endif // PlatformDetection_h__

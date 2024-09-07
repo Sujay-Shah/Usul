@@ -37,6 +37,8 @@ uniform vec3 viewPos;
 
 uniform vec3 lightColor;
 uniform vec3 objectColor;
+uniform float specularStrength;
+uniform float specularExp;
 
 void main()
 {
@@ -51,12 +53,16 @@ void main()
     vec3 diffuse = diff * lightColor;
     
     // specular
-    float specularStrength = 0.5;
+    //float specularStrength = 0.5;
     vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);  
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 256);
+    vec3 reflectDir = normalize(reflect(-lightDir, norm));
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), specularExp);
     vec3 specular = specularStrength * spec * lightColor;  
         
     vec3 result = (ambient + diffuse + specular) * objectColor;
+
+    // Map the normal vector from [-1, 1] to [0, 1]
+    vec3 color = norm * 0.5 + 0.5;
+
     FragColor = vec4(result, 1.0);
 } 
