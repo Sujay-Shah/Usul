@@ -1,7 +1,7 @@
 #include "ImGuiLayer.h"
 #include "imgui.h"
-#include "examples/imgui_impl_opengl3.h"
-#include "examples/imgui_impl_glfw.h"
+#include "backends/imgui_impl_opengl3.h"
+#include "backends/imgui_impl_glfw.h"
 
 #include "Engine/Core/EngineApp.h"
 

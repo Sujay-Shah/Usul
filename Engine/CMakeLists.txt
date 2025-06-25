@@ -62,6 +62,7 @@ add_library( Engine
 find_package(Vulkan REQUIRED)
 message($ENV{VULKAN_SDK})
 message(${Vulkan_INCLUDE_DIRS})
+message(${Vulkan_LIBRARIES})
 
 target_link_libraries( Engine  
     PUBLIC

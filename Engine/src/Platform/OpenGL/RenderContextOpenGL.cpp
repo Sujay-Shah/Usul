@@ -20,9 +20,9 @@ namespace Engine
         ENGINE_ASSERT(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "Glad failed to initialize!");
 
         ENGINE_INFO("OpenGL Info:");
-        ENGINE_INFO("    Vendor:   {0}", glGetString(GL_VENDOR));
-        ENGINE_INFO("    Renderer: {0}", glGetString(GL_RENDERER));
-        ENGINE_INFO("    Version:  {0}", glGetString(GL_VERSION));
+        ENGINE_INFO("    Vendor:   {0}", (const char*)glGetString(GL_VENDOR));
+        ENGINE_INFO("    Renderer: {0}", (const char*)glGetString(GL_RENDERER));
+        ENGINE_INFO("    Version:  {0}", (const char*)glGetString(GL_VERSION));
     }
 
     void RenderContextOpenGL::SwapBuffers()
