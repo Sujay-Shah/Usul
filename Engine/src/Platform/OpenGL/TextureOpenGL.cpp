@@ -1,8 +1,7 @@
 #include "TextureOpenGL.h"
-
 #include "Engine/Core/EngineDefines.h"
-
 #include "stb_image.h"
+#include "Engine/Core/AssetManager.h"
 
 namespace Engine
 {
@@ -37,11 +36,12 @@ namespace Engine
 
     Texture2DOpenGL::Texture2DOpenGL(const std::string& path)
     {
-        m_path = path;
+        auto fullPath = AssetManager::GetAssetPath(path);
+        m_path = fullPath.string();
         stbi_set_flip_vertically_on_load(1);
 
         int width, height, channels;
-        auto* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+        auto* data = stbi_load(m_path.c_str(), &width, &height, &channels, 0);
         ENGINE_ASSERT(data, stbi_failure_reason());
         m_width = width;
         m_height = height;
@@ -68,6 +68,7 @@ namespace Engine
         glTexParameteri(m_rendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_width, m_height, 0, m_dataForamt, GL_UNSIGNED_BYTE, data);
+        GL_CHECK_ERROR();
         glBindTexture(GL_TEXTURE_2D, 0);
         #else
         glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererID);

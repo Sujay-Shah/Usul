@@ -10,7 +10,7 @@
 class ModelExample: public Engine::Layer
 {
 public:
-    ModelExample(std::string& path);
+    ModelExample();
     ~ModelExample() override;
 
     void OnUpdate(const Engine::Timestep &ts) override;

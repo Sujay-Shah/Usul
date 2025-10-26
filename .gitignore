@@ -58,3 +58,5 @@ bin_xcode/
 *.CmakeCache.txt
 *.idea/
 /cmake-*
+*.cache
+*.ini

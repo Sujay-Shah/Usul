@@ -44,11 +44,11 @@ void ModelExample::OnImGuiRender() {
 
 }
 
-ModelExample::ModelExample(std::string& path) :
+ModelExample::ModelExample() :
         Engine::Layer("ModelExample"),m_cameraController(1280.0f / 720.0f), m_cameraPosition(-5.0,0.0f,0.0f),
-        m_backPack(path + "models/backpack/backpack.obj")
+        m_backPack("models/backpack/backpack.obj")
 {
-    m_shaderLibrary.Add(Engine::Shader::Create(path + "shaders/Model.glsl"));
+    m_shaderLibrary.Add(Engine::Shader::Create("shaders/Model.glsl"));
     m_cameraController.SetPos(m_cameraPosition);
     m_cameraController.SetRotation(-3.05,5.0,0.0f);
 
