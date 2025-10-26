@@ -19,6 +19,7 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DENGINE_DEBUG")
 
 
 
+
 # source code
 file(GLOB 
     SOURCES CONFIGURE_DEPENDS
@@ -95,3 +96,7 @@ target_include_directories( Engine
 		vendor/assimp/include
 
 )
+
+# Make sure you have an 'assets' directory in your project root.
+set(ASSET_DIRECTORY "${CMAKE_SOURCE_DIR}/assets")
+target_compile_definitions(Engine PRIVATE "ASSET_ROOT=\"${ASSET_DIRECTORY}\"")

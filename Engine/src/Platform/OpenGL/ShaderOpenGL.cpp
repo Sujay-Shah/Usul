@@ -3,6 +3,7 @@
 #include "Engine/Core/Logging.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <filesystem>
+#include "Engine/Core/AssetManager.h"
 
 namespace Engine
 {
@@ -23,7 +24,8 @@ namespace Engine
 
     ShaderOpenGL::ShaderOpenGL(const std::string& fileName)
     {
-        std::string fileSource = ReadFile(fileName);
+        auto fullPath = AssetManager::GetAssetPath(fileName);
+        std::string fileSource = ReadFile(fullPath.string());
         std::unordered_map<GLenum, std::string> shaderSources = PreProcess(fileSource);
         
         Compile(shaderSources);

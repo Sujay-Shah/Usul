@@ -30,20 +30,12 @@ TriangleDemo::TriangleDemo()
     triangleIB = Engine::IndexBuffer::Create(triangleIndices, sizeof(triangleIndices) / sizeof(uint32_t));
     m_triangleVA->SetIndexBuffer(triangleIB);
 
-    std::string path;
-#ifdef __APPLE__
-    path = "";
-#else
-    path = "../Editor/assets/";
-#endif
-
-    m_shaderLibrary.Add(Engine::Shader::Create(path+"shaders/SingleColor.glsl"));
+    m_shaderLibrary.Add(Engine::Shader::Create("shaders/SingleColor.glsl"));
 }
 
 void TriangleDemo::OnAttach()
 {
-    std::string path;
-    path = "../Editor/assets/";
+    
 }
 
 void TriangleDemo::OnDetach()

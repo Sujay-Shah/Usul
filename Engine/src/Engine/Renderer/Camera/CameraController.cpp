@@ -153,7 +153,7 @@ namespace Engine
     bool CameraController::OnScroll(MouseScrolledEvent& e)
     {
         m_zoom -= e.GetYDiff() * 0.25f;
-        m_zoom = std::max(m_zoom, 0.25f);
+        m_zoom = (glm::max)(m_zoom, 0.25f);
 
         if (m_camera.IsPerspective())
         {

@@ -1,5 +1,5 @@
 #include "Renderer2D.h"
-
+#include "Engine/Core/AssetManager.h"
 #include "Shader.h"
 #include "VertexArray.h"
 #include "RenderCommand.h"
@@ -49,11 +49,7 @@ return;
 		uint32_t whiteTextureData = 0xffffffff;
 		s_data->whiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 
-		std::string path;
-
-		path = "../Editor/assets/";
-
-		s_data->textureShader = Engine::Shader::Create(path + "shaders/Texture.glsl");
+		s_data->textureShader = Engine::Shader::Create("shaders/Texture.glsl");
 		s_data->textureShader->Bind();
 		s_data->textureShader->SetInt("u_Texture", 0);
 	}

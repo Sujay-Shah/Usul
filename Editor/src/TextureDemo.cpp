@@ -32,23 +32,17 @@ Engine::Layer("Texture Demo"), m_cameraController(1280.0f / 720.0f), m_cameraPos
     squareIB = Engine::IndexBuffer::Create(squareIndices, sizeof(squareIndices) / sizeof(uint32_t));
     m_squareVA->SetIndexBuffer(squareIB);
     
-    std::string path;
-    #ifdef __APPLE__
-            path = "";
-    #else
-            path = "../Editor/assets/";
-    #endif
 
     /*std::string checkerboard = "textures/Checkerboard.png";
     std::string logo = "textures/ChernoLogo.png";*/
     
     for (int i = 0; i < texturePaths.size(); ++i)
     {
-        m_texture.push_back( Engine::Texture2D::Create(path+texturePaths[i]));
+        m_texture.push_back( Engine::Texture2D::Create(texturePaths[i]));
     }
     //m_logo = Engine::Texture2D::Create(path+logo);
 
-    auto shader = m_shaderLibrary.Load(path+"shaders/Texture.glsl");
+    auto shader = m_shaderLibrary.Load("shaders/Texture.glsl");
     shader->Bind();
     shader->UploadUniformInt("u_texture", 0);
 }

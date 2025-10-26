@@ -6,7 +6,6 @@
 LightingExample::LightingExample() :
 	Engine::Layer("LightExample"), m_cameraController(1280.0f / 720.0f), m_cameraPosition(-5.0,0.0f,0.0f)
 {
-	std::string path = "../Editor/assets/";
 
 	float vertices[] = {
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
@@ -108,8 +107,8 @@ LightingExample::LightingExample() :
 	lightcubeIB = Engine::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
 	m_lightCubeVA->SetIndexBuffer(lightcubeIB);*/
 
-	m_shaderLibrary.Add(Engine::Shader::Create(path + "shaders/BasicLight.glsl"));
-	m_shaderLibrary.Add(Engine::Shader::Create(path+"shaders/CubeLight.glsl"));
+	m_shaderLibrary.Add(Engine::Shader::Create("shaders/BasicLight.glsl"));
+	m_shaderLibrary.Add(Engine::Shader::Create("shaders/CubeLight.glsl"));
 
 	m_cameraController.SetPos(m_cameraPosition);
 	m_cameraController.SetRotation(-3.05,5.0,0.0f);
