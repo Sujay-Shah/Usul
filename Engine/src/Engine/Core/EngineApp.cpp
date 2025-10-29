@@ -36,28 +36,38 @@ namespace Engine
 #if !API_VULKAN
             if (!m_isMinimized)
             {
+            #if ENABLE_EXAMPLE
                 //record draw calls in imgui layer frame buffer to display it in the viewport
                 m_imguiLayer->BindOrUnbindFrameBuffer(true);
+            #endif
                 for (Layer* layer : m_layerStack)
                 {
                     //TODO: refactor this in future
+                    #if ENABLE_EXAMPLE
                     if(layer->GetName() == m_imguiLayer->GetCurrentExampleName())
+                    #endif
                     {
                         layer->OnUpdate(timestep);
                         break;
                     }
                 }
+            #if ENABLE_EXAMPLE
                 m_imguiLayer->BindOrUnbindFrameBuffer(false);
+            #endif
             }
 
             m_imguiLayer->Begin();
             for (Layer* layer : m_layerStack)
             {
+                #if ENABLE_EXAMPLE
                 if(layer->GetName() == m_imguiLayer->GetCurrentExampleName())
                 {
                     layer->OnImGuiRender();
                     break;
                 }
+                #else
+                layer->OnImGuiRender();
+                #endif
             }
             //TODO: refactor this, currently we need to call imgui layer calls seperately as the LayerStack
             // explicitly contains different examples
@@ -85,7 +95,7 @@ namespace Engine
     void EngineApp::PushLayer(Layer* layer)
     {
         m_layerStack.PushLayer(layer);
-#if !API_VULKAN
+#if !API_VULKAN && ENABLE_EXAMPLE
         m_imguiLayer->AddExample(layer->GetName());
 #endif
         layer->OnAttach();

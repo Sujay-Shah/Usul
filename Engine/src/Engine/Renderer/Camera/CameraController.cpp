@@ -27,7 +27,11 @@ namespace Engine
     void CameraController::OnUpdate(const Timestep& ts)
     {
         EngineApp& app = EngineApp::Get();
-        if(app.GetImGuiLayer() && !app.GetImGuiLayer()->IsViewportFocused())
+        if(app.GetImGuiLayer() 
+ #if ENABLE_EXAMPLE    
+        && !app.GetImGuiLayer()->IsViewportFocused()
+#endif 
+    )
         {
             return;
         }
