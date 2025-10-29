@@ -49,7 +49,7 @@ return;
 		uint32_t whiteTextureData = 0xffffffff;
 		s_data->whiteTexture->SetData(&whiteTextureData, sizeof(uint32_t));
 
-		s_data->textureShader = Engine::Shader::Create("shaders/Texture.glsl");
+		s_data->textureShader = Engine::Shader::Create(AssetManager::GetAssetPath("shaders/Texture.glsl").string());
 		s_data->textureShader->Bind();
 		s_data->textureShader->SetInt("u_Texture", 0);
 	}

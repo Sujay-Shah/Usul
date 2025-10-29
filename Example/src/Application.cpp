@@ -19,7 +19,7 @@ class Application : public Engine::EngineApp
             PushLayer(new LightingExample());
             PushLayer(new TextureDemo());
             PushLayer(new TriangleDemo());
-            PushLayer(new ModelExample());
+            //PushLayer(new ModelExample());
 #else
             PushLayer(new VulkanExample());
 #endif

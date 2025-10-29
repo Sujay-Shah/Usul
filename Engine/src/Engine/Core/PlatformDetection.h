@@ -45,6 +45,7 @@
      //TODO: refactor api selection
 #define API_VULKAN 0
 #define API_OPENGL 1
+#define ENABLE_EXAMPLE 0
 
 #define GLFW_INCLUDE_VULKAN
 

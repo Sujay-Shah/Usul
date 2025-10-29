@@ -10,6 +10,7 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include "Core/EngineDefines.h"
+#include "Core/AssetManager.h"
 
 namespace Engine
 {
@@ -18,7 +19,7 @@ namespace Engine
     public:
         Model(std::string const &path, bool gamma = false) : m_gammaCorrection(gamma)
         {
-            loadModel(path);
+            loadModel(AssetManager::GetAssetPath(path).string());
         }
         std::vector<Ref<Texture2D>> m_textures_loaded;
         std::vector<Ref<Mesh>> m_meshes;
