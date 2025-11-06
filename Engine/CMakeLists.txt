@@ -94,6 +94,7 @@ target_include_directories( Engine
         vendor/glad/include
         vendor/stb_image
 		vendor/assimp/include
+        vendor/entt/single_include/entt
 
 )
 

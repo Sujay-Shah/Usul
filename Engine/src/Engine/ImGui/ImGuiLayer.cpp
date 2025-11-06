@@ -138,7 +138,6 @@ namespace Engine
     void ImGuiLayer::OnUpdate(const Timestep &ts)
     {
 
-
     }
 
     void ImGuiLayer::OnEvent(Event &e)

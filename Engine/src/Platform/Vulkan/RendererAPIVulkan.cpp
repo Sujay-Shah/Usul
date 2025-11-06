@@ -17,11 +17,11 @@ namespace Engine
 
     }
 
-    void RendererAPIVulkan::DrawIndexed(const Ref <VertexArray> &vertexArray) {
+    void RendererAPIVulkan::DrawIndexed(const Ref <VertexArray> &vertexArray, uint32_t indexCount) {
 
     }
 
-    void RendererAPIVulkan::DrawArrays(const Ref <VertexArray> &vertexArray) {
+    void RendererAPIVulkan::DrawArrays(const Ref <VertexArray> &vertexArray, uint32_t indexCount) {
 
     }
 

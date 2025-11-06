@@ -30,7 +30,13 @@ namespace Engine
             inline const glm::mat4& GetViewMatrix() const { return m_data.view; }
             inline const glm::mat4& GetProjectionMatrix() const { return m_data.projection; }
             inline const glm::mat4& GetViewProjectionMatrix() const { return m_data.viewProjection; }
-            bool IsPerspective() { return m_type; }
+            bool IsPerspective() { return m_type == CameraType::Perspective; }
+            bool IsOrthographic() { return m_type == CameraType::Orthographic; }
+
+            inline const glm::vec3& GetFront() { return m_data.m_Front; }
+            inline const glm::vec3& GetRight() { return m_data.m_Right; }
+            inline const glm::vec3& GetUp() { return m_data.m_Up; }
+
     protected:
             struct CameraData
             {
@@ -40,6 +46,9 @@ namespace Engine
                 glm::mat4 view;
                 glm::mat4 projection;
                 glm::mat4 viewProjection;
+                glm::vec3 m_Front;
+                glm::vec3 m_Up;
+                glm::vec3 m_Right;
 
                 CameraData()
                     :
@@ -56,6 +65,7 @@ namespace Engine
             {
                 Perspective,
                 Orthographic,
+                PerspectiveFixed,
                 None
             };
 

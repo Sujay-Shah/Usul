@@ -26,9 +26,7 @@ namespace Engine
 			//euler angles
 			float m_Yaw;
 			float m_Pitch;
-            glm::vec3 m_Front;
-            glm::vec3 m_Up;
-            glm::vec3 m_Right;
+            
 #if FIXED_CAM
 			float m_Radius = 11.0f;
 #endif         

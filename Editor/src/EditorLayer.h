@@ -23,7 +23,7 @@ namespace Engine
 
             bool IsViewportFocused() const;
     private:
-        
+        CameraController m_CameraController;
         //once there are different features in the renderer,
         //this stuff can be ported into a seperate editor layer in future
         Ref<Framebuffer> m_Framebuffer;
