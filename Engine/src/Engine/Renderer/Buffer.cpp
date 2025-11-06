@@ -7,6 +7,18 @@
 
 namespace Engine
 {
+    Ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
+	{
+		switch (Renderer::Get())
+		{
+			case RendererAPI::API::None:    ENGINE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
+			case RendererAPI::API::OpenGL:  return CreateRef<VertexBufferOpenGL>(size);
+		}
+
+		ENGINE_ASSERT(false, "Unknown RendererAPI!");
+		return nullptr;
+	}
+
     Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
     {
         switch(Renderer::Get())

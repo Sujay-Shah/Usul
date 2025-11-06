@@ -9,22 +9,27 @@
 #include "Engine/Core/Timestep.h"
 
 #include <glm/glm.hpp>
-
+#include <memory>
 
 
 namespace Engine
 {
+    enum class CameraType
+    {
+        Orthographic = 0, Perspective = 1
+    };
+
     class CameraController
     {
         public:
-            CameraController(float aspectRatio);
+            CameraController(float aspectRatio, CameraType type = CameraType::Perspective);
 
-            Camera& GetCamera() { return m_camera; }
-            const Camera& GetCamera() const { return m_camera; }
+            Camera& GetCamera() { return *m_camera; }
+            const Camera& GetCamera() const { return *m_camera; }
 
             void SetPos(const glm::vec3& position);
             void SetRotation(float pitch, float yaw, float roll=0.0f);
-
+            void OnResize(float width, float height);
             void OnUpdate(const Timestep& ts);
 
             void OnEvent(Event& e);
@@ -35,9 +40,7 @@ namespace Engine
             float m_aspectRatio; 
             float m_zoom = 45.0f;
 
-            //TODO : add ability to handle both cameras
-            //OrthographicCamera m_camera;
-            PerspectiveCamera m_camera;
+            std::unique_ptr<Camera> m_camera;
             glm::vec3 cameraPos = { 0.0f, 0.0f, 0.0f };
 
             float cameraMoveSpeed = 5.0f;

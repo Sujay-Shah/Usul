@@ -58,8 +58,8 @@ namespace Engine
 		front.y = m_Radius * sin(glm::radians(m_Pitch));
 		front.z = m_Radius * sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
         
-        m_Front = front;
-        m_data.view = glm::lookAt(m_Front, glm::vec3(0.0f), GLOBAL_UP_VECTOR);
+        m_data.m_Front = front;
+        m_data.view = glm::lookAt(m_data.m_Front, glm::vec3(0.0f), GLOBAL_UP_VECTOR);
 #else
         front.x = cos(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
         front.y = sin(glm::radians(m_Pitch));

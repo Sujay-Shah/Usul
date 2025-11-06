@@ -17,7 +17,7 @@ namespace Engine
 
     EditorLayer::EditorLayer()
     :
-    Layer("Editor")
+    Layer("Editor"), m_CameraController(1280.0f / 720.0f)
     {}
 
     EditorLayer::~EditorLayer()
@@ -133,6 +133,18 @@ namespace Engine
 
     void EditorLayer::OnUpdate(const Timestep &ts)
     {
+		//resize
+		if (Engine::FramebufferSpecification spec = m_Framebuffer->GetSpecification();
+			m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
+			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
+		{
+			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+		}
+
+		if(m_ViewportFocused)
+			m_CameraController.OnUpdate(ts);
+
         m_Framebuffer->Bind();
         RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
 		RenderCommand::Clear();
@@ -144,6 +156,8 @@ namespace Engine
 
     void EditorLayer::OnEvent(Event &e)
     {
+		m_CameraController.OnEvent(e);
+		
         //resize
         WindowResizeEvent * we = dynamic_cast<WindowResizeEvent*>(&e);
         if(we)

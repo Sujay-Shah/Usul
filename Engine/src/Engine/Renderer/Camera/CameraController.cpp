@@ -8,20 +8,43 @@
 
 namespace Engine
 {
-    CameraController::CameraController(float aspectRatio)
+    CameraController::CameraController(float aspectRatio, CameraType type)
         :
-        m_aspectRatio(aspectRatio),
-        m_camera(m_zoom, aspectRatio , 1.0f, 100.0f)
-    {}
+        m_aspectRatio(aspectRatio)
+    {
+        if (type == CameraType::Perspective)
+        {
+            m_camera = std::make_unique<PerspectiveCamera>(m_zoom, aspectRatio, 0.1f, 100.0f);
+        }
+        else
+        {
+            m_camera = std::make_unique<OrthographicCamera>(-m_aspectRatio * m_zoom, m_aspectRatio * m_zoom, -m_zoom, m_zoom);
+        }
+    }
 
     void CameraController::SetPos(const glm::vec3& position)
     {
-        m_camera.SetPos(position);
+        m_camera->SetPos(position);
     }
-
+    
+    void CameraController::OnResize(float width, float height)
+	{
+		m_aspectRatio = width / height;
+		if (m_camera->IsPerspective())
+		{
+            PerspectiveCamera* camera = static_cast<PerspectiveCamera*>(m_camera.get());
+            camera->SetProjection(m_zoom);
+		}
+        else
+        {
+            auto* camera = static_cast<OrthographicCamera*>(m_camera.get());
+            camera->SetProjection(-m_aspectRatio * m_zoom, m_aspectRatio * m_zoom, -m_zoom, m_zoom);
+        }
+	}
+    
     void CameraController::SetRotation(float pitch, float yaw, float roll)
     {
-        m_camera.SetRotation(pitch, yaw, roll);
+        m_camera->SetRotation(pitch, yaw, roll);
     }
 
     void CameraController::OnUpdate(const Timestep& ts)
@@ -37,25 +60,26 @@ namespace Engine
         }
         float deltaTime = ts.GetTimeSeconds();
         float velocity = cameraMoveSpeed * deltaTime;
-        glm::vec3 cameraPos = m_camera.GetPos();
+        glm::vec3 cameraPos = m_camera->GetPos();
 
 #if !FIXED_CAM
         if (Input::IsKeyPressed(KEY_W) || Input::IsKeyPressed(KEY_UP))
         {
-            cameraPos += m_camera.m_Front * velocity;
+            // Assuming m_Front is in the base Camera class
+            cameraPos += m_camera->GetFront() * velocity;
         }
         else if (Input::IsKeyPressed(KEY_S) || Input::IsKeyPressed(KEY_DOWN))
         {
-            cameraPos -= m_camera.m_Front * velocity;
+            cameraPos -= m_camera->GetFront() * velocity;
         }
 
         if (Input::IsKeyPressed(KEY_A) || Input::IsKeyPressed(KEY_LEFT))
         {
-            cameraPos -= m_camera.m_Right * velocity;
+            cameraPos -= m_camera->GetRight() * velocity;
         }
         else if (Input::IsKeyPressed(KEY_D) || Input::IsKeyPressed(KEY_RIGHT))
         {
-            cameraPos += m_camera.m_Right * velocity;
+            cameraPos += m_camera->GetRight() * velocity;
         }
 
         if (Input::IsKeyPressed(KEY_Q))
@@ -87,20 +111,24 @@ namespace Engine
             xoffset *= SENSITIVITY;
             yoffset *= SENSITIVITY;
 
+            // You must cast to access derived members
+            if (m_camera->IsPerspective())
+            {
+                PerspectiveCamera* camera = static_cast<PerspectiveCamera*>(m_camera.get());
+                camera->m_Yaw += xoffset;
+                camera->m_Pitch += yoffset;
 
-			m_camera.m_Yaw += xoffset;
-			m_camera.m_Pitch += yoffset;
-
-			if (m_camera.m_Pitch > 89.0f)
-			{
-				m_camera.m_Pitch = 89.0f;
-			}
-			if (m_camera.m_Pitch < -89.0f)
-			{
-				m_camera.m_Pitch = -89.0f;
-			}
+                if (camera->m_Pitch > 89.0f)
+                {
+                    camera->m_Pitch = 89.0f;
+                }
+                if (camera->m_Pitch < -89.0f)
+                {
+                    camera->m_Pitch = -89.0f;
+                }
+            }
         }
-		m_camera.SetPos(cameraPos);
+		m_camera->SetPos(cameraPos);
 
 #else
         if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
@@ -110,9 +138,11 @@ namespace Engine
             float xoffset = glm::clamp(SENSITIVITY * (pos.x - m_lastCursorPos.x),-1.0f,1.0f);
             float yoffset = glm::clamp(SENSITIVITY * (m_lastCursorPos.y - pos.y),-1.0f,1.0f); // reversed since y-coordinates go from bottom to top
 
-            m_camera.m_Radius += xoffset - yoffset;
-            //ENGINE_WARN("Radius : {0}", m_camera.m_Radius);
-            m_camera.m_Radius = glm::clamp(m_camera.m_Radius, 5.0f, 20.0f);
+            // Assuming m_Radius is specific to a camera type, you must cast
+            PerspectiveCamera* camera = static_cast<PerspectiveCamera*>(m_camera.get()); // Change if it's Orthographic
+            camera->m_Radius += xoffset - yoffset;
+            //ENGINE_WARN("Radius : {0}", camera->m_Radius);
+            camera->m_Radius = glm::clamp(camera->m_Radius, 5.0f, 20.0f);
 			ENGINE_CORE_WARN("xoffset : {0}, yoffset : {1} ", xoffset, yoffset);
 			m_lastCursorPos = pos;
         }
@@ -126,24 +156,25 @@ namespace Engine
 
             //if(xoffset != 0 || yoffset!= 0) ENGINE_CORE_WARN("xoffset : {0}, yoffset : {1} ", xoffset, yoffset);
 
-			m_camera.m_Yaw += xoffset;
-			m_camera.m_Pitch += yoffset;
+            auto* camera = static_cast<PerspectiveCamera*>(m_camera.get()); // Change if it's Orthographic
+			camera->m_Yaw += xoffset;
+			camera->m_Pitch += yoffset;
 
-			if (m_camera.m_Pitch > 89.0f)
+			if (camera->m_Pitch > 89.0f)
 			{
-				m_camera.m_Pitch = 89.0f;
+				camera->m_Pitch = 89.0f;
 			}
-			if (m_camera.m_Pitch < -89.0f)
+			if (camera->m_Pitch < -89.0f)
 			{
-				m_camera.m_Pitch = -89.0f;
+				camera->m_Pitch = -89.0f;
 			}
             m_lastCursorPos = pos;
         }
-        m_camera.Update();
+        m_camera->Update();
 #endif        
 
-        //m_camera.SetRotation(cameraRotation);
-        //m_camera.Update();
+        //m_camera->SetRotation(cameraRotation);
+        //m_camera->Update();
     }
 
     void CameraController::OnEvent(Event& e)
@@ -159,13 +190,15 @@ namespace Engine
         m_zoom -= e.GetYDiff() * 0.25f;
         m_zoom = (glm::max)(m_zoom, 0.25f);
 
-        if (m_camera.IsPerspective())
+        if (m_camera->IsPerspective())
         {
-            m_camera.SetProjection (m_zoom);
+            PerspectiveCamera* camera = static_cast<PerspectiveCamera*>(m_camera.get());
+            camera->SetProjection(m_zoom);
         }
         else
         {
-            //m_camera.SetProjection(-m_aspectRatio * m_zoom, m_aspectRatio * m_zoom, -m_zoom, m_zoom);
+            OrthographicCamera* camera = static_cast<OrthographicCamera*>(m_camera.get());
+            camera->SetProjection(-m_aspectRatio * m_zoom, m_aspectRatio * m_zoom, -m_zoom, m_zoom);
         }
         
         return false;
@@ -174,13 +207,15 @@ namespace Engine
     bool CameraController::OnResize(WindowResizeEvent& e)
     {
         m_aspectRatio = (float)e.GetWidth() / (float)e.GetHeight();
-		if (m_camera.IsPerspective())
+		if (m_camera->IsPerspective())
 		{
-            m_camera.SetProjection(m_zoom);
+            PerspectiveCamera* camera = static_cast<PerspectiveCamera*>(m_camera.get());
+            camera->SetProjection(m_zoom);
 		}
         else
         {
-            //m_camera.SetProjection(-m_aspectRatio * m_zoom, m_aspectRatio * m_zoom, -m_zoom, m_zoom);
+            OrthographicCamera* camera = static_cast<OrthographicCamera*>(m_camera.get());
+            camera->SetProjection(-m_aspectRatio * m_zoom, m_aspectRatio * m_zoom, -m_zoom, m_zoom);
         }
         
         return false;
