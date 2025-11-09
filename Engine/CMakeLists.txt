@@ -20,45 +20,35 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DENGINE_DEBUG")
 
 
 
-# source code
-file(GLOB 
-    SOURCES CONFIGURE_DEPENDS
-		/*.cpp
-		/*.h
-        src/Engine/*.cpp 
-        src/Engine/Core/*.cpp
-		src/Engine/Renderer/*.cpp
-		src/Engine/Renderer/Camera/*.cpp
-        src/Engine/ImGui/*.cpp 
-        src/Platform/OpenGL/*.cpp 
-        src/Platform/GLFW/*.cpp 
-
-        # stb_image
-        vendor/stb_image/*.cpp
-
-        # must compile and link imgui directly to project
-        vendor/imgui/*.cpp
+# --- Source Code ---
+file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
+    "src/*.cpp"
+    "src/Engine/*.cpp"
+    "src/Platform/*.cpp"
+    "vendor/stb_image/*.cpp"
+    "EnginePCH.cpp"
 )
-message("sources : ${SOURCES}")
+
+# Add specific ImGui source files needed for GLFW and OpenGL3 backend
+list(APPEND ENGINE_SOURCES
+    vendor/imgui/imgui.cpp
+    vendor/imgui/imgui_draw.cpp
+    vendor/imgui/imgui_widgets.cpp
+    vendor/imgui/imgui_tables.cpp
+    vendor/imgui/backends/imgui_impl_glfw.cpp
+    vendor/imgui/backends/imgui_impl_opengl3.cpp # Assuming OpenGL3 is used with GLAD
+)
 # library creation
 
 add_library( Engine 
     STATIC 
-        ${SOURCES}
-		src/Engine/Renderer/FrameBuffer.cpp
-		src/Engine/Renderer/FrameBuffer.h
-		src/Platform/OpenGL/FrameBufferOpenGL.cpp
-		src/Platform/OpenGL/FrameBufferOpenGL.h
-		EnginePCH.cpp
-		src/Engine/Renderer/Mesh.h
-		src/Platform/OpenGL/MeshOpenGL.h
-		src/Platform/Vulkan/RendererAPIVulkan.h
-		src/Platform/Vulkan/RendererAPIVulkan.cpp
-		src/Platform/Vulkan/RenderContextVulkan.cpp
-		src/Platform/Vulkan/RenderContextVulkan.h
-		src/Engine/Renderer/Model.h
-		src/Engine/Renderer/Mesh.cpp
+        ${ENGINE_SOURCES}
 )
+# Set the standard C++ exception handling model for MSVC
+if(MSVC)
+    target_compile_options(Engine PRIVATE /EHsc)
+endif()
+
 
 find_package(Vulkan REQUIRED)
 message($ENV{VULKAN_SDK})
@@ -80,13 +70,14 @@ target_precompile_headers( Engine
 )
 target_include_directories( Engine 
     PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}
         src 
         src/Engine 
         src/Platform
 
         vendor/imgui
         vendor/glm
-
+        vendor/entt/single_include/entt
         vendor/spdlog/include
 		${Vulkan_INCLUDE_DIRS}
     PRIVATE
@@ -94,7 +85,7 @@ target_include_directories( Engine
         vendor/glad/include
         vendor/stb_image
 		vendor/assimp/include
-        vendor/entt/single_include/entt
+        
 
 )
 

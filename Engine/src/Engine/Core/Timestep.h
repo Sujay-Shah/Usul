@@ -11,6 +11,8 @@ namespace Engine
             m_time(time)
             {}
 
+            operator float() const { return m_time; }
+            
             const float GetTimeSeconds() const { return m_time; }
             const float GetTimeMilliseonds() const { return m_time * 1000.0f; }
         private:
