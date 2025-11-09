@@ -27,6 +27,13 @@ namespace Engine
 			float m_Yaw;
 			float m_Pitch;
             
+            glm::vec3 m_Front;
+            glm::vec3 m_Right;
+            glm::vec3 m_Up;
+
+            float m_Fov;
+            float m_aspectRatio;
+
 #if FIXED_CAM
 			float m_Radius = 11.0f;
 #endif         

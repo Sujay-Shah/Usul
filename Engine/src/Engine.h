@@ -17,9 +17,12 @@
 #include "Engine/Core/LayerStack.h"
 #include "Engine/ImGui/ImGuiLayer.h"
 
-
-
 #include "Engine/Core/Timestep.h"
+
+#include "Engine/Scene/Scene.h"
+#include "Engine/Scene/Components.h"
+#include "Engine/Scene/Entity.h"
+#include "Engine/Scene/ScriptableEntity.h"
 
 //Renderer
 #include "Renderer/Renderer.h"

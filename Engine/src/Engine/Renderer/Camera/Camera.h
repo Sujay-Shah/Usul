@@ -10,67 +10,46 @@ namespace Engine
 {
     class Camera
     {
-        public:
-            virtual ~Camera() {}
-            virtual void Update() {}
+        
+	public:
+		Camera() = default;
+		Camera(const glm::mat4& projection)
+			: m_ProjectionMatrix(projection) {}
 
-            void SetPos(const glm::vec3& pos) { m_data.pos = pos; Update(); }
-            void SetFOV(float fov) { m_data.fov = fov; Update(); }
-            void SetAspectRatio(float aspectRatio) { m_data.aspectRatio = aspectRatio; Update(); }
-            void SetNear(float nearClip) { m_data.nearClip = nearClip; Update(); }
-            void SetFar(float farClip) { m_data.farClip = farClip; Update(); }
-            virtual void SetRotation(float pitch, float yaw, float roll=0.0f) { };
+		virtual ~Camera() = default;
 
-            inline const glm::vec3& GetPos() const { return m_data.pos; }
-            inline const float GetFOV() const { return m_data.fov; }
-            inline const float GetAspectRatio() const { return m_data.aspectRatio; }
-            inline const float GetNear() const { return m_data.nearClip; }
-            inline const float GetFar() const { return m_data.farClip; }
-            inline const float GetRotation() const { return m_data.rotation; }
-            inline const glm::mat4& GetViewMatrix() const { return m_data.view; }
-            inline const glm::mat4& GetProjectionMatrix() const { return m_data.projection; }
-            inline const glm::mat4& GetViewProjectionMatrix() const { return m_data.viewProjection; }
-            bool IsPerspective() { return m_type == CameraType::Perspective; }
-            bool IsOrthographic() { return m_type == CameraType::Orthographic; }
+        virtual void Update() {};
 
-            inline const glm::vec3& GetFront() { return m_data.m_Front; }
-            inline const glm::vec3& GetRight() { return m_data.m_Right; }
-            inline const glm::vec3& GetUp() { return m_data.m_Up; }
+        const glm::mat4& GetProjectionMatrix() const { return m_ProjectionMatrix; }
+		const glm::mat4& GetViewMatrix() const { return m_ViewMatrix; }
+		const glm::mat4& GetViewProjectionMatrix() const { return m_ViewProjectionMatrix; }
+		const glm::vec3& GetPosition() const { return m_Position; }
+		void SetPosition(const glm::vec3& position) { m_Position = position; RecalculateViewMatrix(); }
+ 
+		float GetRotation() const { return m_Rotation; }
+		void SetRotation(float rotation) { m_Rotation = rotation; RecalculateViewMatrix(); }
+        virtual void SetRotation(float yaw, float pitch, float roll=0.0f) {};
+        bool IsPerspective() const { return m_type == CameraType::Perspective; }
 
     protected:
-            struct CameraData
-            {
-                glm::vec3 pos;
-                float fov, aspectRatio, nearClip, farClip, rotation;
+        void RecalculateViewMatrix();
 
-                glm::mat4 view;
-                glm::mat4 projection;
-                glm::mat4 viewProjection;
-                glm::vec3 m_Front;
-                glm::vec3 m_Up;
-                glm::vec3 m_Right;
+		glm::mat4 m_ProjectionMatrix = glm::mat4(1.0f);
+		glm::mat4 m_ViewMatrix = glm::mat4(1.0f);
+		glm::mat4 m_ViewProjectionMatrix = glm::mat4(1.0f);
+        glm::vec3 m_Position = { 0.0f, 0.0f, 0.0f };
+		float m_Rotation = 0.0f;
+        float m_nearClip;
+        float m_farClip;
 
-                CameraData()
-                    :
-                    pos(glm::vec3()), fov(65.0f), aspectRatio(4.0f/3.0f), nearClip(-1.0f), farClip(1.0f), rotation(0.0f)
-                {}
-
-                CameraData(const glm::vec3 pos, float fov, float aspectRatio, float nearClip, float farClip, float rotation)
-                :
-                pos(pos), fov(fov), aspectRatio(aspectRatio), nearClip(nearClip), farClip(farClip), rotation(rotation)
-                {}
-            };
-
-            enum CameraType
-            {
-                Perspective,
-                Orthographic,
-                PerspectiveFixed,
-                None
-            };
-
-            CameraType m_type;
-            CameraData m_data;
+        enum CameraType
+        {
+            Perspective,
+            Orthographic,
+            PerspectiveFixed,
+            None
+        };
+        CameraType m_type = CameraType::None;
     };
 }
 

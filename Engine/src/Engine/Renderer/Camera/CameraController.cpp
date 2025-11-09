@@ -24,7 +24,7 @@ namespace Engine
 
     void CameraController::SetPos(const glm::vec3& position)
     {
-        m_camera->SetPos(position);
+        m_camera->SetPosition(position);
     }
     
     void CameraController::OnResize(float width, float height)
@@ -60,7 +60,7 @@ namespace Engine
         }
         float deltaTime = ts.GetTimeSeconds();
         float velocity = cameraMoveSpeed * deltaTime;
-        glm::vec3 cameraPos = m_camera->GetPos();
+        glm::vec3 cameraPos = m_camera->GetPosition();
 
 #if !FIXED_CAM
         if (Input::IsKeyPressed(KEY_W) || Input::IsKeyPressed(KEY_UP))
