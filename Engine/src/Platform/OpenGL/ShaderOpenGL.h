@@ -32,12 +32,13 @@ namespace Engine
             virtual void UploadUniformFloat2(const std::string& name, const glm::vec2& vec) override;
             virtual void UploadUniformFloat3(const std::string& name, const glm::vec3& vec) override;
             virtual void UploadUniformFloat4(const std::string& name, const glm::vec4& vec) override;
-            virtual void UploadUniformIntArray(const std::string& name, int* values, uint32_t count);
+            virtual void UploadUniformIntArray(const std::string& name, int* values, uint32_t count) override;
             virtual void UploadUniformMat3(const std::string& name, const glm::mat3& matrix) override;
             virtual void UploadUniformMat4(const std::string& name, const glm::mat4& matrix) override;
 
             uint32_t GetRendererId() {return m_rendererID;}
         private:
+            GLint GetUniformLocation(const std::string& name);
             std::string ParseString(const std::string& filePath);
             std::string ReadFile(const std::string& filename);
             std::unordered_map<GLenum, std::string> PreProcess(const std::string& fileSource);

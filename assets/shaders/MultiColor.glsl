@@ -14,7 +14,8 @@ void main()
 {
     v_position = vec3(a_Position);
     v_color = a_Color;
-    gl_Position = u_viewProjection * u_transform * vec4(a_Position, 1.0);
+    //gl_Position = u_viewProjection * u_transform * vec4(a_Position, 1.0);
+    gl_Position = u_viewProjection * vec4(a_Position, 1.0);
 }
 
 #type fragment
