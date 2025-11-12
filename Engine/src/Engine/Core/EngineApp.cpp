@@ -71,7 +71,7 @@ namespace Engine
             }
             //TODO: refactor this, currently we need to call imgui layer calls seperately as the LayerStack
             // explicitly contains different examples
-            m_imguiLayer->OnImGuiRender();
+            //m_imguiLayer->OnImGuiRender();
             m_imguiLayer->End();
 #endif
             m_window->Update();

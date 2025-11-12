@@ -241,6 +241,8 @@ namespace Engine
         m_Framebuffer->ClearAttachment(1, -1);
         //record Editor render operations
     	
+		// Update scene
+		m_ActiveScene->OnUpdate(ts);
 
         m_Framebuffer->Unbind();
     }

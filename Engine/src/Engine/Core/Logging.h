@@ -50,10 +50,12 @@ inline OStream& operator<<(OStream& os, glm::qua<T, Q> quaternion)
 #define ENGINE_CORE_INFO(...) Engine::Log::GetCoreLogger()->info(__VA_ARGS__)
 #define ENGINE_CORE_WARN(...) Engine::Log::GetCoreLogger()->warn(__VA_ARGS__)
 #define ENGINE_CORE_ERROR(...) Engine::Log::GetCoreLogger()->error(__VA_ARGS__)
+#define ENGINE_CORE_DEBUG(...) Engine::Log::GetCoreLogger()->debug(__VA_ARGS__)
 
 #define ENGINE_TRACE(...) Engine::Log::GetClientLogger()->trace(__VA_ARGS__)
 #define ENGINE_INFO(...) Engine::Log::GetClientLogger()->info(__VA_ARGS__)
 #define ENGINE_WARN(...) Engine::Log::GetClientLogger()->warn(__VA_ARGS__)
 #define ENGINE_ERROR(...) Engine::Log::GetClientLogger()->error(__VA_ARGS__)
+#define ENGINE_DEBUG(...) Engine::Log::GetClientLogger()->debug(__VA_ARGS__)
 
 #endif

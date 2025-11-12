@@ -100,7 +100,7 @@ namespace Engine
             else
                 m_DepthAttachmentSpecification = spec;
         }
-
+        ENGINE_CORE_INFO("Created a framebuffer");
         Invalidate();
     }
 
