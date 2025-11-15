@@ -2,7 +2,7 @@
 #define __EDITORLAYER_H__
 
 #include "Engine.h"
-
+#include "Panels/SceneHierarchyPanel.h"
 namespace Engine
 {
     class Framebuffer;
@@ -40,6 +40,9 @@ namespace Engine
 		Entity m_SquareEntity;
 		Entity m_CameraEntity;
 
+        //Panels
+        SceneHierarchyPanel m_SceneHierarchyPanel;
+        
         glm::vec4 m_SquareColor = { 0.2f, 0.3f, 0.8f, 1.0f };
     };
 
