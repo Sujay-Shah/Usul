@@ -73,6 +73,7 @@ namespace Engine
 			}
 		};
 
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
 
     }
@@ -173,6 +174,8 @@ namespace Engine
         static bool show = false;
         ImGui::End();
         //ImGui::ShowDemoWindow(&show);
+
+		m_SceneHierarchyPanel.OnImGuiRender();
 
 		ImGui::Begin("Settings");
 
