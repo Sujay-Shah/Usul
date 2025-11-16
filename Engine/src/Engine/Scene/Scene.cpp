@@ -30,7 +30,7 @@ namespace Engine {
 	void Scene::OnUpdate(Timestep ts)
 	{
 		// Update scripts
-		/*{
+		{
 			m_Registry.view<NativeScriptComponent>().each([=](auto entity, auto& nsc)
 			{
 				// TODO: Move to Scene::OnScenePlay
@@ -43,7 +43,7 @@ namespace Engine {
 
 				nsc.Instance->OnUpdate(ts);
 			});
-		}*/
+		}
 
 		// Render 2D
 		Camera* mainCamera = nullptr;
