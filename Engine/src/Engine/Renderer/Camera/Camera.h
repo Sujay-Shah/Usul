@@ -8,6 +8,14 @@
 
 namespace Engine
 {
+    enum CameraType
+    {
+        Perspective,
+        Orthographic,
+        PerspectiveFixed,
+        None
+    };
+
     class Camera
     {
         
@@ -31,6 +39,9 @@ namespace Engine
         virtual void SetRotation(float yaw, float pitch, float roll=0.0f) {};
         bool IsPerspective() const { return m_type == CameraType::Perspective; }
 
+        CameraType GetType() const { return m_type; }
+        void SetType(CameraType type) { m_type = type; }
+
     protected:
         void RecalculateViewMatrix();
 
@@ -42,13 +53,6 @@ namespace Engine
         float m_nearClip;
         float m_farClip;
 
-        enum CameraType
-        {
-            Perspective,
-            Orthographic,
-            PerspectiveFixed,
-            None
-        };
         CameraType m_type = CameraType::None;
     };
 }
