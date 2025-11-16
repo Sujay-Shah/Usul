@@ -14,11 +14,6 @@
 
 namespace Engine
 {
-    enum class CameraType
-    {
-        Orthographic = 0, Perspective = 1
-    };
-
     class CameraController
     {
         public:
