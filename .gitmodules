@@ -19,3 +19,6 @@
 [submodule "Engine/vendor/entt"]
 	path = Engine/vendor/entt
 	url = https://github.com/skypjack/entt.git
+[submodule "Engine/vendor/yaml-cpp"]
+	path = Engine/vendor/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp.git

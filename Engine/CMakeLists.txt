@@ -13,6 +13,7 @@ add_subdirectory( vendor/glad )
 add_subdirectory( vendor/spdlog )
 add_subdirectory( vendor/glfw )
 add_subdirectory( vendor/assimp )
+add_subdirectory(vendor/yaml-cpp)
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DENGINE_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DENGINE_DEBUG")
@@ -47,6 +48,7 @@ add_library( Engine
 # Set the standard C++ exception handling model for MSVC
 if(MSVC)
     target_compile_options(Engine PRIVATE /EHsc)
+    target_compile_definitions(Engine PRIVATE NOMINMAX)
 endif()
 
 
@@ -61,6 +63,7 @@ target_link_libraries( Engine
         glfw
         spdlog
 		assimp
+        yaml-cpp
 		${Vulkan_LIBRARIES}
 )
 
@@ -79,6 +82,7 @@ target_include_directories( Engine
         vendor/glm
         vendor/entt/single_include/entt
         vendor/spdlog/include
+        vendor/yaml-cpp/include
 		${Vulkan_INCLUDE_DIRS}
     PRIVATE
         vendor/glfw/include
