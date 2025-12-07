@@ -1,7 +1,6 @@
 #ifndef __LOGGING_H__
 #define __LOGGING_H__
 
-#define GLM_ENABLE_EXPERIMENTAL
 #include "glm/gtx/string_cast.hpp"
 
 // This ignores all warnings raised inside External headers

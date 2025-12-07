@@ -51,6 +51,7 @@ if(MSVC)
     target_compile_definitions(Engine PRIVATE NOMINMAX)
 endif()
 
+target_compile_definitions(Engine PUBLIC GLM_ENABLE_EXPERIMENTAL)
 
 find_package(Vulkan REQUIRED)
 message($ENV{VULKAN_SDK})
