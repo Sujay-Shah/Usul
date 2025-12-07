@@ -11,6 +11,7 @@
 #include "Renderer/FrameBuffer.h"
 #include "Event/WindowEvent.h"
 #include "Engine/Scene/SceneSerializer.h"
+#include "Engine/Utils/PlatformUtils.h"
 
 //#define ENGINE_BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 namespace Engine
@@ -140,31 +141,19 @@ namespace Engine
 		{
 			if (ImGui::BeginMenu("File"))
 			{
-				if (ImGui::MenuItem("Serialize"))
-				{
-					SceneSerializer serializer(m_ActiveScene);
-					serializer.Serialize("assets/scenes/Example.yml");
-				}
-
-				if (ImGui::MenuItem("Deserialize"))
-				{
-					SceneSerializer serializer(m_ActiveScene);
-					serializer.Deserialize(AssetManager::GetAssetPath("scenes/Example.yml").string());
-				}
-
-				if (ImGui::MenuItem("Open Project...", "Ctrl+O"))
-					//OpenProject();
+				if (ImGui::MenuItem("Open Scene", "Ctrl+O"))
+					OpenScene();
 
 				ImGui::Separator();
 
 				if (ImGui::MenuItem("New Scene", "Ctrl+N"))
-					//NewScene();
+					NewScene();
 
-				if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
-					//SaveScene();
+				/*if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+					SaveScene();*/
 
 				if (ImGui::MenuItem("Save Scene As...", "Ctrl+Shift+S"))
-					//SaveSceneAs();
+					SaveSceneAs();
 
 				ImGui::Separator();
 
@@ -252,8 +241,11 @@ namespace Engine
     {
 		m_CameraController.OnEvent(e);
 		
+		EventDispatcher dispatcher(e);
+		dispatcher.Dispatch<KeyPressedEvent>(ENGINE_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+
         //resize
-        WindowResizeEvent * we = dynamic_cast<WindowResizeEvent*>(&e);
+        /*WindowResizeEvent * we = dynamic_cast<WindowResizeEvent*>(&e);
         if(we)
         {
             if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
@@ -270,9 +262,77 @@ namespace Engine
             ImGuiIO& io = ImGui::GetIO();
             e.handled |= e.InCategory(MOUSE) & io.WantCaptureMouse;
             e.handled |= e.InCategory(KEYBOARD) & io.WantCaptureKeyboard;
-        }
+        }*/
 
     }
+
+	bool EditorLayer::OnKeyPressed(KeyPressedEvent& e)
+	{
+		// Shortcuts
+		if (e.IsRepeat())
+			return false;
+
+		bool control = Input::IsKeyPressed(Key::LeftControl) || Input::IsKeyPressed(Key::RightControl);
+		bool shift = Input::IsKeyPressed(Key::LeftShift) || Input::IsKeyPressed(Key::RightShift);
+		switch (e.GetKeyCode())
+		{
+			case Key::N:
+			{
+				if (control)
+					NewScene();
+
+				break;
+			}
+			case Key::O:
+			{
+				if (control)
+					OpenScene();
+
+				break;
+			}
+			case Key::S:
+			{
+				if (control && shift)
+					SaveSceneAs();
+
+				break;
+			}
+		}
+		return true;
+	}
+
+	void EditorLayer::NewScene()
+	{
+		m_ActiveScene = CreateRef<Scene>();
+		m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+	}
+
+	void EditorLayer::OpenScene()
+	{
+		// Combine the extensions into one pattern using a semicolon
+std::string filepath = FileDialogs::SaveFile("Scene (*.yaml, *.yml)\0*.yaml;*.yml\0");
+		if (!filepath.empty())
+		{
+			m_ActiveScene = CreateRef<Scene>();
+			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
+			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+
+			SceneSerializer serializer(m_ActiveScene);
+			serializer.Deserialize(filepath);
+		}
+	}
+
+	void EditorLayer::SaveSceneAs()
+	{
+		// Combine the extensions into one pattern using a semicolon
+		std::string filepath = FileDialogs::SaveFile("Scene (*.yaml, *.yml)\0*.yaml;*.yml\0");
+		if (!filepath.empty())
+		{
+			SceneSerializer serializer(m_ActiveScene);
+			serializer.Serialize(filepath);
+		}
+	}
 
     bool EditorLayer::IsViewportFocused() const
     {

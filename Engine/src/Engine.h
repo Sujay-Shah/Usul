@@ -12,6 +12,7 @@
 #include "Engine/Event/Event.h"
 #include "Engine/Event/KeyCodes.h"
 #include "Engine/Event/MouseCodes.h"
+#include "Engine/Event/KeyboardEvent.h"
 
 #include "Engine/Core/Layer.h"
 #include "Engine/Core/LayerStack.h"

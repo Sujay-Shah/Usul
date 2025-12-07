@@ -32,11 +32,16 @@ namespace Engine
             std::string ToString() const override
             {
                 std::stringstream ss;
-                ss << "KeyPressedEvent: " << GetKeyCode();
+                ss << "KeyPressedEvent: " << GetKeyCode() << " (repeat = " << m_isRepeat << ")";
                 return ss.str();
             }
 
             EVENT_TYPE(KeyPressed);
+
+            inline bool IsRepeat() const { return m_isRepeat; }
+
+        private:
+            bool m_isRepeat;
     };
 
     class KeyReleasedEvent : public KeyboardEvent
