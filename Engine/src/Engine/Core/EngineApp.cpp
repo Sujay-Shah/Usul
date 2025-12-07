@@ -1,5 +1,5 @@
 #include "EngineApp.h"
-#include "Event/WindowEvent.h"
+#include "Event/ApplicationEvent.h"
 #include "Input.h"
 #include "EngineDefines.h"
 #include "Platform/GLFW/TimeGLFW.h"
@@ -87,7 +87,7 @@ namespace Engine
         for (auto it = m_layerStack.rbegin(); it != m_layerStack.rend(); ++it)
         {
             (*it)->OnEvent(e);
-            if (e.handled)
+            if (e.Handled)
                 break;
         }
     }

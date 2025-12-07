@@ -9,7 +9,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Renderer/FrameBuffer.h"
-#include "Event/WindowEvent.h"
+#include "Event/ApplicationEvent.h"
 #include "ImGuizmo.h"
 
 //#define ENGINE_BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
@@ -41,7 +41,7 @@ namespace Engine
         ImGui::CreateContext();
         ImGuiIO& io = ImGui::GetIO(); 
         (void)io;
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable Keyboard Controls
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;       // Enable EventCategoryKeyboard Controls
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;           // Enable Docking
         io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;         // Enable Multi-Viewport / Platform Windows
 
@@ -163,8 +163,8 @@ namespace Engine
         if (m_BlockEvents)
         {
             ImGuiIO& io = ImGui::GetIO();
-            e.handled |= e.InCategory(MOUSE) & io.WantCaptureMouse;
-            e.handled |= e.InCategory(KEYBOARD) & io.WantCaptureKeyboard;
+            e.Handled |= e.IsInCategory(EventCategoryMouse) & io.WantCaptureMouse;
+            e.Handled |= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
         }
 
     }

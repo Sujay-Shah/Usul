@@ -15,7 +15,7 @@ namespace Engine
 
         public:
             unsigned int GetKeyCode() const { return m_keyCode; }
-            EVENT_CATEGORY(INPUT | KEYBOARD);
+            EVENT_CLASS_CATEGORY(EventCategoryInput | EventCategoryKeyboard);
 
         private:
             unsigned int m_keyCode;
@@ -36,7 +36,7 @@ namespace Engine
                 return ss.str();
             }
 
-            EVENT_TYPE(KeyPressed);
+            EVENT_CLASS_TYPE(KeyPressed);
 
             inline bool IsRepeat() const { return m_isRepeat; }
 
@@ -59,7 +59,7 @@ namespace Engine
                 return ss.str();
             }
 
-            EVENT_TYPE(KeyReleased);
+            EVENT_CLASS_TYPE(KeyReleased);
     }; 
 
     class KeyTypedEvent : public KeyboardEvent
@@ -77,7 +77,7 @@ namespace Engine
                 return ss.str();
             }
 
-            EVENT_TYPE(KeyTyped);
+            EVENT_CLASS_TYPE(KeyTyped);
     }; 
 }
 

@@ -1,6 +1,6 @@
 #include "WindowGLFW.h"
 #include "Event/KeyboardEvent.h"
-#include "Event/WindowEvent.h"
+#include "Event/ApplicationEvent.h"
 #include "Event/MouseEvent.h"
 #include "Platform/OpenGL/RenderContextOpenGL.h"
 #include "Platform/Vulkan/RenderContextVulkan.h"

@@ -9,7 +9,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "Renderer/FrameBuffer.h"
-#include "Event/WindowEvent.h"
+#include "Event/ApplicationEvent.h"
 #include "Engine/Scene/SceneSerializer.h"
 #include "Engine/Utils/PlatformUtils.h"
 
@@ -231,7 +231,7 @@ namespace Engine
         //record Editor render operations
     	
 		// Update scene
-		m_ActiveScene->OnUpdate(ts);
+		m_ActiveScene->OnUpdateEditor(ts,m_EditorCamera);
 
         m_Framebuffer->Unbind();
     }

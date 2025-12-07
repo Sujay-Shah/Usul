@@ -3,6 +3,7 @@
 
 #include "Engine.h"
 #include "Panels/SceneHierarchyPanel.h"
+#include "Engine/Renderer/Camera/EditorCamera.h"
 namespace Engine
 {
     class Framebuffer;
@@ -30,6 +31,7 @@ namespace Engine
         //void SaveScene();
 		void SaveSceneAs();
     private:
+        EditorCamera m_EditorCamera;
         CameraController m_CameraController;
         //once there are different features in the renderer,
         //this stuff can be ported into a seperate editor layer in future

@@ -5,7 +5,7 @@
 #include "PerspectiveCamera.h"
 #include "Event/Event.h"
 #include "Event/MouseEvent.h"
-#include "Event/WindowEvent.h"
+#include "Event/ApplicationEvent.h"
 #include "Engine/Core/Timestep.h"
 
 #include <glm/glm.hpp>
