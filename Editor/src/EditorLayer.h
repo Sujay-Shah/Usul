@@ -47,6 +47,8 @@ namespace Engine
 		Entity m_SquareEntity;
 		Entity m_CameraEntity;
 
+        int m_GizmoType = -1;
+        
         //Panels
         SceneHierarchyPanel m_SceneHierarchyPanel;
         

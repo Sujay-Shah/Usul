@@ -10,6 +10,7 @@
 #include <GLFW/glfw3.h>
 #include "Renderer/FrameBuffer.h"
 #include "Event/WindowEvent.h"
+#include "ImGuizmo.h"
 
 //#define ENGINE_BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
@@ -88,6 +89,8 @@ namespace Engine
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+
+        ImGuizmo::BeginFrame();
 
  #if ENABLE_EXAMPLE
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });

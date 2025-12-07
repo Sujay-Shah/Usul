@@ -14,6 +14,7 @@ add_subdirectory( vendor/spdlog )
 add_subdirectory( vendor/glfw )
 add_subdirectory( vendor/assimp )
 add_subdirectory(vendor/yaml-cpp)
+#add_subdirectory(vendor/ImGuizmo)
 
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -DENGINE_DEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DENGINE_DEBUG")
@@ -38,6 +39,8 @@ list(APPEND ENGINE_SOURCES
     vendor/imgui/imgui_tables.cpp
     vendor/imgui/backends/imgui_impl_glfw.cpp
     vendor/imgui/backends/imgui_impl_opengl3.cpp # Assuming OpenGL3 is used with GLAD
+
+    vendor/ImGuizmo/ImGuizmo.cpp
 )
 # library creation
 
@@ -48,7 +51,7 @@ add_library( Engine
 # Set the standard C++ exception handling model for MSVC
 if(MSVC)
     target_compile_options(Engine PRIVATE /EHsc)
-    target_compile_definitions(Engine PRIVATE NOMINMAX)
+    target_compile_definitions(Engine PUBLIC NOMINMAX)
 endif()
 
 target_compile_definitions(Engine PUBLIC GLM_ENABLE_EXPERIMENTAL)
@@ -85,13 +88,14 @@ target_include_directories( Engine
         vendor/spdlog/include
         vendor/yaml-cpp/include
 		${Vulkan_INCLUDE_DIRS}
+        
     PRIVATE
+        vendor/ImGuizmo/
         vendor/glfw/include
         vendor/glad/include
         vendor/stb_image
 		vendor/assimp/include
         
-
 )
 
 # Make sure you have an 'assets' directory in your project root.

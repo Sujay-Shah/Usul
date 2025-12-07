@@ -9,6 +9,8 @@ file(GLOB SOURCES
 
 add_executable(Editor ${SOURCES})
 
+target_compile_definitions(Editor PUBLIC GLM_ENABLE_EXPERIMENTAL)
+
 target_include_directories(Editor
     PRIVATE
         ${CMAKE_SOURCE_DIR}/Engine/src/Engine
