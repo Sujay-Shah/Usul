@@ -68,7 +68,7 @@ namespace Engine
         glTexParameteri(m_rendererID, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         glTexImage2D(GL_TEXTURE_2D, 0, m_internalFormat, m_width, m_height, 0, m_dataForamt, GL_UNSIGNED_BYTE, data);
-        GL_CHECK_ERROR();
+        //GL_CHECK_ERROR();
         glBindTexture(GL_TEXTURE_2D, 0);
         #else
         glCreateTextures(GL_TEXTURE_2D, 1, &m_rendererID);

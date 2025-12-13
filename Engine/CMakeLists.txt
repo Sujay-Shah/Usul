@@ -31,6 +31,7 @@ file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
     "src/*.cpp"
     "src/Engine/*.cpp"
     "src/Platform/*.cpp"
+    "src/Platform/*.mm"
     "vendor/stb_image/*.cpp"
     "EnginePCH.cpp"
 )

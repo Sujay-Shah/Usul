@@ -20,7 +20,7 @@ namespace Engine {
 		void OnUpdateRuntime(Timestep ts);
 		void OnUpdateEditor(Timestep ts, EditorCamera& camera);
 		void OnViewportResize(uint32_t width, uint32_t height);
-		void Scene::DestroyEntity(Entity entity);
+		void DestroyEntity(Entity entity);
 		Entity GetPrimaryCameraEntity();
 	private:
 		template<typename T>

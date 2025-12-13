@@ -1,6 +1,8 @@
 #include "EnginePCH.h"
 #include "Engine/Utils/PlatformUtils.h"
+#include "Engine/Core/PlatformDetection.h"
 
+#ifdef ENGINE_PLATFORM_WINDOWS
 #include <commdlg.h>
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
@@ -49,3 +51,4 @@ namespace Engine {
 	}
 
 }
+#endif

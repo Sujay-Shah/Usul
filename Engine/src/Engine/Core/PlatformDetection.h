@@ -43,14 +43,51 @@
 	#endif // End of platform detection
 
      //TODO: refactor api selection
-#define API_VULKAN 1
-#define API_OPENGL 0
+// API Selection
+    #if defined(ENGINE_PLATFORM_MAC)
+        // Mac: Disable OpenGL, use Vulkan via MoltenVK
+        #define API_OPENGL 0
+        #define API_VULKAN 1
+        #define API_DIRECTX 0
+		#define GLFW_EXPOSE_NATIVE_COCOA
+    #elif defined(ENGINE_PLATFORM_ANDROID)
+        // Android: Use Vulkan
+        #define API_OPENGL 0
+        #define API_VULKAN 1
+        #define API_DIRECTX 0
+    #elif defined(ENGINE_PLATFORM_LINUX)
+        // Linux: Vulkan or OpenGL (Default to OpenGL)
+        #if defined(ENGINE_USE_VULKAN)
+            #define API_OPENGL 0
+            #define API_VULKAN 1
+        #else
+            #define API_OPENGL 1
+            #define API_VULKAN 0
+        #endif
+        #define API_DIRECTX 0
+    #elif defined(ENGINE_PLATFORM_WINDOWS)
+        // Windows: OpenGL, Vulkan, or DirectX (Default to OpenGL)
+        #if defined(ENGINE_USE_VULKAN)
+            #define API_OPENGL 0
+            #define API_VULKAN 1
+            #define API_DIRECTX 0
+        #elif defined(ENGINE_USE_DIRECTX)
+            #define API_OPENGL 0
+            #define API_VULKAN 0
+            #define API_DIRECTX 1
+        #else
+            #define API_OPENGL 1
+            #define API_VULKAN 0
+            #define API_DIRECTX 0
+        #endif
+    #else
+        #error "Unknown platform for API selection!"
+    #endif
+
 #define ENABLE_EXAMPLE 0
 
-#define GLFW_INCLUDE_VULKAN
-
 #if API_VULKAN
-
+#define GLFW_INCLUDE_VULKAN
 #endif //API_VULKAN
 
 #endif // PlatformDetection_h__

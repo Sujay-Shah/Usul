@@ -172,8 +172,7 @@ namespace Engine {
 			auto& tag = entity.GetComponent<TagComponent>().Tag;
 
 			char buffer[256];
-			memset(buffer, 0, sizeof(buffer));
-			strcpy_s(buffer, sizeof(buffer), tag.c_str());
+			ImStrncpy(buffer, tag.c_str(), sizeof(buffer));
 			if (ImGui::InputText("Tag", buffer, sizeof(buffer)))
 			{
 				tag = std::string(buffer);

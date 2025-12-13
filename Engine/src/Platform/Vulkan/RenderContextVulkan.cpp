@@ -144,7 +144,6 @@ namespace Engine
         std::vector<const char*> requiredExtensions = getRequiredExtensions();
 #if __APPLE__
         requiredExtensions.emplace_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-
         createInfo.flags |= VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
 
@@ -398,7 +397,7 @@ namespace Engine
 
         createInfo.pEnabledFeatures = &deviceFeatures;
 
-        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());;
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(deviceExtensions.size());
         createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
         //device specific layer desc
@@ -425,22 +424,44 @@ namespace Engine
         //Alternate way to create platform/wsi specific surface, since we are using glfw
         // which abstracts it, we won't need below code
         /* 
-        #define VK_USE_PLATFORM_WIN32_KHR
-        #define GLFW_INCLUDE_VULKAN
-        #include <GLFW/glfw3.h>
-        #define GLFW_EXPOSE_NATIVE_WIN32
-        #include <GLFW/glfw3native.h>
-        VkWin32SurfaceCreateInfoKHR createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
-        createInfo.hwnd = glfwGetWin32Window(window);
-        createInfo.hinstance = GetModuleHandle(nullptr);
+        #ifdef _WIN32
+            #define VK_USE_PLATFORM_WIN32_KHR
+            #define GLFW_INCLUDE_VULKAN
+            #include <GLFW/glfw3.h>
+            #define GLFW_EXPOSE_NATIVE_WIN32
+            #include <GLFW/glfw3native.h>
+            VkWin32SurfaceCreateInfoKHR createInfo{};
+            createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+            createInfo.hwnd = glfwGetWin32Window(m_windowHandle);
+            createInfo.hinstance = GetModuleHandle(nullptr);
 
-        if (vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create window surface!");
-        }
+            if (vkCreateWin32SurfaceKHR(m_instance, &createInfo, nullptr, &m_surface) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create window surface!");
+            }
+        #elif defined(__APPLE__)
+            #define VK_USE_PLATFORM_METAL_EXT
+            #define GLFW_INCLUDE_VULKAN
+            #include <GLFW/glfw3.h>
+            #define GLFW_EXPOSE_NATIVE_COCOA
+            #include <GLFW/glfw3native.h>
+
+            // Note: Accessing NSWindow/NSView requires Objective-C++ or runtime calls
+            // NSWindow* window = glfwGetCocoaWindow(m_windowHandle);
+            // CAMetalLayer* layer = [[window contentView] layer];
+
+            VkMetalSurfaceCreateInfoEXT createInfo{};
+            createInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
+            createInfo.pLayer = layer;
+
+            if (vkCreateMetalSurfaceEXT(m_instance, &createInfo, nullptr, &m_surface) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create window surface!");
+            }
+        #endif
         */
-        if (glfwCreateWindowSurface(m_instance, m_windowHandle, nullptr, &m_surface) != VK_SUCCESS) {
-            ENGINE_CORE_ERROR("failed to create window surface!");
+
+        VkResult result = glfwCreateWindowSurface(m_instance, m_windowHandle, nullptr, &m_surface);
+        if (result != VK_SUCCESS) {
+            ENGINE_CORE_ERROR("failed to create window surface! Error: {0}", (int)result);
         }
     }
 

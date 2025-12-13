@@ -310,7 +310,7 @@ namespace Engine
 	void EditorLayer::OpenScene()
 	{
 		// Combine the extensions into one pattern using a semicolon
-std::string filepath = FileDialogs::SaveFile("Scene (*.yaml, *.yml)\0*.yaml;*.yml\0");
+		std::string filepath = FileDialogs::OpenFile("Scene (*.yaml, *.yml)\0*.yaml;*.yml\0");
 		if (!filepath.empty())
 		{
 			m_ActiveScene = CreateRef<Scene>();

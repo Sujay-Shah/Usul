@@ -1,4 +1,4 @@
-#include "Enginepch.h"
+#include "EnginePCH.h"
 #include "SceneSerializer.h"
 
 #include "Entity.h"
@@ -221,7 +221,7 @@ namespace Engine {
 				{
 					auto& cc = deserializedEntity.AddComponent<CameraComponent>();
 
-					auto& cameraProps = cameraComponent["Camera"];
+					const auto& cameraProps = cameraComponent["Camera"];
 					cc.Camera.SetType((Engine::CameraType)cameraProps["ProjectionType"].as<int>());
 
 					cc.Camera.SetPerspectiveVerticalFOV(cameraProps["PerspectiveFOV"].as<float>());
