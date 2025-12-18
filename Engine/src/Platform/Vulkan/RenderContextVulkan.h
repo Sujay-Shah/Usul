@@ -91,9 +91,23 @@ namespace Engine
         QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
         void createLogicalDevice();
         void createSurface();
+        void createSwapChain();
+        void createImageViews();
+        void createRenderPass();
+        void createGraphicsPipeline();
+        void createFramebuffers();
+        void createCommandPool();
+        void createCommandBuffers();
+        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+        void createSyncObjects();
+        void drawFrame();
 
         bool checkDeviceExtensionSupport(VkPhysicalDevice device);
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+        VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+        VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+        VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+        VkShaderModule createShaderModule(const std::vector<char>& code);
 
     public:
         VkInstance m_instance;
@@ -107,6 +121,21 @@ namespace Engine
         VkQueue m_graphicsQueue;
         VkQueue m_presentQueue;
         VkSurfaceKHR m_surface;
+        VkSwapchainKHR m_swapChain;
+        std::vector<VkImage> m_swapChainImages;
+        VkFormat m_swapChainImageFormat;
+        VkExtent2D m_swapChainExtent;
+        std::vector<VkImageView> m_swapChainImageViews;
+        std::vector<VkFramebuffer> m_swapChainFramebuffers;
+
+        VkPipelineLayout m_pipelineLayout;
+        VkRenderPass m_renderPass;
+        VkPipeline m_graphicsPipeline;
+        VkCommandPool m_commandPool;
+        VkCommandBuffer m_commandBuffer;
+        VkSemaphore m_imageAvailableSemaphore;
+        VkSemaphore m_renderFinishedSemaphore;
+        VkFence m_inFlightFence;
 
         std::vector<const char*> m_validationLayers = {
                 "VK_LAYER_KHRONOS_validation"

@@ -43,8 +43,8 @@
 	#endif // End of platform detection
 
      //TODO: refactor api selection
-#define API_VULKAN 0
-#define API_OPENGL 1
+#define API_VULKAN 1
+#define API_OPENGL 0
 #define ENABLE_EXAMPLE 0
 
 #define GLFW_INCLUDE_VULKAN

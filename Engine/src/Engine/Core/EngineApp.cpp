@@ -19,8 +19,8 @@ namespace Engine
         m_window->SetEventCallback(ENGINE_BIND_EVENT_FN(EngineApp::OnEvent));
         m_window->SetVsync(false);
         
-        Renderer::Init();
 #if !API_VULKAN
+        Renderer::Init();
         m_imguiLayer = new ImGuiLayer();
         PushOverlay(m_imguiLayer);
 #endif
