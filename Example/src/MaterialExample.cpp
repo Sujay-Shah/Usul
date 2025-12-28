@@ -86,8 +86,8 @@ void MaterialExample::OnUpdate(const Engine::Timestep &ts) {
 
     m_cameraController.OnUpdate(ts);
 
-    Engine::RenderCommand::SetClearColor({ 0.0f, 0.0f, 0.0f, 1 });
-    Engine::RenderCommand::Clear();
+    Engine::Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 1 });
+    Engine::Renderer::Clear();
 
     Engine::Renderer::BeginScene(m_cameraController.GetCamera());
 

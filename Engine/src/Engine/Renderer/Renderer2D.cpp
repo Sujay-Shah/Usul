@@ -2,7 +2,7 @@
 #include "Engine/Core/AssetManager.h"
 #include "Shader.h"
 #include "VertexArray.h"
-#include "RenderCommand.h"
+#include "Renderer.h"
 
 namespace Engine
 {
@@ -168,7 +168,7 @@ namespace Engine
 		for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
 			s_Data.TextureSlots[i]->Bind(i);
 		
-		RenderCommand::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
+		Renderer::DrawIndexed(s_Data.QuadVertexArray, s_Data.QuadIndexCount);
 		s_Data.Stats.DrawCalls++;
 	}
 

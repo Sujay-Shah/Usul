@@ -52,8 +52,8 @@ void TextureDemo::OnUpdate(const Engine::Timestep& ts)
     //CLIENT_TRACE("Delta time: {0}", ts.GetTimeSeconds());
     m_cameraController.OnUpdate(ts);
 
-    Engine::RenderCommand::SetClearColor({0.1f, 0.1f, 0.1f, 1});
-    Engine::RenderCommand::Clear();
+    Engine::Renderer::SetClearColor({0.1f, 0.1f, 0.1f, 1});
+    Engine::Renderer::Clear();
 
     Engine::Renderer::BeginScene(m_cameraController.GetCamera());
 

@@ -8,6 +8,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include "Renderer/Renderer.h"
 #include "Renderer/FrameBuffer.h"
 #include "Event/ApplicationEvent.h"
 #include "Engine/Scene/SceneSerializer.h"
@@ -225,8 +226,8 @@ namespace Engine
 
 		Renderer2D::ResetStats();
         m_Framebuffer->Bind();
-        RenderCommand::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-		RenderCommand::Clear();
+        Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+		Renderer::Clear();
         m_Framebuffer->ClearAttachment(1, -1);
         //record Editor render operations
     	
