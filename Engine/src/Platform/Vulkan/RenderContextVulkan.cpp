@@ -1,7 +1,8 @@
 //
 // Created by snsha on 2024-02-01.
 //
-
+//TODO: fix GLFW_INCLUDE_VULKAN define error while running with OPENGL & Windows
+#define GLFW_INCLUDE_VULKAN
 #include "RenderContextVulkan.h"
 #include <set>
 #include "Engine/Core/AssetManager.h"

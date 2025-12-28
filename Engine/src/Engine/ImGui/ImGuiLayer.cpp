@@ -93,6 +93,7 @@ namespace Engine
         ImGuizmo::BeginFrame();
 
  #if ENABLE_EXAMPLE
+        ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Viewport");
         auto viewportMinRegion = ImGui::GetWindowContentRegionMin();

@@ -84,7 +84,7 @@
         #error "Unknown platform for API selection!"
     #endif
 
-#define ENABLE_EXAMPLE 0
+#define ENABLE_EXAMPLE 1
 
 #if API_VULKAN
 #define GLFW_INCLUDE_VULKAN

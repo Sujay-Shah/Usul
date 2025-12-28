@@ -34,6 +34,9 @@ namespace Engine
             Timestep timestep = time - m_lastTime;
             m_lastTime = time;
 #if !API_VULKAN
+            Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
+            Renderer::Clear();
+
             if (!m_isMinimized)
             {
             #if ENABLE_EXAMPLE
@@ -71,7 +74,7 @@ namespace Engine
             }
             //TODO: refactor this, currently we need to call imgui layer calls seperately as the LayerStack
             // explicitly contains different examples
-            //m_imguiLayer->OnImGuiRender();
+            m_imguiLayer->OnImGuiRender();
             m_imguiLayer->End();
 #endif
             m_window->Update();
