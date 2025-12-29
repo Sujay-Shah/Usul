@@ -5,32 +5,18 @@
 #ifndef USUL_RENDERCONTEXTVULKAN_H
 #define USUL_RENDERCONTEXTVULKAN_H
 
+#define GLFW_INCLUDE_VULKAN
 #include "Renderer/RenderContext.h"
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-#include <vulkan/vulkan.hpp>
-#include <optional>
+#include "VulkanDevice.h"
+#include "VulkanSwapChain.h"
+#include "VulkanPipeline.h"
+#include "VulkanCommand.h"
+#include <memory>
 
 struct GLFWwindow;
 
 namespace Engine
 {
-
-    struct QueueFamilyIndices {
-        std::optional<uint32_t> graphicsFamily;
-        std::optional<uint32_t> presentFamily;
-
-        bool isComplete() {
-            return graphicsFamily.has_value() && presentFamily.has_value();
-        }
-    };
-
-    struct SwapChainSupportDetails {
-        VkSurfaceCapabilitiesKHR capabilities;
-        std::vector<VkSurfaceFormatKHR> formats;
-        std::vector<VkPresentModeKHR> presentModes;
-    };
-
     class RenderContextVulkan final : public RenderContext
     {
     public:
@@ -41,114 +27,34 @@ namespace Engine
 
         void Cleanup() override;
 
-        struct PhysicalDevices
-        {
-            struct PhysicalDeviceInfo
-            {
-                VkPhysicalDevice m_PhysicalDevice;
-                VkPhysicalDeviceFeatures m_Features;
-                VkPhysicalDeviceProperties m_Properties;
-                VkPhysicalDeviceMemoryProperties m_MemoryProperties;
-            };
-            std::vector<PhysicalDeviceInfo> m_PDIs;
-
-            PhysicalDevices(const VkInstance& instance);
-            PhysicalDevices() {};
-            PhysicalDevices(const PhysicalDevices& physicalDevice)
-            {
-                for (const PhysicalDeviceInfo& physicalDeviceInfo : physicalDevice.m_PDIs)
-                {
-                    m_PDIs.push_back(physicalDeviceInfo);
-                }
-            };
-
-           // void FillOutFeaturesAndProperties(Context* pContext);
-        };
-
-        static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-                VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-                VkDebugUtilsMessageTypeFlagsEXT messageType,
-                const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-                void* pUserData) {
-
-            ENGINE_CORE_WARN("validation layer: {0}",pCallbackData->pMessage);
-
-            return VK_FALSE;
-        }
+    private:
+        void drawFrame();
+        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+        void createFramebuffers();
 
     private:
         GLFWwindow* m_windowHandle = nullptr;
-
-        bool checkValidationLayerSupport();
-        std::vector<const char *> getRequiredExtensions();
-        void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
-
-        void setupDebugMessenger();
-        void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
-        void pickPhysicalDevice();
-
-        bool isDeviceSuitable(VkPhysicalDevice device);
-        QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
-        void createLogicalDevice();
-        void createSurface();
-        void createSwapChain();
-        void createImageViews();
-        void createRenderPass();
-        void createGraphicsPipeline();
-        void createFramebuffers();
-        void createCommandPool();
-        void createCommandBuffers();
-        void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-        void createSyncObjects();
-        void drawFrame();
-
-        bool checkDeviceExtensionSupport(VkPhysicalDevice device);
-        SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
-        VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
-        VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
-        VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-        VkShaderModule createShaderModule(const std::vector<char>& code);
-
-    public:
+        
         VkInstance m_instance;
         VkDebugUtilsMessengerEXT m_debugMessenger;
-        VkDeviceCreateInfo m_DeviceCI;
-        PhysicalDevices m_PhysicalDevices;
-        size_t m_PhysicalDeviceIndex;
-        VkPhysicalDevice m_physicalDevice = VK_NULL_HANDLE;
-        //logical device
-        VkDevice m_logicalDevice;
-        VkQueue m_graphicsQueue;
-        VkQueue m_presentQueue;
-        VkSurfaceKHR m_surface;
-        VkSwapchainKHR m_swapChain;
-        std::vector<VkImage> m_swapChainImages;
-        VkFormat m_swapChainImageFormat;
-        VkExtent2D m_swapChainExtent;
-        std::vector<VkImageView> m_swapChainImageViews;
+
+        std::shared_ptr<VulkanDevice> m_device;
+        std::shared_ptr<VulkanSwapChain> m_swapChain;
+        std::shared_ptr<VulkanPipeline> m_pipeline;
+        std::shared_ptr<VulkanCommand> m_command;
+        
         std::vector<VkFramebuffer> m_swapChainFramebuffers;
-
-        VkPipelineLayout m_pipelineLayout;
-        VkRenderPass m_renderPass;
-        VkPipeline m_graphicsPipeline;
-        VkCommandPool m_commandPool;
-        VkCommandBuffer m_commandBuffer;
-        VkSemaphore m_imageAvailableSemaphore;
-        VkSemaphore m_renderFinishedSemaphore;
-        VkFence m_inFlightFence;
-
-        std::vector<const char*> m_validationLayers = {
+        
+        const std::vector<const char*> m_validationLayers = {
                 "VK_LAYER_KHRONOS_validation"
         };
-
-        const std::vector<const char*> deviceExtensions = {
-                VK_KHR_SWAPCHAIN_EXTENSION_NAME
-#if __APPLE__
-                ,"VK_KHR_portability_subset"
-#endif
-        };
-
         const bool m_enableValidationLayers = true;
+
+        void setupDebugMessenger();
+        bool checkValidationLayerSupport();
+        void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+        std::vector<const char *> getRequiredExtensions();
+        void destroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
     };
 
 } // Engine
