@@ -78,6 +78,15 @@ namespace Engine {
         }
     }
     
+
+    uint32_t VulkanSwapChain::GetWidth() const {
+        return m_swapChainExtent.width;
+    }
+
+    uint32_t VulkanSwapChain::GetHeight() const {
+        return m_swapChainExtent.height;
+    }
+
     SwapChainSupportDetails VulkanSwapChain::querySwapChainSupport(VkPhysicalDevice device) {
         SwapChainSupportDetails details;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, m_surface, &details.capabilities);

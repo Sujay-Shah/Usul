@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Renderer/Device.h"
 #include <vulkan/vulkan.hpp>
 #include <optional>
 #include <vector>
@@ -15,7 +16,7 @@ namespace Engine {
         }
     };
 
-    class VulkanDevice {
+    class VulkanDevice : public Device {
     public:
         struct PhysicalDeviceInfo {
             VkPhysicalDevice physicalDevice;
@@ -27,6 +28,8 @@ namespace Engine {
 
         VulkanDevice(VkInstance instance, VkSurfaceKHR surface);
         ~VulkanDevice();
+
+        void* GetNativeDevice() const override { return m_logicalDevice; }
 
         VkDevice getLogicalDevice() const { return m_logicalDevice; }
         VkPhysicalDevice getPhysicalDevice() const { return m_physicalDevice; }

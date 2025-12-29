@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Renderer/Pipeline.h"
 #include <vulkan/vulkan.hpp>
 #include <string>
 #include <vector>
@@ -7,13 +8,13 @@
 
 namespace Engine {
 
-    class VulkanPipeline {
+    class VulkanPipeline : public Pipeline {
     public:
         VulkanPipeline(const std::shared_ptr<VulkanDevice>& device, const std::string& vertShaderPath, const std::string& fragShaderPath, VkFormat colorAttachmentFormat);
         ~VulkanPipeline();
 
-        void Create();
-        void Cleanup();
+        void Create() override;
+        void Cleanup() override;
 
         VkPipeline getPipeline() const { return m_graphicsPipeline; }
         VkPipelineLayout getPipelineLayout() const { return m_pipelineLayout; }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Renderer/SwapChain.h"
 #include <vulkan/vulkan.hpp>
 #include <vector>
 
@@ -15,13 +16,16 @@ namespace Engine {
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    class VulkanSwapChain {
+    class VulkanSwapChain : public SwapChain {
     public:
         VulkanSwapChain(const std::shared_ptr<VulkanDevice>& device, VkSurfaceKHR surface, GLFWwindow* window);
         ~VulkanSwapChain();
 
-        void Create();
-        void Cleanup();
+        void Create() override;
+        void Cleanup() override;
+
+        uint32_t GetWidth() const override;
+        uint32_t GetHeight() const override;
 
         VkSwapchainKHR getSwapChain() const { return m_swapChain; }
         const std::vector<VkImage>& getImages() const { return m_swapChainImages; }
