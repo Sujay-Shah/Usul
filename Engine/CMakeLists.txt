@@ -28,10 +28,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DENGINE_DEBUG")
 
 # --- Source Code ---
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
-    "src/*.cpp"
-    "src/Engine/*.cpp"
-    "src/Platform/*.cpp"
-    "src/Platform/*.mm"
+    "src/**.cpp"
+    "src/**.mm"
     "vendor/stb_image/*.cpp"
     "EnginePCH.cpp"
 )
@@ -85,6 +83,7 @@ target_include_directories( Engine
         ${CMAKE_CURRENT_SOURCE_DIR}
         src 
         src/Engine 
+        src/Engine/RHI
         src/Platform
 
         vendor/imgui
