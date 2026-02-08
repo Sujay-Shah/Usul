@@ -135,8 +135,7 @@ namespace Engine
             virtual uint32_t GetSize() const = 0;
             virtual void SetData(const void* data, uint32_t size) = 0;
             static Ref<VertexBuffer> Create(uint32_t size);
-            static Ref<VertexBuffer> Create(float* vertices, uint32_t size);
-            static Ref<VertexBuffer> Create(Vertex* vertices, uint32_t size);
+            static Ref<VertexBuffer> Create(void* vertices, uint32_t size);
         protected:
         uint32_t m_size;
     };

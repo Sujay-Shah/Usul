@@ -1,7 +1,7 @@
 #ifndef __TEXTUREOPENGL_H__
 #define __TEXTUREOPENGL_H__
 
-#include "Renderer/Texture.h"
+#include "RHI/Texture.h"
 #include <glad/glad.h>
 
 namespace Engine
@@ -14,7 +14,7 @@ namespace Engine
             virtual ~Texture2DOpenGL();
 
             inline virtual uint32_t GetHeight() const override { return m_height; }
-            inline virtual uint32_t GetWidth() const override { return m_height; }
+            inline virtual uint32_t GetWidth() const override { return m_width; }
 
             void SetData(void* data, uint32_t size) override;
 

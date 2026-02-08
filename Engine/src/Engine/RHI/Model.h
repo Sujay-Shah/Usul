@@ -5,7 +5,7 @@
 #ifndef USUL_MODEL_H
 #define USUL_MODEL_H
 
-#include "Mesh.h"
+#include "RHI/Mesh.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>

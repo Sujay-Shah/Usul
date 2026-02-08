@@ -5,10 +5,10 @@
 #ifndef USUL_MESH_H
 #define USUL_MESH_H
 
-#include "Renderer/Texture.h"
-#include "Renderer/Vertex.h"
-#include "Buffer.h"
-#include "Renderer.h"
+#include "RHI/Texture.h"
+#include "RHI/Vertex.h"
+#include "RHI/Buffer.h"
+#include "RHI/Renderer.h"
 
 namespace Engine
 {

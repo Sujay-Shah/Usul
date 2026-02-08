@@ -1,4 +1,4 @@
-//#include "../EnginePCH.h"
+#include "EnginePCH.h"
 #include "ShaderOpenGL.h"
 #include "Engine/Core/Logging.h"
 #include <glm/gtc/type_ptr.hpp>

@@ -4,7 +4,7 @@
 
 #ifndef USUL_MESHOPENGL_H
 #define USUL_MESHOPENGL_H
-#include "Renderer/Mesh.h"
+#include "RHI/Mesh.h"
 #include "TextureOpenGL.h"
 
 namespace Engine {

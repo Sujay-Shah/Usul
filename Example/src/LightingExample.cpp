@@ -1,7 +1,7 @@
 #include "LightingExample.h"
 #include "imgui.h"
 #include <glm/gtc/type_ptr.hpp>
-#include "Platform/GLFW/TimeGLFW.h"
+#include "RHI/Renderer.h"
 
 LightingExample::LightingExample() :
 	Engine::Layer("LightExample"), m_cameraController(1280.0f / 720.0f), m_cameraPosition(-5.0,0.0f,0.0f)
@@ -137,13 +137,9 @@ void LightingExample::OnUpdate(const Engine::Timestep& ts)
     lightShader->UploadUniformFloat("specularExp",m_specularExp);
     lightShader->UploadUniformFloat("specularStrength",m_specularIntensity);
 
-	lightShader->UploadUniformMat4("projection", m_cameraController.GetCamera().GetProjectionMatrix());
-	lightShader->UploadUniformMat4("view", m_cameraController.GetCamera().GetViewMatrix());
-
     glm::mat4 cubeModel = glm::mat4(1.0f);
     cubeModel = glm::scale(cubeModel, glm::vec3(3.0f));
-	lightShader->UploadUniformMat4("model", cubeModel);
-	Engine::Renderer::Submit(lightShader, m_cubeVA);
+	Engine::Renderer::Submit(lightShader, m_cubeVA, cubeModel);
 
 	auto LightcubeShader = m_shaderLibrary.Get("CubeLight");
 	LightcubeShader->Bind();
@@ -152,10 +148,7 @@ void LightingExample::OnUpdate(const Engine::Timestep& ts)
 	model = glm::translate(model, m_lightPos);
 	model = glm::scale(model, glm::vec3(0.2f)); // a smaller cube
 
-	LightcubeShader->UploadUniformMat4("model", model);
-	LightcubeShader->UploadUniformMat4("projection", m_cameraController.GetCamera().GetProjectionMatrix());
-	LightcubeShader->UploadUniformMat4("view", m_cameraController.GetCamera().GetViewMatrix());
-	Engine::Renderer::Submit(LightcubeShader, m_lightCubeVA);
+	Engine::Renderer::Submit(LightcubeShader, m_lightCubeVA, model);
 
 }
 

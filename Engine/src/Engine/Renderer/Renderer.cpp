@@ -1,7 +1,8 @@
-#include "Renderer.h"
+#include "RHI/Renderer.h"
 #include "Renderer2D.h"
-#include "Platform/OpenGL/RendererAPIOpenGL.h"
+#include "RHI/Backends/OpenGL/RendererAPIOpenGL.h"
 #include "Platform/Vulkan/RendererAPIVulkan.h"
+#include "RHI/Texture.h"
 
 namespace Engine
 {
@@ -45,6 +46,24 @@ namespace Engine
             DrawArrays(vertexArray);
         }
         
+    }
+
+    void Renderer::Submit(const Ref<Shader>& shader, const Ref<VertexArray>& vertexArray, const Ref<Texture2D>& texture, const glm::mat4& transform)
+    {
+        shader->Bind();
+        shader->UploadUniformMat4("u_viewProjection", s_sceneData->m_viewProjectionMatrix);
+        shader->UploadUniformMat4("u_transform", transform);
+        texture->Bind();
+        
+        vertexArray->Bind();
+        if (vertexArray->GetIndexBuffer())
+        {
+            DrawIndexed(vertexArray);
+        }
+        else
+        {
+            DrawArrays(vertexArray);
+        }
     }
 
     void Renderer::OnWindowResize(uint32_t width, uint32_t height)

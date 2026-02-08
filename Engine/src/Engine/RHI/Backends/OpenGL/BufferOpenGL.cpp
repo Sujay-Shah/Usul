@@ -6,6 +6,8 @@
 namespace Engine
 {
     VertexBufferOpenGL::VertexBufferOpenGL(uint32_t size)
+    :
+    m_size(size)
 	{
 		glCreateBuffers(1, &m_rendererID);
 		glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
@@ -18,9 +20,10 @@ namespace Engine
 		glBufferSubData(GL_ARRAY_BUFFER, 0, size, data);
 	}
     
-    VertexBufferOpenGL::VertexBufferOpenGL(float* vertices, uint32_t size)
+    VertexBufferOpenGL::VertexBufferOpenGL(void* vertices, uint32_t size)
+    :
+    m_size(size)
     {
-        m_size = size;
         glGenBuffers(1, &m_rendererID);
         glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
         glBufferData(GL_ARRAY_BUFFER,size, vertices, GL_STATIC_DRAW);
@@ -41,15 +44,6 @@ namespace Engine
     void VertexBufferOpenGL::UnBind() const
     {
         glBindBuffer(GL_ARRAY_BUFFER, 0);
-    }
-
-    VertexBufferOpenGL::VertexBufferOpenGL(Vertex *vertices, uint32_t size)
-    {
-        m_size = size;
-        glGenBuffers(1, &m_rendererID);
-        glBindBuffer(GL_ARRAY_BUFFER, m_rendererID);
-        glBufferData(GL_ARRAY_BUFFER, size * sizeof (Vertex), vertices, GL_STATIC_DRAW);
-        //ENGINE_CORE_INFO("glBufferData(GL_ARRAY_BUFFER, {0}, vertices, GL_STATIC_DRAW)",size * sizeof (Vertex));
     }
 
     IndexBufferOpenGL::IndexBufferOpenGL(uint32_t* indices, uint32_t count)

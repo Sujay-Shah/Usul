@@ -1,7 +1,7 @@
 #ifndef __VERTEXARRAY_H__
 #define __VERTEXARRAY_H__
 
-#include "Buffer.h"
+#include "RHI/Buffer.h"
 #include "Engine/Core/EngineDefines.h"
 namespace Engine
 {

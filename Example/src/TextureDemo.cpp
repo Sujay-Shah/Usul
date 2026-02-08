@@ -63,11 +63,10 @@ void TextureDemo::OnUpdate(const Engine::Timestep& ts)
     Engine::Renderer::Submit(m_shader, m_squareVA);*/
 
 
-    m_texture[currentTextureIndex]->Bind();
     auto shader = m_shaderLibrary.Get("Texture");
     squareTransform = glm::mat4(1.0f);
     squareTransform = glm::scale(squareTransform,glm::vec3(m_scale));
-    Engine::Renderer::Submit(shader, m_squareVA,squareTransform);
+    Engine::Renderer::Submit(shader, m_squareVA, m_texture[currentTextureIndex], squareTransform);
 
 
     Engine::Renderer::EndScene();

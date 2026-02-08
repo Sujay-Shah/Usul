@@ -34,6 +34,12 @@ file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
     "src/Platform/Mac/**.cpp"
     "src/Platform/Windows/**.cpp"
     "src/Engine/RHI/Backends/OpenGL/**.cpp"
+    "src/Engine/RHI/Buffer.cpp"
+    "src/Engine/RHI/FrameBuffer.cpp"
+    "src/Engine/Renderer/Mesh.cpp"
+    "src/Engine/RHI/Shader.cpp"
+    "src/Engine/RHI/Texture.cpp"
+    "src/Engine/Renderer/VertexArray.cpp"
     "vendor/stb_image/*.cpp"
     "EnginePCH.cpp"
 )
