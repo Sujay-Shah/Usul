@@ -2,7 +2,7 @@
 
 #include "RHICommon.h"
 #include "RHICommands.h"
-#include "Engine/Renderer/RendererAPI.h"
+#include "Engine/RHI/RendererAPI.h"
 
 #include <vector>
 #include <string>

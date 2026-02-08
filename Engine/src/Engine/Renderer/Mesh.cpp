@@ -1,4 +1,4 @@
-#include "Renderer/Mesh.h"
+#include "RHI/Mesh.h"
 #include "RHI/Backends/OpenGL/MeshOpenGL.h"
 
 namespace Engine

@@ -2,7 +2,7 @@
 
 // Backend implementations
 #include "Platform/Dummy/RHIDummy.h"
-#include "Platform/OpenGL/RendererAPIOpenGL.h"
+#include "RHI/Backends/OpenGL/RendererAPIOpenGL.h"
 #include "Platform/Vulkan/RendererAPIVulkan.h"
 
 

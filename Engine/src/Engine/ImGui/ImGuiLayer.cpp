@@ -8,7 +8,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "Renderer/FrameBuffer.h"
+#include "RHI/FrameBuffer.h"
 #include "Event/ApplicationEvent.h"
 #include "ImGuizmo.h"
 

@@ -1,4 +1,4 @@
-#include "Renderer/VertexArray.h"
+#include "VertexArray.h"
 #include "RHI/Renderer.h"
 #include "RHI/Backends/OpenGL/VertexArrayOpenGL.h"
 

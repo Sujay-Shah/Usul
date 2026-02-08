@@ -1,7 +1,7 @@
 #ifndef __VERTEXARRAYOPENGL_H__
 #define __VERTEXARRAYOPENGL_H__
 
-#include "Renderer/VertexArray.h"
+#include "RHI/VertexArray.h"
 
 namespace Engine
 {

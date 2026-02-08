@@ -1,7 +1,7 @@
 #include "../EnginePCH.h"
 #include "FrameBuffer.h"
-#include "Renderer/Renderer.h"
-#include "Platform/OpenGL/FrameBufferOpenGL.h"
+#include "RHI/Renderer.h"
+#include "RHI/Backends/OpenGL/FrameBufferOpenGL.h"
 
 namespace Engine {
 

@@ -5,7 +5,7 @@
 #ifndef OPENGLFRAMEBUFFER_H
 #define OPENGLFRAMEBUFFER_H
 
-#include "Engine/Renderer/FrameBuffer.h"
+#include "RHI/FrameBuffer.h"
 
 namespace Engine {
 

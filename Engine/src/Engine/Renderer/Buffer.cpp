@@ -1,6 +1,6 @@
 #include "Buffer.h"
 #include "Renderer.h"
-#include "Platform/OpenGL/BufferOpenGL.h"
+#include "RHI/Backends/OpenGL/BufferOpenGL.h"
 
 #include "Engine/Core/Logging.h"
 #include "Engine/Core/EngineDefines.h"
@@ -9,7 +9,7 @@ namespace Engine
 {
     Ref<VertexBuffer> VertexBuffer::Create(uint32_t size)
 	{
-		switch (Renderer::Get())
+		switch (Renderer::GetAPI())
 		{
 			case RendererAPI::API::None:    ENGINE_ASSERT(false, "RendererAPI::None is currently not supported!"); return nullptr;
 			case RendererAPI::API::OpenGL:  return CreateRef<VertexBufferOpenGL>(size);
@@ -21,7 +21,7 @@ namespace Engine
 
     Ref<VertexBuffer> VertexBuffer::Create(float* vertices, uint32_t size)
     {
-        switch(Renderer::Get())
+        switch(Renderer::GetAPI())
         {
             case RendererAPI::API::None:
                 ENGINE_ASSERT(0, "No renderer API is not supported!");
@@ -35,7 +35,7 @@ namespace Engine
     }
 
     Ref <VertexBuffer> VertexBuffer::Create(Vertex *vertices, uint32_t size) {
-        switch(Renderer::Get())
+        switch(Renderer::GetAPI())
         {
             case RendererAPI::API::None:
             ENGINE_ASSERT(0, "No renderer API is not supported!");
@@ -53,7 +53,7 @@ namespace Engine
 
     Ref<IndexBuffer> IndexBuffer::Create(uint32_t* indices, uint32_t count)
     {
-        switch(Renderer::Get())
+        switch(Renderer::GetAPI())
         {
             case RendererAPI::API::None:
                 ENGINE_ASSERT(0, "No renderer API is not supported!");
