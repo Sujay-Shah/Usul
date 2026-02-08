@@ -1,7 +1,7 @@
 #ifndef __RENAPIOPENGL_H__
 #define __RENAPIOPENGL_H__
 
-#include "Renderer/RendererAPI.h"
+#include "RHI/RendererAPI.h"
 
 namespace Engine
 {

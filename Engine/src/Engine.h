@@ -29,10 +29,10 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/Renderer2D.h"
 #include "Renderer/VertexArray.h"
-#include "Renderer/Shader.h"
+#include "RHI/Shader.h"
 #include "Renderer/Texture.h"
 #include "Renderer/Camera/CameraController.h"
-#include "Renderer/FrameBuffer.h"
+#include "RHI/FrameBuffer.h"
 #include "Renderer/Material.h"
 #include "Renderer/Model.h"
 

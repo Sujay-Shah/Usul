@@ -60,3 +60,4 @@ bin_xcode/
 /cmake-*
 *.cache
 *.ini
+*.md

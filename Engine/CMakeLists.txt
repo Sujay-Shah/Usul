@@ -28,8 +28,12 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DENGINE_DEBUG")
 
 # --- Source Code ---
 file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
-    "src/**.cpp"
-    "src/**.mm"
+    "src/Engine/**.cpp"
+    "src/Platform/Dummy/**.cpp"
+    "src/Platform/GLFW/**.cpp"
+    "src/Platform/Mac/**.cpp"
+    "src/Platform/Windows/**.cpp"
+    "src/Engine/RHI/Backends/OpenGL/**.cpp"
     "vendor/stb_image/*.cpp"
     "EnginePCH.cpp"
 )
@@ -99,6 +103,7 @@ target_include_directories( Engine
         vendor/glad/include
         vendor/stb_image
 		vendor/assimp/include
+        src/Engine/RHI/Backends/OpenGL
         
 )
 

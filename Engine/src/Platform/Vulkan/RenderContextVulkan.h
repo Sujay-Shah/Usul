@@ -6,7 +6,7 @@
 #define USUL_RENDERCONTEXTVULKAN_H
 
 #define GLFW_INCLUDE_VULKAN
-#include "Renderer/RenderContext.h"
+#include "RHI/RenderContext.h"
 #include "VulkanDevice.h"
 #include "VulkanSwapChain.h"
 #include "VulkanPipeline.h"

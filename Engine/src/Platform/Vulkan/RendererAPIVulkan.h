@@ -2,7 +2,7 @@
 #ifndef USUL_RENDERERAPIVULKAN_H
 #define USUL_RENDERERAPIVULKAN_H
 
-#include "Renderer/RendererAPI.h"
+#include "RHI/RendererAPI.h"
 
 namespace Engine {
 
