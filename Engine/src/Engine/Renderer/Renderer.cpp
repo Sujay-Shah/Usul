@@ -1,7 +1,7 @@
 #include "Renderer.h"
 #include "Renderer2D.h"
-#include "Platform/OpenGL/RendererAPIOpenGL.h"
-#include "Platform/Vulkan/RendererAPIVulkan.h"
+#include "Backends/OpenGL/RendererAPIOpenGL.h"
+#include "Backends/Vulkan/RendererAPIVulkan.h"
 
 namespace Engine
 {

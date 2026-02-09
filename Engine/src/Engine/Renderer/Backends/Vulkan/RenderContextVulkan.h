@@ -110,6 +110,8 @@ namespace Engine
         VkShaderModule createShaderModule(const std::vector<char>& code);
 
     public:
+        const int MAX_FRAMES_IN_FLIGHT = 2;
+
         VkInstance m_instance;
         VkDebugUtilsMessengerEXT m_debugMessenger;
         VkDeviceCreateInfo m_DeviceCI;
@@ -132,10 +134,11 @@ namespace Engine
         VkRenderPass m_renderPass;
         VkPipeline m_graphicsPipeline;
         VkCommandPool m_commandPool;
-        VkCommandBuffer m_commandBuffer;
-        VkSemaphore m_imageAvailableSemaphore;
-        VkSemaphore m_renderFinishedSemaphore;
-        VkFence m_inFlightFence;
+        std::vector<VkCommandBuffer> m_commandBuffers;
+        std::vector<VkSemaphore> m_imageAvailableSemaphores;
+        std::vector<VkSemaphore> m_renderFinishedSemaphores;
+        std::vector<VkFence> m_inFlightFences;
+        uint32_t m_currentFrame = 0;
 
         std::vector<const char*> m_validationLayers = {
                 "VK_LAYER_KHRONOS_validation"

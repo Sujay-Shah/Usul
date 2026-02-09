@@ -1,7 +1,7 @@
 #include "Texture.h"
 
 #include "Renderer.h"
-#include "Platform/OpenGL/TextureOpenGL.h"
+#include "Backends/OpenGL/TextureOpenGL.h"
 
 #include "Engine/Core/EngineDefines.h"
 

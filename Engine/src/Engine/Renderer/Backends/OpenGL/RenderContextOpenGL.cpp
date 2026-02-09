@@ -1,4 +1,4 @@
-#include "OpenGL/RenderContextOpenGL.h"
+#include "RenderContextOpenGL.h"
 #include "Engine/Core/Logging.h"
 #include "Engine/Core/EngineDefines.h"
 

@@ -2,8 +2,8 @@
 #include "Event/KeyboardEvent.h"
 #include "Event/ApplicationEvent.h"
 #include "Event/MouseEvent.h"
-#include "Platform/OpenGL/RenderContextOpenGL.h"
-#include "Platform/Vulkan/RenderContextVulkan.h"
+#include "Renderer/Backends/OpenGL/RenderContextOpenGL.h"
+#include "Renderer/Backends/Vulkan/RenderContextVulkan.h"
 #include "Engine/Core/EngineDefines.h"
 
 namespace Engine

@@ -1,6 +1,6 @@
 #include "Shader.h"
 #include "Renderer.h"
-#include "Platform/OpenGL/ShaderOpenGL.h"
+#include "Backends/OpenGL/ShaderOpenGL.h"
 
 #include "Engine/Core/Logging.h"
 #include "Engine/Core/EngineDefines.h"

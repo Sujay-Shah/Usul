@@ -1,6 +1,6 @@
 #include "Buffer.h"
 #include "Renderer.h"
-#include "Platform/OpenGL/BufferOpenGL.h"
+#include "Backends/OpenGL/BufferOpenGL.h"
 
 #include "Engine/Core/Logging.h"
 #include "Engine/Core/EngineDefines.h"

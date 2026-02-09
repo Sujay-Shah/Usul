@@ -76,15 +76,15 @@
             #define API_VULKAN 0
             #define API_DIRECTX 1
         #else
-            #define API_OPENGL 1
-            #define API_VULKAN 0
+            #define API_OPENGL 0
+            #define API_VULKAN 1
             #define API_DIRECTX 0
         #endif
     #else
         #error "Unknown platform for API selection!"
     #endif
 
-#define ENABLE_EXAMPLE 1
+#define ENABLE_EXAMPLE 0
 
 #if API_VULKAN
 #define GLFW_INCLUDE_VULKAN
