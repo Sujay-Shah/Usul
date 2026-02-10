@@ -1,7 +1,7 @@
 //
 // Created by snsha on 2024-03-15.
 //
-#include "Backends/OpenGL/MeshOpenGl.h"
+#include "Backends/OpenGL/MeshOpenGL.h"
 #include "Engine/Core/EngineDefines.h"
 
 namespace Engine

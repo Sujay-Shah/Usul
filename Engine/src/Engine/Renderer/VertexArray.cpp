@@ -1,6 +1,6 @@
 #include "VertexArray.h"
 #include "Renderer.h"
-#include "Platform/OpenGL/VertexArrayOpenGL.h"
+#include "Backends/OpenGL/VertexArrayOpenGL.h"
 
 #include "Engine/Core/Logging.h"
 #include "Engine/Core/EngineDefines.h"
