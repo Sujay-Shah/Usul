@@ -92,7 +92,7 @@ namespace Engine
 
         ImGuizmo::BeginFrame();
 
- #if ENABLE_EXAMPLE
+ #if ENABLE_EXAMPLE && ENABLE_EDITOR_MODE
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Viewport");

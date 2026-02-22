@@ -26,7 +26,7 @@ class TextureDemo : public Engine::Layer
         glm::mat4 squareTransform;
         float m_scale = 6.5f;
 
-        std::vector<char*> texturePaths{"textures/batman.png","textures/beerus.png","textures/dbz.png","textures/dragon.png"};
+        std::vector<const char*> texturePaths{"textures/batman.png","textures/beerus.png","textures/dbz.png","textures/dragon.png"};
         int currentTextureIndex=0;
 };
 

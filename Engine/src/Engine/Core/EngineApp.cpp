@@ -39,7 +39,7 @@ namespace Engine
 
             if (!m_isMinimized)
             {
-            #if ENABLE_EXAMPLE
+            #if ENABLE_EXAMPLE & ENABLE_EDITOR_MODE
                 //record draw calls in imgui layer frame buffer to display it in the viewport
                 m_imguiLayer->BindOrUnbindFrameBuffer(true);
             #endif
@@ -47,14 +47,14 @@ namespace Engine
                 {
                     //TODO: refactor this in future
                     #if ENABLE_EXAMPLE
-                    if(layer->GetName() == m_imguiLayer->GetCurrentExampleName())
+                        if(layer->GetName() == m_imguiLayer->GetCurrentExampleName())
                     #endif
                     {
                         layer->OnUpdate(timestep);
                         break;
                     }
                 }
-            #if ENABLE_EXAMPLE
+            #if ENABLE_EXAMPLE && ENABLE_EDITOR_MODE
                 m_imguiLayer->BindOrUnbindFrameBuffer(false);
             #endif
             }
@@ -71,11 +71,12 @@ namespace Engine
                 #else
                 layer->OnImGuiRender();
                 #endif
-            }
+            } 
             //TODO: refactor this, currently we need to call imgui layer calls seperately as the LayerStack
             // explicitly contains different examples
             m_imguiLayer->OnImGuiRender();
             m_imguiLayer->End();
+           
 #endif
             m_window->Update();
         }
