@@ -32,7 +32,7 @@ namespace Engine
     {
         ENGINE_ASSERT(glfwInit(), "GLFW failed to initialize!");
         ENGINE_INFO("GLFW initialized.");
-
+        
         #ifdef __APPLE__
                     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
                     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
@@ -59,9 +59,9 @@ namespace Engine
 #if API_OPENGL
         m_renderContext = new RenderContextOpenGL(m_window);
 #elif API_VULKAN
-        m_renderContext = new RenderContextVulkan(m_window);
+        //m_renderContext = new RenderContextVulkan(m_window);
 #endif
-        m_renderContext->Init();
+        //m_renderContext->Init();
 
         glfwSetWindowUserPointer(m_window, &m_windowData);
 
@@ -80,12 +80,12 @@ namespace Engine
     void WindowGLFW::Update()
     {
         glfwPollEvents();
-        m_renderContext->SwapBuffers();
+       // m_renderContext->SwapBuffers();
     }
 
     void WindowGLFW::Destroy()
     {
-        m_renderContext->Cleanup();
+        //m_renderContext->Cleanup();
 
         ENGINE_ERROR("Destroying window.");
         glfwDestroyWindow(m_window);

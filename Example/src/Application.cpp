@@ -16,12 +16,13 @@ class Application : public Engine::EngineApp
             //Push different example
             //PushLayer(new MaterialExample());
 #if API_OPENGL
-            PushLayer(new LightingExample());
-            PushLayer(new TextureDemo());
-            PushLayer(new TriangleDemo());
+            //PushLayer(new LightingExample());
+            //PushLayer(new TextureDemo());
+            //PushLayer(new TriangleDemo());
             //PushLayer(new ModelExample());
 #else
-            PushLayer(new VulkanExample());
+            //PushLayer(new VulkanExample());
+             PushLayer(new TriangleDemo());
 #endif
         }
         ~Application() {}

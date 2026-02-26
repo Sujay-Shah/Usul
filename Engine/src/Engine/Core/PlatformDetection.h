@@ -76,8 +76,8 @@
             #define API_VULKAN 0
             #define API_DIRECTX 1
         #else
-            #define API_OPENGL 1
-            #define API_VULKAN 0
+            #define API_OPENGL 0
+            #define API_VULKAN 1
             #define API_DIRECTX 0
         #endif
     #else

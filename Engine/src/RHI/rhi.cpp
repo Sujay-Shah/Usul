@@ -4,6 +4,8 @@
 
 // Each compiled-in backend exposes one function.
 // Guard with feature macros so unused backends don't link.
+#define RHI_ENABLE_VULKAN
+
 #ifdef RHI_ENABLE_VULKAN
 namespace vkrhi { const rhi::BackendApi* get_api(); }
 #endif

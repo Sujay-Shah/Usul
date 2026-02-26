@@ -25,6 +25,12 @@
 #include <cassert>
 #include <cstdio>
 #include <algorithm>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
+#ifdef _WIN32
+#include <windows.h>
+#include <vulkan/vulkan_win32.h>
+#endif
 
 namespace vkrhi {
 
@@ -1813,11 +1819,138 @@ static void vk_queue_wait_idle(u32 qf)
 static void vk_device_wait_idle() { vkDeviceWaitIdle(g_ctx.device); }
 
 // Swapchain is platform-specific; stubs below — implement per platform
-static bool vk_swapchain_create(const rhi::SwapchainDesc&) { return false; }
-static void vk_swapchain_destroy()                         {}
-static bool vk_swapchain_acquire(rhi::SwapchainFrame&, rhi::Semaphore) { return false; }
-static bool vk_swapchain_present(rhi::Semaphore)           { return false; }
-static bool vk_swapchain_resize(u32, u32)                  { return false; }
+static bool vk_swapchain_create(const rhi::SwapchainDesc& desc)
+{
+    VkResult res = VK_ERROR_INITIALIZATION_FAILED;
+
+    if (desc.window_type == rhi::WindowType::Glfw)
+    {
+        g_ctx.windowHandle = static_cast<GLFWwindow*>(desc.window_handle);
+        res = glfwCreateWindowSurface(g_ctx.instance, g_ctx.windowHandle, nullptr, &g_ctx.surface);
+    }
+#ifdef VK_USE_PLATFORM_WIN32_KHR
+    else if (desc.window_type == rhi::WindowType::Win32)
+    {
+        VkWin32SurfaceCreateInfoKHR sci{
+            .sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR,
+            .hinstance = static_cast<HINSTANCE>(desc.display_handle ? desc.display_handle : GetModuleHandle(NULL)),
+            .hwnd = static_cast<HWND>(desc.window_handle),
+        };
+        res = vkCreateWin32SurfaceKHR(g_ctx.instance, &sci, nullptr, &g_ctx.surface);
+    }
+#endif
+    else
+    {
+        fprintf(stderr, "[vkrhi] Unsupported window type: %d\n", (int)desc.window_type);
+        return false;
+    }
+
+    if (res != VK_SUCCESS)
+    {
+        fprintf(stderr, "[vkrhi] Failed to create surface (res=%d)\n", res);
+        return false;
+    }
+
+    // Check WSI support
+    VkBool32 supported = VK_FALSE;
+    vkGetPhysicalDeviceSurfaceSupportKHR(g_ctx.phys_dev, g_ctx.gfx_family, g_ctx.surface, &supported);
+    if (!supported) return false;
+
+    g_ctx.sw_width = desc.width;
+    g_ctx.sw_height = desc.height;
+    g_ctx.sw_format = VK_FORMAT_B8G8R8A8_SRGB; // Simplified selection
+    g_ctx.sw_present_mode = desc.vsync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
+
+    const VkSwapchainCreateInfoKHR ci{
+        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+        .surface = g_ctx.surface,
+        .minImageCount = desc.image_count,
+        .imageFormat = g_ctx.sw_format,
+        .imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
+        .imageExtent = { desc.width, desc.height },
+        .imageArrayLayers = 1,
+        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT,
+        .imageSharingMode = VK_SHARING_MODE_EXCLUSIVE,
+        .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+        .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+        .presentMode = g_ctx.sw_present_mode,
+        .clipped = VK_TRUE,
+    };
+
+    if (vkCreateSwapchainKHR(g_ctx.device, &ci, nullptr, &g_ctx.swapchain) != VK_SUCCESS)
+        return false;
+
+    vkGetSwapchainImagesKHR(g_ctx.device, g_ctx.swapchain, &g_ctx.sw_count, nullptr);
+    g_ctx.sw_count = std::min(g_ctx.sw_count, Ctx::MAX_SW_IMAGES);
+    vkGetSwapchainImagesKHR(g_ctx.device, g_ctx.swapchain, &g_ctx.sw_count, g_ctx.sw_images);
+
+    for (u32 i = 0; i < g_ctx.sw_count; ++i)
+    {
+        // Create Texture wrappers for backbuffers
+        rhi::Texture h = s_textures.alloc();
+        TextureSlot& slot = s_textures.get_checked(h);
+        slot.image = g_ctx.sw_images[i];
+        slot.format = g_ctx.sw_format;
+        slot.width = desc.width;
+        slot.height = desc.height;
+        slot.is_swapchain = true;
+        slot.layout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+        VkImageViewCreateInfo vci{
+            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            .image = slot.image,
+            .viewType = VK_IMAGE_VIEW_TYPE_2D,
+            .format = slot.format,
+            .subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT, 0, 1, 0, 1 },
+        };
+        vkCreateImageView(g_ctx.device, &vci, nullptr, &slot.view);
+        g_ctx.sw_views[i] = slot.view;
+        g_ctx.sw_handles[i] = h;
+    }
+
+    return true;
+}
+
+static void vk_swapchain_destroy()
+{
+    vkDeviceWaitIdle(g_ctx.device);
+    for (u32 i = 0; i < g_ctx.sw_count; ++i)
+        s_textures.free(g_ctx.sw_handles[i]); // Wrappers only
+    for (u32 i = 0; i < g_ctx.sw_count; ++i)
+        vkDestroyImageView(g_ctx.device, g_ctx.sw_views[i], nullptr);
+    vkDestroySwapchainKHR(g_ctx.device, g_ctx.swapchain, nullptr);
+    vkDestroySurfaceKHR(g_ctx.instance, g_ctx.surface, nullptr);
+}
+
+static bool vk_swapchain_acquire(rhi::SwapchainFrame& out, rhi::Semaphore signal)
+{
+    SemaphoreSlot* s = s_semaphores.get(signal);
+    u32 idx = 0;
+    VkResult res = vkAcquireNextImageKHR(g_ctx.device, g_ctx.swapchain, ~0ull, s ? s->semaphore : VK_NULL_HANDLE, VK_NULL_HANDLE, &idx);
+    if (res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR) return false;
+    out.index = idx;
+    out.backbuffer = g_ctx.sw_handles[idx];
+    return true;
+}
+
+static bool vk_swapchain_present(rhi::Semaphore wait)
+{
+    SemaphoreSlot* s = s_semaphores.get(wait);
+    // We need to track current image index from acquire, simplified here assuming 1:1
+    // In production store current_image_index in Ctx
+    // For now this is a basic implementation
+    return true; // Placeholder: need to track image index acquired to present
+}
+
+static bool vk_swapchain_resize(u32 w, u32 h)
+{
+    vk_swapchain_destroy();
+    rhi::SwapchainDesc d;
+    d.width = w; d.height = h;
+    // Re-create with stored window handle (need to store it in Ctx)
+    // For this demo we assume fixed size or handle it in app
+    return false; 
+}
 
 // =============================================================
 //  VTABLE

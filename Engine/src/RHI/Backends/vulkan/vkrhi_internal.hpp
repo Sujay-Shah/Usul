@@ -36,6 +36,8 @@
 #include <cstdio>
 #include <algorithm>            // std::min / max
 
+struct GLFWwindow;
+
 namespace vkrhi {
 
 using u8  = ::u8;
@@ -100,6 +102,7 @@ struct Ctx
     VkPhysicalDeviceVulkan13Features feats13     = {};
 
     // Swapchain
+    GLFWwindow*              windowHandle = nullptr;
     VkSurfaceKHR             surface         = VK_NULL_HANDLE;
     VkSwapchainKHR           swapchain       = VK_NULL_HANDLE;
     static constexpr u32     MAX_SW_IMAGES   = 8;

@@ -3,6 +3,8 @@
 
 #include <Engine.h>
 
+#include "RHI/rhi.hpp"
+
 class TriangleDemo : public Engine::Layer
 {
 	public:
@@ -16,14 +18,17 @@ class TriangleDemo : public Engine::Layer
 		virtual void OnImGuiRender() override;
 		virtual void OnEvent(Engine::Event& e) override;
 	private:
-        Engine::ShaderLibrary m_shaderLibrary;
 		Engine::CameraController m_cameraController;
 
-		Engine::Ref<Engine::Shader> m_singleColorShader;
-        Engine::Ref<Engine::VertexArray> m_triangleVA;
+		rhi::Buffer   m_vb       = {};
+		rhi::Shader   m_vs       = {};
+		rhi::Shader   m_fs       = {};
+		rhi::Pipeline m_pipeline = {};
 
-		glm::vec4 triangleColor = {0.3f, 0.2f, 0.8f, 1.0f };
-
+		// Per-frame-in-flight resources
+		rhi::FrameContext m_frames[rhi::MAX_FRAMES_IN_FLIGHT] = {};
+		uint32_t m_frame_index = 0;
+		bool m_rhi_initialized = false;
 };
 
 #endif

@@ -368,8 +368,8 @@ struct ShaderDesc
 
 struct VertexAttrib
 {
-    u32    location = 0;
     u32    binding  = 0;
+    u32    location = 0;
     Format format   = Format::Undefined;
     u32    offset   = 0;
 };
@@ -652,15 +652,18 @@ struct DispatchCmd { u32 x = 1, y = 1, z = 1; };
 //  SWAPCHAIN
 // =============================================================
 
+enum class WindowType : u32 { Glfw, Win32, Cocoa, Xcb, Wayland, Android };
+
 struct SwapchainDesc
 {
-    void       *window_handle  = nullptr; // HWND / xcb_window_t / NSWindow*
+    void       *window_handle  = nullptr; // HWND / xcb_window_t / NSWindow* / GLFWwindow*
     void       *display_handle = nullptr; // HINSTANCE / xcb_connection_t / nullptr
     u32         width          = 0;
     u32         height         = 0;
     u32         image_count    = 3;
     Format      format         = Format::BGRA8_Srgb;
     bool        vsync          = true;
+    WindowType  window_type    = WindowType::Glfw;
 };
 
 struct SwapchainFrame
