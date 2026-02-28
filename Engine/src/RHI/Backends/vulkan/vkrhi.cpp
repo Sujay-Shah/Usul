@@ -295,7 +295,7 @@ static bool vk_init(const rhi::InitDesc& desc)
     const char* layers[]     = { "VK_LAYER_KHRONOS_validation" };
     const char* inst_exts[]  = {
         VK_KHR_SURFACE_EXTENSION_NAME,
-#ifdef VK_USE_PLATFORM_WIN32_KHR
+#if defined(VK_USE_PLATFORM_WIN32_KHR) || defined(_WIN32)
         VK_KHR_WIN32_SURFACE_EXTENSION_NAME,
 #elif defined(VK_USE_PLATFORM_XCB_KHR)
         VK_KHR_XCB_SURFACE_EXTENSION_NAME,
@@ -500,6 +500,21 @@ static bool vk_init(const rhi::InitDesc& desc)
         vkCreateDescriptorPool(g_ctx.device, &dpi, nullptr, &g_ctx.desc_pool);
     }
 
+    // ---- Default Pipeline Layout ----
+    {
+        const VkPushConstantRange pcr{
+            .stageFlags = VK_SHADER_STAGE_ALL,
+            .offset     = 0,
+            .size       = 128,
+        };
+        const VkPipelineLayoutCreateInfo plci{
+            .sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+            .pushConstantRangeCount = 1,
+            .pPushConstantRanges    = &pcr,
+        };
+        vkCreatePipelineLayout(g_ctx.device, &plci, nullptr, &g_ctx.default_pipeline_layout);
+    }
+
     // ---- Debug utils ----
     if (desc.validation)
     {
@@ -561,6 +576,7 @@ static void vk_shutdown()
     });
 
     vkDestroyDescriptorPool(g_ctx.device, g_ctx.desc_pool, nullptr);
+    vkDestroyPipelineLayout(g_ctx.device, g_ctx.default_pipeline_layout, nullptr);
     vkDestroyCommandPool(g_ctx.device, g_ctx.gfx_pool,  nullptr);
     vkDestroyCommandPool(g_ctx.device, g_ctx.comp_pool, nullptr);
     vkDestroyCommandPool(g_ctx.device, g_ctx.xfr_pool,  nullptr);
@@ -635,6 +651,7 @@ static rhi::Buffer vk_buffer_create(const rhi::BufferDesc& desc)
     }
 
     slot.mapped_ptr = alloc_info.pMappedData; // non-null if MAPPED_BIT was set
+    slot.persistent_map = (slot.mapped_ptr != nullptr);
 
     // Buffer device address (useful for bindless / ray tracing)
     const VkBufferDeviceAddressInfo bda{ .sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO, .buffer = slot.buffer };
@@ -665,8 +682,13 @@ static void vk_buffer_unmap(rhi::Buffer h)
 {
     BufferSlot* s = s_buffers.get(h);
     if (!s || !s->mapped_ptr) return;
-    vmaUnmapMemory(g_ctx.allocator, s->allocation);
-    s->mapped_ptr = nullptr;
+    
+    if (!s->persistent_map)
+    {
+        vmaUnmapMemory(g_ctx.allocator, s->allocation);
+        // Reset the mapped pointer in the slot to nullptr.
+        s->mapped_ptr = nullptr;
+    }
 }
 
 static void vk_buffer_flush(rhi::Buffer h, u64 offset, u64 size)
@@ -1019,6 +1041,7 @@ static rhi::Pipeline vk_pipeline_create(const rhi::PipelineDesc& desc)
         ShaderSlot* cs = s_shaders.get(desc.compute_shader);
         if (!cs) return {};
         DescLayoutSlot* layout = s_desc_layouts.get(desc.layout);
+        VkPipelineLayout vk_layout = layout ? layout->pipeline_layout : g_ctx.default_pipeline_layout;
 
         const VkPipelineShaderStageCreateInfo stage{
             .sType  = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
@@ -1029,13 +1052,14 @@ static rhi::Pipeline vk_pipeline_create(const rhi::PipelineDesc& desc)
         const VkComputePipelineCreateInfo ci{
             .sType  = VK_STRUCTURE_TYPE_COMPUTE_PIPELINE_CREATE_INFO,
             .stage  = stage,
-            .layout = layout ? layout->pipeline_layout : VK_NULL_HANDLE,
+            .layout = vk_layout,
         };
         rhi::Pipeline h = s_pipelines.alloc();
         if (!h) return {};
         PipelineSlot& slot = s_pipelines.get_checked(h);
         slot.bind_point     = VK_PIPELINE_BIND_POINT_COMPUTE;
         slot.pipeline_layout= layout ? layout->pipeline_layout : VK_NULL_HANDLE;
+        slot.pipeline_layout= vk_layout;
         vkCreateComputePipelines(g_ctx.device, VK_NULL_HANDLE, 1, &ci, nullptr, &slot.pipeline);
         set_debug_name(VK_OBJECT_TYPE_PIPELINE, reinterpret_cast<u64>(slot.pipeline), desc.name);
         return h;
@@ -1045,6 +1069,7 @@ static rhi::Pipeline vk_pipeline_create(const rhi::PipelineDesc& desc)
     ShaderSlot* vs = s_shaders.get(desc.vertex_shader);
     ShaderSlot* fs = s_shaders.get(desc.fragment_shader);
     DescLayoutSlot* layout = s_desc_layouts.get(desc.layout);
+    VkPipelineLayout vk_layout = layout ? layout->pipeline_layout : g_ctx.default_pipeline_layout;
 
     // Shader stages
     VkPipelineShaderStageCreateInfo stages[2];
@@ -1181,7 +1206,7 @@ static rhi::Pipeline vk_pipeline_create(const rhi::PipelineDesc& desc)
         .pDepthStencilState  = &ds,
         .pColorBlendState    = &cbs,
         .pDynamicState       = &dyn,
-        .layout              = layout ? layout->pipeline_layout : VK_NULL_HANDLE,
+        .layout              = vk_layout
     };
 
     rhi::Pipeline h = s_pipelines.alloc();
@@ -1189,6 +1214,7 @@ static rhi::Pipeline vk_pipeline_create(const rhi::PipelineDesc& desc)
     PipelineSlot& slot = s_pipelines.get_checked(h);
     slot.bind_point      = VK_PIPELINE_BIND_POINT_GRAPHICS;
     slot.pipeline_layout = layout ? layout->pipeline_layout : VK_NULL_HANDLE;
+    slot.pipeline_layout = vk_layout;
 
     if (vkCreateGraphicsPipelines(g_ctx.device, VK_NULL_HANDLE, 1, &gci, nullptr, &slot.pipeline) != VK_SUCCESS)
     {
@@ -1828,7 +1854,7 @@ static bool vk_swapchain_create(const rhi::SwapchainDesc& desc)
         g_ctx.windowHandle = static_cast<GLFWwindow*>(desc.window_handle);
         res = glfwCreateWindowSurface(g_ctx.instance, g_ctx.windowHandle, nullptr, &g_ctx.surface);
     }
-#ifdef VK_USE_PLATFORM_WIN32_KHR
+#if defined(VK_USE_PLATFORM_WIN32_KHR) || defined(_WIN32)
     else if (desc.window_type == rhi::WindowType::Win32)
     {
         VkWin32SurfaceCreateInfoKHR sci{
@@ -1930,16 +1956,24 @@ static bool vk_swapchain_acquire(rhi::SwapchainFrame& out, rhi::Semaphore signal
     if (res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR) return false;
     out.index = idx;
     out.backbuffer = g_ctx.sw_handles[idx];
+    g_ctx.current_image_index = idx;
     return true;
 }
 
 static bool vk_swapchain_present(rhi::Semaphore wait)
 {
     SemaphoreSlot* s = s_semaphores.get(wait);
-    // We need to track current image index from acquire, simplified here assuming 1:1
-    // In production store current_image_index in Ctx
-    // For now this is a basic implementation
-    return true; // Placeholder: need to track image index acquired to present
+    VkSemaphore wait_sem = s ? s->semaphore : VK_NULL_HANDLE;
+    VkPresentInfoKHR pi{
+        .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .waitSemaphoreCount = wait_sem ? 1u : 0u,
+        .pWaitSemaphores = wait_sem ? &wait_sem : nullptr,
+        .swapchainCount = 1,
+        .pSwapchains = &g_ctx.swapchain,
+        .pImageIndices = &g_ctx.current_image_index,
+    };
+    VkResult res = vkQueuePresentKHR(g_ctx.graphics_queue, &pi);
+    return res == VK_SUCCESS || res == VK_SUBOPTIMAL_KHR;
 }
 
 static bool vk_swapchain_resize(u32 w, u32 h)

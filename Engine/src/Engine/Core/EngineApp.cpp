@@ -78,6 +78,14 @@ namespace Engine
             m_imguiLayer->End();
            
 #endif
+                for (Layer* layer : m_layerStack)
+                {
+
+                    {
+                        layer->OnUpdate(timestep);
+                        //break;
+                    }
+                }
             m_window->Update();
         }
     }

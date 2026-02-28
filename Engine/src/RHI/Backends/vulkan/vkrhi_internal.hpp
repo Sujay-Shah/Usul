@@ -95,6 +95,7 @@ struct Ctx
 
     // Global descriptor pool — sized conservatively; adjust for your project
     VkDescriptorPool desc_pool = VK_NULL_HANDLE;
+    VkPipelineLayout default_pipeline_layout = VK_NULL_HANDLE;
 
     // Physical device properties for validation / alignment queries
     VkPhysicalDeviceProperties       props       = {};
@@ -114,6 +115,7 @@ struct Ctx
     u32                      sw_height       = 0;
     VkFormat                 sw_format       = VK_FORMAT_UNDEFINED;
     VkPresentModeKHR         sw_present_mode = VK_PRESENT_MODE_FIFO_KHR;
+    u32                      current_image_index = 0;
 
     // Debug utils extension function pointers (null if extension absent)
     VkDebugUtilsMessengerEXT          debug_messenger  = VK_NULL_HANDLE;
@@ -148,6 +150,7 @@ struct BufferSlot
     VkDeviceSize    size        = 0;
     void           *mapped_ptr  = nullptr;        // non-null for CpuToGpu/CpuCoherent
     rhi::BufferUsage usage      = rhi::BufferUsage::None;
+    bool            persistent_map = false;
 };
 
 struct TextureSlot
