@@ -25,12 +25,15 @@
 #include <cassert>
 #include <cstdio>
 #include <algorithm>
-#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #ifdef _WIN32
 #include <windows.h>
 #include <vulkan/vulkan_win32.h>
 #endif
+#include "imgui.h"
+#include "backends/imgui_impl_glfw.h"
+#include "backends/imgui_impl_vulkan.cpp"
+
 
 namespace vkrhi {
 
@@ -1987,6 +1990,50 @@ static bool vk_swapchain_resize(u32 w, u32 h)
 }
 
 // =============================================================
+//  IMGUI
+// =============================================================
+
+static void vk_imgui_init()
+{
+    ImGui_ImplGlfw_InitForVulkan(g_ctx.windowHandle, true);
+    ImGui_ImplVulkan_InitInfo init_info = {};
+    init_info.Instance = g_ctx.instance;
+    init_info.PhysicalDevice = g_ctx.phys_dev;
+    init_info.Device = g_ctx.device;
+    init_info.QueueFamily = g_ctx.gfx_family;
+    init_info.Queue = g_ctx.graphics_queue;
+    init_info.PipelineCache = VK_NULL_HANDLE;
+    init_info.DescriptorPool = g_ctx.desc_pool;
+    init_info.RenderPass = VK_NULL_HANDLE;
+    init_info.Subpass = 0;
+    init_info.MinImageCount = g_ctx.sw_count;
+    init_info.ImageCount = g_ctx.sw_count;
+    init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    init_info.UseDynamicRendering = true;
+#ifdef IMGUI_IMPL_VULKAN_HAS_DYNAMIC_RENDERING
+    init_info.PipelineRenderingCreateInfo = { .sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO_KHR };
+    init_info.PipelineRenderingCreateInfo.colorAttachmentCount = 1;
+    init_info.PipelineRenderingCreateInfo.pColorAttachmentFormats = &g_ctx.sw_format;
+#endif
+    ImGui_ImplVulkan_Init(&init_info);
+}
+static void vk_imgui_shutdown()
+{
+    ImGui_ImplVulkan_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+}
+static void vk_imgui_new_frame()
+{
+    ImGui_ImplVulkan_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+}
+static void vk_imgui_render(rhi::CmdBuf cb)
+{
+    if (CmdBufSlot* s = s_cmdbufs.get(cb))
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), s->cmd);
+}
+
+// =============================================================
 //  VTABLE
 // =============================================================
 
@@ -2061,6 +2108,10 @@ static const rhi::BackendApi k_api{
     .queue_submit              = vk_queue_submit,
     .queue_wait_idle           = vk_queue_wait_idle,
     .device_wait_idle          = vk_device_wait_idle,
+    .imgui_init                = vk_imgui_init,
+    .imgui_shutdown            = vk_imgui_shutdown,
+    .imgui_new_frame           = vk_imgui_new_frame,
+    .imgui_render              = vk_imgui_render,
 };
 
 const rhi::BackendApi* get_api() noexcept { return &k_api; }

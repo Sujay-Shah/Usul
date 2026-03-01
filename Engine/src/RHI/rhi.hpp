@@ -147,6 +147,12 @@ struct BackendApi
                              Fence signal_fence);
     void (*queue_wait_idle) (u32 queue_family);
     void (*device_wait_idle)();
+
+    // ---- ImGui ----
+    void (*imgui_init)       ();
+    void (*imgui_shutdown)   ();
+    void (*imgui_new_frame)  ();
+    void (*imgui_render)     (CmdBuf);
 };
 
 // =============================================================
@@ -373,6 +379,16 @@ inline void queue_wait_idle(u32 qf = 0)
     { _RHI_CHECK(); g_rhi->queue_wait_idle(qf); }
 inline void device_wait_idle()
     { _RHI_CHECK(); g_rhi->device_wait_idle(); }
+
+// ---- ImGui ----
+inline void imgui_init()
+    { _RHI_CHECK(); g_rhi->imgui_init(); }
+inline void imgui_shutdown()
+    { _RHI_CHECK(); g_rhi->imgui_shutdown(); }
+inline void imgui_new_frame()
+    { _RHI_CHECK(); g_rhi->imgui_new_frame(); }
+inline void imgui_render(CmdBuf c)
+    { _RHI_CHECK(); g_rhi->imgui_render(c); }
 
 #undef _RHI_CHECK
 

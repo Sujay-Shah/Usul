@@ -1,8 +1,6 @@
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 #include "ImGuiLayer.h"
 #include "imgui.h"
-#include "backends/imgui_impl_opengl3.h"
-#include "backends/imgui_impl_glfw.h"
 
 #include "Engine/Core/EngineApp.h"
 
@@ -11,6 +9,7 @@
 #include "Renderer/FrameBuffer.h"
 #include "Event/ApplicationEvent.h"
 #include "ImGuizmo.h"
+#include "RHI/rhi.hpp"
 
 //#define ENGINE_BIND_EVENT_FN(x) std::bind(&x, this, std::placeholders::_1)
 
@@ -62,14 +61,12 @@ namespace Engine
         }
 
         // Setup Platform/Renderer bindings
-        ImGui_ImplGlfw_InitForOpenGL(window, true);
-        ImGui_ImplOpenGL3_Init("#version 410");
+        rhi::imgui_init();
     }
 
     void ImGuiLayer::OnDetach()
     {
-        ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
+        rhi::imgui_shutdown();
         ImGui::DestroyContext();
     }
 
@@ -86,8 +83,7 @@ namespace Engine
     void ImGuiLayer::Begin()
     {
         // Start the Dear ImGui frame
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+        rhi::imgui_new_frame();
         ImGui::NewFrame();
 
         ImGuizmo::BeginFrame();
@@ -126,7 +122,6 @@ namespace Engine
 
         // Rendering
         ImGui::Render();
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
     	
         // Update and Render additional Platform Windows
         // (Platform functions may change the current OpenGL context, so we save/restore it to make it easier to paste this code elsewhere.
