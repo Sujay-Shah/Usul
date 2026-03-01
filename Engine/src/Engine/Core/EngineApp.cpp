@@ -86,7 +86,7 @@ namespace Engine
                         //break;
                     }
                 }
-            m_window->Update();
+                m_window->Update();
         }
     }
 

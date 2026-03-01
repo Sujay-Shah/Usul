@@ -37,9 +37,9 @@ struct Vertex
 
 static constexpr Vertex k_verts[3] =
 {
-    {  0.0f, -0.5f,   1.f, 0.0f, 0.0f },
-    {  0.5f,  0.5f,   0.0f, 1.f, 0.0f },
-    { -0.5f,  0.5f,   0.0f, 0.0f, 1.f },
+    {  0.0f,  0.5f,   1.f, 0.0f, 0.0f },
+    { -0.5f, -0.5f,   0.0f, 0.0f, 1.f },
+    {  0.5f, -0.5f,   0.0f, 1.f, 0.0f },
 };
 
 TriangleDemo::TriangleDemo()
