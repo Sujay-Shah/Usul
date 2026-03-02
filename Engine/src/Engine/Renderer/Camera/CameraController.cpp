@@ -51,7 +51,7 @@ namespace Engine
     {
         EngineApp& app = EngineApp::Get();
         if(app.GetImGuiLayer() 
- #if ENABLE_EXAMPLE    
+ #if ENABLE_EXAMPLE & 0
         && !app.GetImGuiLayer()->IsViewportFocused()
 #endif 
     )

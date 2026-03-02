@@ -5,6 +5,8 @@
 #include "Platform/GLFW/TimeGLFW.h"
 #include "Timestep.h"
 #include "Renderer/Renderer.h"
+#include "RHI/rhi.hpp"
+#include <GLFW/glfw3.h>
 
 namespace Engine
 {
@@ -18,12 +20,45 @@ namespace Engine
         m_window = Scope<Window>(Window::Create());
         m_window->SetEventCallback(ENGINE_BIND_EVENT_FN(EngineApp::OnEvent));
         m_window->SetVsync(false);
-        
-#if !API_VULKAN
-        Renderer::Init();
+
+#if API_VULKAN
+        // 1. Init RHI Context globally
+        if (!rhi::init({
+            .backend = rhi::Backend::Vulkan,
+            .validation = true,
+            .app_name = "Usul Engine"
+        }))
+        {
+            ENGINE_ERROR("Failed to initialize RHI");
+        }
+
+        // 2. Create Swapchain
+        GLFWwindow* nativeWindow = static_cast<GLFWwindow*>(m_window->GetNativeWindow());
+        if (!rhi::swapchain_create({
+            .window_handle = nativeWindow,
+            .width = m_window->GetWidth(),
+            .height = m_window->GetHeight(),
+            .image_count = rhi::MAX_FRAMES_IN_FLIGHT,
+            .format = rhi::Format::BGRA8_Srgb,
+            .vsync = true,
+            .window_type = rhi::WindowType::Glfw
+        }))
+        {
+            ENGINE_ERROR("Failed to create swapchain");
+        }
+#endif
+
         m_imguiLayer = new ImGuiLayer();
         PushOverlay(m_imguiLayer);
+#if !API_VULKAN
+        Renderer::Init();
 #endif
+    }
+
+    EngineApp::~EngineApp()
+    {
+        rhi::swapchain_destroy();
+        rhi::shutdown();
     }
 
     void EngineApp::Run()
@@ -74,17 +109,21 @@ namespace Engine
             } 
             //TODO: refactor this, currently we need to call imgui layer calls seperately as the LayerStack
             // explicitly contains different examples
-            m_imguiLayer->OnImGuiRender();
-            m_imguiLayer->End();
+            
+            
            
 #endif
+                m_imguiLayer->Begin();
                 for (Layer* layer : m_layerStack)
                 {
+                    layer->OnImGuiRender();
+                }
+                m_imguiLayer->OnImGuiRender();
+                m_imguiLayer->End();
 
-                    {
-                        layer->OnUpdate(timestep);
-                        //break;
-                    }
+                for (Layer* layer : m_layerStack)
+                {
+                    layer->OnUpdate(timestep);
                 }
                 m_window->Update();
         }

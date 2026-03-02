@@ -27,7 +27,7 @@ namespace Engine
 
     void ImGuiLayer::OnAttach()
     {
-#if ENABLE_EXAMPLE
+#if ENABLE_EXAMPLE & 0
         FramebufferSpecification fbSpec;
         fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
         fbSpec.Width = 1280;
@@ -72,7 +72,7 @@ namespace Engine
 
     void ImGuiLayer::OnImGuiRender()
     {
-#if ENABLE_EXAMPLE
+#if ENABLE_EXAMPLE & 0
         if(_showExamples)
         {
             ShowExamples();
@@ -88,7 +88,7 @@ namespace Engine
 
         ImGuizmo::BeginFrame();
 
- #if ENABLE_EXAMPLE && ENABLE_EDITOR_MODE
+ #if ENABLE_EXAMPLE && ENABLE_EDITOR_MODE && 0
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Viewport");
@@ -142,7 +142,7 @@ namespace Engine
 
     void ImGuiLayer::OnEvent(Event &e)
     {
-#if ENABLE_EXAMPLE
+#if ENABLE_EXAMPLE & 0
         //resize
         WindowResizeEvent * we = dynamic_cast<WindowResizeEvent*>(&e);
         if(we)
@@ -164,7 +164,7 @@ namespace Engine
         }
 
     }
-#if ENABLE_EXAMPLE
+#if ENABLE_EXAMPLE & 0
     void ImGuiLayer::BindOrUnbindFrameBuffer(bool val)
     {
         if(val)

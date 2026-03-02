@@ -41,6 +41,7 @@ static constexpr Vertex k_verts[3] =
     { -0.5f, -0.5f,   0.0f, 0.0f, 1.f },
     {  0.5f, -0.5f,   0.0f, 1.f, 0.0f },
 };
+static glm::vec3 triangleColor = { 0.2f, 0.3f, 0.8f };
 
 TriangleDemo::TriangleDemo()
 	:
@@ -52,32 +53,6 @@ void TriangleDemo::OnAttach()
 {
     auto& window = Engine::EngineApp::Get().GetWindow();
     GLFWwindow* nativeWindow = static_cast<GLFWwindow*>(window.GetNativeWindow());
-
-    // 1. Init RHI
-    if (!rhi::init({
-        .backend = rhi::Backend::Vulkan,
-        .validation = true,
-        .app_name = "Usul Triangle Demo"
-    }))
-    {
-        ENGINE_ERROR("Failed to initialize RHI");
-        return;
-    }
-
-    // 2. Create Swapchain
-    if (!rhi::swapchain_create({
-        .window_handle = nativeWindow,
-        .width = window.GetWidth(),
-        .height = window.GetHeight(),
-        .image_count = rhi::MAX_FRAMES_IN_FLIGHT,
-        .format = rhi::Format::BGRA8_Srgb,
-        .vsync = true,
-        .window_type = rhi::WindowType::Glfw
-    }))
-    {
-        ENGINE_ERROR("Failed to create swapchain");
-        return;
-    }
 
     // 3. Create Vertex Buffer
     m_vb = rhi::buffer_create({
@@ -163,8 +138,6 @@ void TriangleDemo::OnDetach()
         rhi::shader_destroy(m_vs);
         rhi::shader_destroy(m_fs);
         rhi::buffer_destroy(m_vb);
-        rhi::swapchain_destroy();
-        rhi::shutdown();
     }
 }
 
@@ -215,6 +188,8 @@ void TriangleDemo::OnUpdate(const Engine::Timestep& ts)
     rhi::bind_vertex_buffer(f.cmd, m_vb);
     rhi::draw(f.cmd, { .vertex_count = 3 });
 
+    rhi::imgui_render(f.cmd);
+
     rhi::end_render_pass(f.cmd);
 
     rhi::texture_barrier(f.cmd, {
@@ -237,6 +212,10 @@ void TriangleDemo::OnUpdate(const Engine::Timestep& ts)
 
 void TriangleDemo::OnImGuiRender()
 {
+    ImGui::Begin("Settings");
+    ImGui::ColorEdit4("Triangle Color", glm::value_ptr(triangleColor));
+
+    ImGui::End();
 }
 
 void TriangleDemo::OnEvent(Engine::Event& e)

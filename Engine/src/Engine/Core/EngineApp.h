@@ -17,6 +17,7 @@ namespace Engine
     {
         public:
             EngineApp();
+            ~EngineApp();
 
             void Run();
             void OnEvent(Event& e);
