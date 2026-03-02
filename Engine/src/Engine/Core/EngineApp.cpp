@@ -20,6 +20,7 @@ namespace Engine
         m_window = Scope<Window>(Window::Create());
         m_window->SetEventCallback(ENGINE_BIND_EVENT_FN(EngineApp::OnEvent));
         m_window->SetVsync(false);
+        m_layerStack = new LayerStack();
 
 #if API_VULKAN
         // 1. Init RHI Context globally
@@ -57,6 +58,8 @@ namespace Engine
 
     EngineApp::~EngineApp()
     {
+        delete m_layerStack;
+        m_window.reset();
         rhi::swapchain_destroy();
         rhi::shutdown();
     }
@@ -78,7 +81,7 @@ namespace Engine
                 //record draw calls in imgui layer frame buffer to display it in the viewport
                 m_imguiLayer->BindOrUnbindFrameBuffer(true);
             #endif
-                for (Layer* layer : m_layerStack)
+                for (Layer* layer : *m_layerStack)
                 {
                     //TODO: refactor this in future
                     #if ENABLE_EXAMPLE
@@ -95,7 +98,7 @@ namespace Engine
             }
 
             m_imguiLayer->Begin();
-            for (Layer* layer : m_layerStack)
+            for (Layer* layer : *m_layerStack)
             {
                 #if ENABLE_EXAMPLE
                 if(layer->GetName() == m_imguiLayer->GetCurrentExampleName())
@@ -114,14 +117,14 @@ namespace Engine
            
 #endif
                 m_imguiLayer->Begin();
-                for (Layer* layer : m_layerStack)
+                for (Layer* layer : *m_layerStack)
                 {
                     layer->OnImGuiRender();
                 }
                 m_imguiLayer->OnImGuiRender();
                 m_imguiLayer->End();
 
-                for (Layer* layer : m_layerStack)
+                for (Layer* layer : *m_layerStack)
                 {
                     layer->OnUpdate(timestep);
                 }
@@ -135,7 +138,7 @@ namespace Engine
         dispatcher.Dispatch<WindowCloseEvent>(ENGINE_BIND_EVENT_FN(EngineApp::OnWindowCloseEvent));
         dispatcher.Dispatch<WindowResizeEvent>(ENGINE_BIND_EVENT_FN(EngineApp::OnWindowResizeEvent));
 
-        for (auto it = m_layerStack.rbegin(); it != m_layerStack.rend(); ++it)
+        for (auto it = m_layerStack->rbegin(); it != m_layerStack->rend(); ++it)
         {
             (*it)->OnEvent(e);
             if (e.Handled)
@@ -145,7 +148,7 @@ namespace Engine
 
     void EngineApp::PushLayer(Layer* layer)
     {
-        m_layerStack.PushLayer(layer);
+        m_layerStack->PushLayer(layer);
 #if !API_VULKAN && ENABLE_EXAMPLE
         m_imguiLayer->AddExample(layer->GetName());
 #endif
@@ -154,7 +157,7 @@ namespace Engine
 
     void EngineApp::PushOverlay(Layer* layer)
     {
-        m_layerStack.PushOverlay(layer);
+        m_layerStack->PushOverlay(layer);
         layer->OnAttach();
     }
 
