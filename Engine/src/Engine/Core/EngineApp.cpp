@@ -22,7 +22,6 @@ namespace Engine
         m_window->SetVsync(false);
         m_layerStack = new LayerStack();
 
-#if API_VULKAN
         // 1. Init RHI Context globally
         if (!rhi::init({
             .backend = rhi::Backend::Vulkan,
@@ -47,7 +46,6 @@ namespace Engine
         {
             ENGINE_ERROR("Failed to create swapchain");
         }
-#endif
 
         m_imguiLayer = new ImGuiLayer();
         PushOverlay(m_imguiLayer);
@@ -71,9 +69,7 @@ namespace Engine
             float time = GetTime();
             Timestep timestep = time - m_lastTime;
             m_lastTime = time;
-#if !API_VULKAN
-            Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-            Renderer::Clear();
+
 
             if (!m_isMinimized)
             {
@@ -109,26 +105,25 @@ namespace Engine
                 #else
                 layer->OnImGuiRender();
                 #endif
-            } 
+            }
+            m_imguiLayer->End(); 
             //TODO: refactor this, currently we need to call imgui layer calls seperately as the LayerStack
             // explicitly contains different examples
             
-            
-           
-#endif
-                m_imguiLayer->Begin();
-                for (Layer* layer : *m_layerStack)
-                {
-                    layer->OnImGuiRender();
-                }
-                m_imguiLayer->OnImGuiRender();
-                m_imguiLayer->End();
+            /*m_imguiLayer->Begin();
+            for (Layer* layer : *m_layerStack)
+            {
+                layer->OnImGuiRender();
+            }
+            m_imguiLayer->OnImGuiRender();
+            m_imguiLayer->End();
 
-                for (Layer* layer : *m_layerStack)
-                {
-                    layer->OnUpdate(timestep);
-                }
-                m_window->Update();
+            for (Layer* layer : *m_layerStack)
+            {
+                layer->OnUpdate(timestep);
+            }
+            m_window->Update();
+            */
         }
     }
 
@@ -149,7 +144,7 @@ namespace Engine
     void EngineApp::PushLayer(Layer* layer)
     {
         m_layerStack->PushLayer(layer);
-#if !API_VULKAN && ENABLE_EXAMPLE
+#if ENABLE_EXAMPLE
         m_imguiLayer->AddExample(layer->GetName());
 #endif
         layer->OnAttach();

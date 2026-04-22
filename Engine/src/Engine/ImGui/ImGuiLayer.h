@@ -23,7 +23,7 @@ namespace Engine
             void BlockEvents(bool block) { m_BlockEvents = block; }
 
             void OnEvent(Event &e) override;
-#if ENABLE_EXAMPLE & 0
+#if ENABLE_EXAMPLE
             void BindOrUnbindFrameBuffer(bool);
 
             bool IsViewportFocused() const;

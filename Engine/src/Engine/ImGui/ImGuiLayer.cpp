@@ -16,6 +16,14 @@
 namespace Engine
 {
     static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
+    
+    // RHI Resources
+    static rhi::Texture s_ColorTex = {};
+    static rhi::Texture s_DepthTex = {};
+    static rhi::CmdBuf  s_Cmd      = {};
+    static rhi::Fence   s_Fence    = {};
+    static uint32_t     s_ViewportWidth = 1280;
+    static uint32_t     s_ViewportHeight = 720;
 
     ImGuiLayer::ImGuiLayer()
     :
@@ -27,12 +35,28 @@ namespace Engine
 
     void ImGuiLayer::OnAttach()
     {
-#if ENABLE_EXAMPLE & 0
-        FramebufferSpecification fbSpec;
-        fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
-        fbSpec.Width = 1280;
-        fbSpec.Height = 720;
-        m_Framebuffer = Framebuffer::Create(fbSpec);
+#if ENABLE_EXAMPLE
+        s_ViewportWidth = 1280;
+        s_ViewportHeight = 720;
+
+        s_ColorTex = rhi::texture_create({
+            .width = s_ViewportWidth,
+            .height = s_ViewportHeight,
+            .format = rhi::Format::BGRA8_Srgb,
+            .usage = rhi::TextureUsage::ColorTarget | rhi::TextureUsage::Sampled,
+            .name = "ViewportColor"
+        });
+
+        s_DepthTex = rhi::texture_create({
+            .width = s_ViewportWidth,
+            .height = s_ViewportHeight,
+            .format = rhi::Format::D32_Float,
+            .usage = rhi::TextureUsage::DepthTarget,
+            .name = "ViewportDepth"
+        });
+        
+        s_Cmd = rhi::cmdbuf_create(0);
+        s_Fence = rhi::fence_create(false);
 #endif
 
         // Setup Dear ImGui context
@@ -68,11 +92,17 @@ namespace Engine
     {
         rhi::imgui_shutdown();
         ImGui::DestroyContext();
+#if ENABLE_EXAMPLE
+        rhi::texture_destroy(s_ColorTex);
+        rhi::texture_destroy(s_DepthTex);
+        rhi::cmdbuf_destroy(s_Cmd);
+        rhi::fence_destroy(s_Fence);
+#endif
     }
 
     void ImGuiLayer::OnImGuiRender()
     {
-#if ENABLE_EXAMPLE & 0
+#if ENABLE_EXAMPLE
         if(_showExamples)
         {
             ShowExamples();
@@ -88,7 +118,7 @@ namespace Engine
 
         ImGuizmo::BeginFrame();
 
- #if ENABLE_EXAMPLE && ENABLE_EDITOR_MODE && 0
+ #if ENABLE_EXAMPLE && ENABLE_EDITOR_MODE
         ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
         ImGui::Begin("Viewport");
@@ -106,8 +136,8 @@ namespace Engine
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-        uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-        ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+        // Note: Casting rhi::Texture handle to ImTextureID. Backend must support this or use a descriptor set.
+        ImGui::Image((ImTextureID)(uintptr_t)s_ColorTex.id, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 
         ImGui::End();
         ImGui::PopStyleVar();
@@ -142,16 +172,36 @@ namespace Engine
 
     void ImGuiLayer::OnEvent(Event &e)
     {
-#if ENABLE_EXAMPLE & 0
+#if ENABLE_EXAMPLE
         //resize
         WindowResizeEvent * we = dynamic_cast<WindowResizeEvent*>(&e);
         if(we)
         {
-            if (FramebufferSpecification spec = m_Framebuffer->GetSpecification();
-                    we->GetWidth() > 0.0f && we->GetHeight() > 0.0f && // zero sized framebuffer is invalid
-                    (spec.Width != we->GetWidth() || spec.Height != we->GetHeight()))
+            uint32_t width = (uint32_t)we->GetWidth();
+            uint32_t height = (uint32_t)we->GetHeight();
+            if (width > 0 && height > 0 && (width != s_ViewportWidth || height != s_ViewportHeight))
             {
-                m_Framebuffer->Resize((uint32_t)we->GetWidth(), (uint32_t)we->GetHeight());
+                s_ViewportWidth = width;
+                s_ViewportHeight = height;
+
+                rhi::texture_destroy(s_ColorTex);
+                rhi::texture_destroy(s_DepthTex);
+
+                s_ColorTex = rhi::texture_create({
+                    .width = s_ViewportWidth,
+                    .height = s_ViewportHeight,
+                    .format = rhi::Format::BGRA8_Srgb,
+                    .usage = rhi::TextureUsage::ColorTarget | rhi::TextureUsage::Sampled,
+                    .name = "ViewportColor"
+                });
+
+                s_DepthTex = rhi::texture_create({
+                    .width = s_ViewportWidth,
+                    .height = s_ViewportHeight,
+                    .format = rhi::Format::D32_Float,
+                    .usage = rhi::TextureUsage::DepthTarget,
+                    .name = "ViewportDepth"
+                });
             }
             //ENGINE_WARN("{0}",we->ToString());
         }
@@ -164,17 +214,27 @@ namespace Engine
         }
 
     }
-#if ENABLE_EXAMPLE & 0
+#if ENABLE_EXAMPLE 
     void ImGuiLayer::BindOrUnbindFrameBuffer(bool val)
     {
         if(val)
         {
-            m_Framebuffer->Bind();
-            m_Framebuffer->ClearAttachment(1, -1);
+            rhi::cmdbuf_reset(s_Cmd);
+            rhi::cmdbuf_begin(s_Cmd);
+            rhi::begin_render_pass(s_Cmd, {
+                .color = {{ .texture = s_ColorTex, .load_op = rhi::LoadOp::Clear, .store_op = rhi::StoreOp::Store, .clear = {0.1f, 0.1f, 0.1f, 1.0f} }},
+                .color_count = 1,
+                .depth = { .texture = s_DepthTex, .load_op = rhi::LoadOp::Clear, .store_op = rhi::StoreOp::Store, .clear = {1.0f, 0} },
+                .has_depth = true
+            });
         }
         else
         {
-            m_Framebuffer->Unbind();
+            rhi::end_render_pass(s_Cmd);
+            rhi::cmdbuf_end(s_Cmd);
+            rhi::queue_submit(&s_Cmd, 1, nullptr, 0, nullptr, 0, s_Fence);
+            rhi::fence_wait(s_Fence);
+            rhi::fence_reset(s_Fence);
         }
     }
 

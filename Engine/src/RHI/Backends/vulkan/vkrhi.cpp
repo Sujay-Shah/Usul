@@ -2029,8 +2029,14 @@ static void vk_imgui_new_frame()
 }
 static void vk_imgui_render(rhi::CmdBuf cb)
 {
+    ImDrawData* draw_data = ImGui::GetDrawData();
+    if (!draw_data) return;
+
     if (CmdBufSlot* s = s_cmdbufs.get(cb))
+    {
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), s->cmd);
+        ImGui_ImplVulkan_RenderDrawData(draw_data, s->cmd);
+    }
 }
 
 // =============================================================
