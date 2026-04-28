@@ -279,7 +279,7 @@ namespace Engine
 
      const char* ImGuiLayer::GetCurrentExampleName()
     {
-        return _Examples[_currentExampleIndex];
+        return "";//_Examples[_currentExampleIndex];
     }
 
 #endif

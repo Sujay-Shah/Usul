@@ -81,7 +81,7 @@ namespace Engine
                 {
                     //TODO: refactor this in future
                     #if ENABLE_EXAMPLE
-                        if(layer->GetName() == m_imguiLayer->GetCurrentExampleName())
+                        //if(layer->GetName() == m_imguiLayer->GetCurrentExampleName())
                     #endif
                     {
                         layer->OnUpdate(timestep);
@@ -122,8 +122,8 @@ namespace Engine
             {
                 layer->OnUpdate(timestep);
             }
-            m_window->Update();
             */
+            m_window->Update();
         }
     }
 

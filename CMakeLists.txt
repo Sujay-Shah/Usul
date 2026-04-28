@@ -18,6 +18,7 @@ if(WIN32)
     endif()
 elseif(APPLE)
     # macOS uses Vulkan (MoltenVK) by default in PlatformDetection.h
+    add_compile_definitions(VK_USE_PLATFORM_METAL_EXT)
 elseif(ANDROID)
     # Android uses Vulkan by default in PlatformDetection.h
 elseif(UNIX)
