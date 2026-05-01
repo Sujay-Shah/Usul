@@ -2034,7 +2034,6 @@ static void vk_imgui_render(rhi::CmdBuf cb)
 
     if (CmdBufSlot* s = s_cmdbufs.get(cb))
     {
-        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), s->cmd);
         ImGui_ImplVulkan_RenderDrawData(draw_data, s->cmd);
     }
 }

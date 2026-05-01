@@ -93,36 +93,20 @@ namespace Engine
             #endif
             }
 
+            //TODO: refactor this, currently we need to call imgui layer calls seperately as the LayerStack
+            // explicitly contains different examples
+
             m_imguiLayer->Begin();
             for (Layer* layer : *m_layerStack)
             {
-                #if ENABLE_EXAMPLE
-                if(layer->GetName() == m_imguiLayer->GetCurrentExampleName())
-                {
-                    layer->OnImGuiRender();
-                    break;
-                }
-                #else
-                layer->OnImGuiRender();
-                #endif
-            }
-            m_imguiLayer->End(); 
-            //TODO: refactor this, currently we need to call imgui layer calls seperately as the LayerStack
-            // explicitly contains different examples
-            
-            /*m_imguiLayer->Begin();
-            for (Layer* layer : *m_layerStack)
-            {
                 layer->OnImGuiRender();
             }
-            m_imguiLayer->OnImGuiRender();
             m_imguiLayer->End();
 
-            for (Layer* layer : *m_layerStack)
+            /*for (Layer* layer : *m_layerStack)
             {
                 layer->OnUpdate(timestep);
-            }
-            */
+            }*/
             m_window->Update();
         }
     }
