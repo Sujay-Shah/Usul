@@ -213,6 +213,7 @@ struct CmdBufSlot
     VkCommandBuffer cmd          = VK_NULL_HANDLE;
     u32             queue_family = 0;
     bool            recording    = false;
+    VkPipelineLayout bound_pipeline_layout = VK_NULL_HANDLE;
 };
 
 struct FenceSlot

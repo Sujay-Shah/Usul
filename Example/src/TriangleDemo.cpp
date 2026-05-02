@@ -106,6 +106,8 @@ void TriangleDemo::OnAttach()
         .color_formats = { rhi::Format::BGRA8_Srgb },
         .color_count = 1,
         .topology = rhi::PrimitiveTopology::TriangleList,
+        .push_constant_size = sizeof(glm::vec3),
+        .push_constant_offset = 0,
         .name = "TrianglePipeline"
     });
 
@@ -185,6 +187,7 @@ void TriangleDemo::OnUpdate(const Engine::Timestep& ts)
     rhi::set_scissor(f.cmd, { .x = 0, .y = 0, .w = (uint32_t)width, .h = (uint32_t)height });
 
     rhi::bind_pipeline(f.cmd, m_pipeline);
+    rhi::push_constants(f.cmd, triangleColor, rhi::ShaderStage::All, 0);
     rhi::bind_vertex_buffer(f.cmd, m_vb);
     rhi::draw(f.cmd, { .vertex_count = 3 });
 

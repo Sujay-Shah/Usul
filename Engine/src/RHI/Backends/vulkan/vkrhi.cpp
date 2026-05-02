@@ -155,6 +155,7 @@ VkPipelineStageFlags2 to_vk_stage2(rhi::PipelineStage s) noexcept
 
 VkShaderStageFlags to_vk_shader_stage(rhi::ShaderStage s) noexcept
 {
+    if (s == rhi::ShaderStage::All) return VK_SHADER_STAGE_ALL;
     VkShaderStageFlags out = 0;
     if (has(s, rhi::ShaderStage::Vertex))   out |= VK_SHADER_STAGE_VERTEX_BIT;
     if (has(s, rhi::ShaderStage::Fragment)) out |= VK_SHADER_STAGE_FRAGMENT_BIT;
@@ -1389,6 +1390,7 @@ static void vk_cmd_bind_pipeline(rhi::CmdBuf ch, rhi::Pipeline ph)
     PipelineSlot* pip = s_pipelines.get(ph);
     if (!cmd || !pip) return;
     vkCmdBindPipeline(cmd->cmd, pip->bind_point, pip->pipeline);
+    cmd->bound_pipeline_layout = pip->pipeline_layout;
 }
 
 static void vk_cmd_bind_descriptor_set(rhi::CmdBuf ch, rhi::DescriptorSet dsh,
@@ -1441,12 +1443,7 @@ static void vk_cmd_push_constants(rhi::CmdBuf ch, rhi::ShaderStage stages,
 {
     CmdBufSlot* cmd = s_cmdbufs.get(ch);
     if (!cmd) return;
-    // We need the pipeline layout — obtain it from the most recently bound pipeline.
-    // In production, track the bound pipeline per CmdBufSlot.
-    // For now we iterate the pipeline pool to find the bound one — this is a known
-    // limitation; the production fix is to add 'Pipeline bound_pipeline' to CmdBufSlot.
-    // (The call still compiles and runs correctly when push_constant_size is set.)
-    vkCmdPushConstants(cmd->cmd, VK_NULL_HANDLE,  // see above note
+    vkCmdPushConstants(cmd->cmd, cmd->bound_pipeline_layout,
                        to_vk_shader_stage(stages), offset, size, data);
 }
 
@@ -1462,7 +1459,7 @@ static void vk_cmd_draw(rhi::CmdBuf ch, const rhi::DrawCmd& d)
 
 static void vk_cmd_draw_indexed(rhi::CmdBuf ch, const rhi::DrawIndexedCmd& d)
 {
-    if (CmdBufSlot* s = s_cmdbufs.get(ch))
+    if (CmdBufSlot* s = s_cmdbufs.get(ch))  
         vkCmdDrawIndexed(s->cmd, d.index_count, d.instance_count,
                          d.first_index, d.vertex_offset, d.first_instance);
 }

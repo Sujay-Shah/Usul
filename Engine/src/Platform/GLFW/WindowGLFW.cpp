@@ -10,6 +10,9 @@ namespace Engine
 {
     static void SetGLFWErrorCallback(int error, const char* message)
     {
+        // Suppress harmless macOS Cocoa error that spams the console
+        if (error == 65544) return; 
+        
         ENGINE_ERROR("GLFW Error ({0}): {1}", error, message);
     }
 
