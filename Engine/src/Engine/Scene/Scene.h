@@ -22,6 +22,10 @@ namespace Engine {
 		void OnViewportResize(uint32_t width, uint32_t height);
 		void DestroyEntity(Entity entity);
 		Entity GetPrimaryCameraEntity();
+
+		// Allow SceneRenderer and serializer to iterate components
+		entt::registry& GetRegistry() { return m_Registry; }
+		const entt::registry& GetRegistry() const { return m_Registry; }
 	private:
 		template<typename T>
 		void OnComponentAdded(Entity entity, T& component);
@@ -32,6 +36,7 @@ namespace Engine {
 		friend class Entity;
 		friend class SceneHierarchyPanel;
 		friend class SceneSerializer;
+		friend class SceneRenderer;
 	};
 
 }

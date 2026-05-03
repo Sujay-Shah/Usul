@@ -27,36 +27,14 @@ namespace Engine
 
     void EditorLayer::OnAttach()
     {
-        m_ColorTex = rhi::texture_create({
-            .width = 1280,
-            .height = 720,
-            .format = rhi::Format::BGRA8_Srgb,
-            .usage = rhi::TextureUsage::ColorTarget | rhi::TextureUsage::Sampled,
-            .name = "EditorColorTex"
-        });
-
-        m_DepthTex = rhi::texture_create({
-            .width = 1280,
-            .height = 720,
-            .format = rhi::Format::D32_Float,
-            .usage = rhi::TextureUsage::DepthTarget,
-            .name = "EditorDepthTex"
-        });
-
-        m_Cmd = rhi::cmdbuf_create(0);
-        m_Fence = rhi::fence_create(false);
-
-		m_ActiveScene = CreateRef<Scene>();
-		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+        m_ActiveScene = CreateRef<Scene>();
+        m_SceneHierarchyPanel.SetContext(m_ActiveScene);
+        m_SceneRenderer.Init(1280, 720);
     }
 
     void EditorLayer::OnDetach()
     {
-        rhi::device_wait_idle();
-        rhi::texture_destroy(m_ColorTex);
-        rhi::texture_destroy(m_DepthTex);
-        rhi::cmdbuf_destroy(m_Cmd);
-        rhi::fence_destroy(m_Fence);
+        m_SceneRenderer.Shutdown();
     }
 
     void EditorLayer::OnImGuiRender()
@@ -157,119 +135,40 @@ namespace Engine
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
 
-		m_ViewportFocused = ImGui::IsWindowFocused();
-		m_ViewportHovered = ImGui::IsWindowHovered();
-		EngineApp::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
+		bool viewportFocused = ImGui::IsWindowFocused();
+		bool viewportHovered = ImGui::IsWindowHovered();
+		EngineApp::Get().GetImGuiLayer()->BlockEvents(!viewportFocused || !viewportHovered);
 
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-		ImGui::Image((ImTextureID)(uintptr_t)m_ColorTex.id, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		// Display the final lit scene output from SceneRenderer
+		rhi::Texture colorOut = m_SceneRenderer.GetColorOutput();
+		ImGui::Image((ImTextureID)(uintptr_t)colorOut.id, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::End();
 		ImGui::PopStyleVar();
+
+		// ---- Renderer Settings panel ----
+		ImGui::Begin("Renderer Settings");
+		ImGui::Checkbox("Shadows",   &m_RenderSettings.EnableShadows);
+		ImGui::Checkbox("Wireframe", &m_RenderSettings.EnableWireframe);
+		ImGui::End();
     }
 
     void EditorLayer::OnUpdate(const Timestep &ts)
     {
-		//resize
-		if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized viewport is invalid
+		// Resize G-Buffer when viewport changes size
+		if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f &&
 			(m_AllocatedViewportSize.x != m_ViewportSize.x || m_AllocatedViewportSize.y != m_ViewportSize.y))
 		{
-            rhi::device_wait_idle();
-            rhi::texture_destroy(m_ColorTex);
-            rhi::texture_destroy(m_DepthTex);
-
-            m_ColorTex = rhi::texture_create({
-                .width = (uint32_t)m_ViewportSize.x,
-                .height = (uint32_t)m_ViewportSize.y,
-                .format = rhi::Format::BGRA8_Srgb,
-                .usage = rhi::TextureUsage::ColorTarget | rhi::TextureUsage::Sampled,
-                .name = "EditorColorTex"
-            });
-
-            m_DepthTex = rhi::texture_create({
-                .width = (uint32_t)m_ViewportSize.x,
-                .height = (uint32_t)m_ViewportSize.y,
-                .format = rhi::Format::D32_Float,
-                .usage = rhi::TextureUsage::DepthTarget,
-                .name = "EditorDepthTex"
-            });
-            
-            m_AllocatedViewportSize = m_ViewportSize;
-
+			m_AllocatedViewportSize = m_ViewportSize;
+			m_SceneRenderer.Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
 
-		if(m_ViewportFocused)
-			m_CameraController.OnUpdate(ts);
-
-        rhi::cmdbuf_reset(m_Cmd);
-        rhi::cmdbuf_begin(m_Cmd);
-        
-        rhi::TextureBarrier barriers_begin[] = {
-            {
-                .tex = m_ColorTex,
-                .old_layout = rhi::TextureLayout::Undefined,
-                .new_layout = rhi::TextureLayout::ColorTarget,
-                .src_stage = rhi::PipelineStage::Top,
-                .dst_stage = rhi::PipelineStage::ColorOutput,
-                .src_access = rhi::Access::None,
-                .dst_access = rhi::Access::ColorWrite,
-                .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
-            },
-            {
-                .tex = m_DepthTex,
-                .old_layout = rhi::TextureLayout::Undefined,
-                .new_layout = rhi::TextureLayout::DepthStencilTarget,
-                .src_stage = rhi::PipelineStage::Top,
-                .dst_stage = rhi::PipelineStage::EarlyDepth | rhi::PipelineStage::LateDepth,
-                .src_access = rhi::Access::None,
-                .dst_access = rhi::Access::DepthWrite,
-                .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
-            }
-        };
-        rhi::texture_barrier(m_Cmd, barriers_begin, 2);
-        
-        rhi::begin_render_pass(m_Cmd, {
-            .color = {{
-                .texture = m_ColorTex,
-                .load_op = rhi::LoadOp::Clear,
-                .store_op = rhi::StoreOp::Store,
-                .clear = {0.1f, 0.1f, 0.1f, 1.0f}
-            }},
-            .color_count = 1,
-            .depth = {
-                .texture = m_DepthTex,
-                .load_op = rhi::LoadOp::Clear,
-                .store_op = rhi::StoreOp::Store,
-                .clear = {1.0f, 0}
-            },
-            .has_depth = true
-        });
-
-		// Update scene
-		m_ActiveScene->OnUpdateEditor(ts,m_EditorCamera);
-
-        rhi::end_render_pass(m_Cmd);
-
-        rhi::TextureBarrier barrier_end = {
-            .tex = m_ColorTex,
-            .old_layout = rhi::TextureLayout::ColorTarget,
-            .new_layout = rhi::TextureLayout::ShaderReadOnly,
-            .src_stage = rhi::PipelineStage::ColorOutput,
-            .dst_stage = rhi::PipelineStage::Fragment,
-            .src_access = rhi::Access::ColorWrite,
-            .dst_access = rhi::Access::ShaderRead,
-            .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
-        };
-        rhi::texture_barrier(m_Cmd, &barrier_end, 1);
-
-        rhi::cmdbuf_end(m_Cmd);
-        
-        rhi::queue_submit(&m_Cmd, 1, nullptr, 0, nullptr, 0, m_Fence);
-        rhi::fence_wait(m_Fence);
-        rhi::fence_reset(m_Fence);
+		if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f)
+			m_SceneRenderer.RenderScene(m_ActiveScene, m_EditorCamera, m_RenderSettings);
     }
 
     void EditorLayer::OnEvent(Event &e)

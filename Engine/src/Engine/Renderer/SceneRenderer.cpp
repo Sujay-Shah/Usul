@@ -1,0 +1,585 @@
+#include "EnginePCH.h"
+#include "SceneRenderer.h"
+#include "Engine/Core/AssetManager.h"
+#include "Engine/Renderer/Model.h"
+#include "Engine/Renderer/Vertex.h"
+#include <glm/gtc/matrix_transform.hpp>
+#include <fstream>
+#include <vector>
+
+namespace Engine {
+
+static std::vector<char> ReadSpv(const std::string& path)
+{
+    std::ifstream f(path, std::ios::ate | std::ios::binary);
+    ENGINE_CORE_ASSERT(f.is_open(), "SceneRenderer: Cannot open shader: {0}", path);
+    size_t size = (size_t)f.tellg();
+    std::vector<char> buf(size);
+    f.seekg(0);
+    f.read(buf.data(), size);
+    return buf;
+}
+
+// ================================================================
+//  Init / Shutdown
+// ================================================================
+void SceneRenderer::Init(uint32_t width, uint32_t height)
+{
+    if (m_Initialised) return;
+    m_Width  = width;
+    m_Height = height;
+
+    CreateSamplers();
+    CreateDescriptorLayouts();
+    CreatePipelines();
+    CreateGBuffer(width, height);
+    CreateLightPassTargets(width, height);
+    CreateShadowMap(m_ShadowRes);
+
+    // Per-frame UBOs
+    for (uint32_t i = 0; i < k_MaxFrames; ++i)
+    {
+        m_LightUBOs[i] = rhi::buffer_create({
+            .size   = sizeof(GPULightUBO),
+            .usage  = rhi::BufferUsage::Uniform,
+            .memory = rhi::MemoryType::CpuToGpu,
+            .name   = "LightUBO"
+        });
+        m_MaterialUBOs[i] = rhi::buffer_create({
+            .size   = sizeof(GPUMaterialUBO) * m_MaterialUBOCount,
+            .usage  = rhi::BufferUsage::Uniform,
+            .memory = rhi::MemoryType::CpuToGpu,
+            .name   = "MaterialUBO"
+        });
+    }
+
+    // Fallback 1x1 white texture
+    {
+        uint32_t white = 0xFFFFFFFF;
+        m_WhiteTex = rhi::texture_create({
+            .width=1,.height=1,
+            .format=rhi::Format::RGBA8_Unorm,
+            .usage=rhi::TextureUsage::Sampled|rhi::TextureUsage::TransferDst,
+            .name="White1x1"
+        });
+        auto ctx = rhi::UploadContext::create(4);
+        ctx.begin();
+        ctx.upload_texture(m_WhiteTex, &white, 4, 1, 1);
+        ctx.submit_and_wait();
+        ctx.destroy();
+    }
+
+    m_Cmd   = rhi::cmdbuf_create(0);
+    m_Fence = rhi::fence_create(false);
+    m_Initialised = true;
+    ENGINE_CORE_INFO("SceneRenderer: Initialised ({0}x{1})", width, height);
+}
+
+void SceneRenderer::Shutdown()
+{
+    if (!m_Initialised) return;
+    rhi::device_wait_idle();
+
+    DestroyGBuffer();
+    DestroyLightPassTargets();
+    DestroyShadowMap();
+    DestroyPipelines();
+    DestroySamplers();
+
+    for (uint32_t i = 0; i < k_MaxFrames; ++i)
+    {
+        rhi::buffer_destroy(m_LightUBOs[i]);
+        rhi::buffer_destroy(m_MaterialUBOs[i]);
+    }
+
+    rhi::texture_destroy(m_WhiteTex);
+    rhi::cmdbuf_destroy(m_Cmd);
+    rhi::fence_destroy(m_Fence);
+
+    rhi::descriptor_layout_destroy(m_MaterialLayout);
+    rhi::descriptor_layout_destroy(m_LightingLayout0);
+    rhi::descriptor_layout_destroy(m_LightingLayout1);
+
+    m_Initialised = false;
+}
+
+// ================================================================
+//  Resize
+// ================================================================
+void SceneRenderer::Resize(uint32_t w, uint32_t h)
+{
+    if (w == m_Width && h == m_Height) return;
+    rhi::device_wait_idle();
+    m_Width = w; m_Height = h;
+
+    DestroyGBuffer();
+    DestroyLightPassTargets();
+    CreateGBuffer(w, h);
+    CreateLightPassTargets(w, h);
+}
+
+// ================================================================
+//  G-Buffer helpers
+// ================================================================
+void SceneRenderer::CreateGBuffer(uint32_t w, uint32_t h)
+{
+    auto mkTex = [&](rhi::Format fmt, rhi::TextureUsage usage, const char* name) {
+        return rhi::texture_create({ .width=w,.height=h,.format=fmt,.usage=usage,.name=name });
+    };
+    using TU = rhi::TextureUsage;
+    m_GPosition = mkTex(rhi::Format::RGBA16_Float, TU::ColorTarget|TU::Sampled, "GPosition");
+    m_GNormal   = mkTex(rhi::Format::RGBA16_Float, TU::ColorTarget|TU::Sampled, "GNormal");
+    m_GAlbedo   = mkTex(rhi::Format::RGBA8_Unorm,  TU::ColorTarget|TU::Sampled, "GAlbedo");
+    m_GPBR      = mkTex(rhi::Format::RGBA8_Unorm,  TU::ColorTarget|TU::Sampled, "GPBR");
+    m_GDepth    = mkTex(rhi::Format::D32_Float,    TU::DepthTarget,             "GDepth");
+}
+
+void SceneRenderer::DestroyGBuffer()
+{
+    rhi::texture_destroy(m_GPosition);
+    rhi::texture_destroy(m_GNormal);
+    rhi::texture_destroy(m_GAlbedo);
+    rhi::texture_destroy(m_GPBR);
+    rhi::texture_destroy(m_GDepth);
+}
+
+void SceneRenderer::CreateLightPassTargets(uint32_t w, uint32_t h)
+{
+    m_LightPassColor = rhi::texture_create({
+        .width=w,.height=h,
+        .format=rhi::Format::RGBA16_Float,
+        .usage=rhi::TextureUsage::ColorTarget|rhi::TextureUsage::Sampled,
+        .name="LightPassColor"
+    });
+}
+
+void SceneRenderer::DestroyLightPassTargets()
+{
+    rhi::texture_destroy(m_LightPassColor);
+}
+
+void SceneRenderer::CreateShadowMap(uint32_t res)
+{
+    m_ShadowRes = res;
+    m_ShadowMap = rhi::texture_create({
+        .width=res,.height=res,
+        .format=rhi::Format::D32_Float,
+        .usage=rhi::TextureUsage::DepthTarget|rhi::TextureUsage::Sampled,
+        .name="ShadowMap"
+    });
+}
+
+void SceneRenderer::DestroyShadowMap()
+{
+    rhi::texture_destroy(m_ShadowMap);
+}
+
+// ================================================================
+//  Samplers
+// ================================================================
+void SceneRenderer::CreateSamplers()
+{
+    m_LinearSampler = rhi::sampler_create({
+        .min_filter=rhi::SamplerFilter::Linear,
+        .mag_filter=rhi::SamplerFilter::Linear,
+        .mip_mode=rhi::SamplerMipmap::Linear,
+        .name="LinearRepeat"
+    });
+    m_ShadowSampler = rhi::sampler_create({
+        .min_filter=rhi::SamplerFilter::Linear,
+        .mag_filter=rhi::SamplerFilter::Linear,
+        .address_u=rhi::SamplerAddress::ClampToEdge,
+        .address_v=rhi::SamplerAddress::ClampToEdge,
+        .compare=true,
+        .compare_op=rhi::CompareOp::LessEqual,
+        .name="ShadowPCF"
+    });
+}
+
+void SceneRenderer::DestroySamplers()
+{
+    rhi::sampler_destroy(m_LinearSampler);
+    rhi::sampler_destroy(m_ShadowSampler);
+}
+
+// ================================================================
+//  Descriptor layouts
+// ================================================================
+void SceneRenderer::CreateDescriptorLayouts()
+{
+    using DT = rhi::DescriptorType;
+    using SS = rhi::ShaderStage;
+
+    // set 0 for geometry pass: 4 combined-image-samplers + 1 UBO
+    m_MaterialLayout = rhi::descriptor_layout_create({
+        .bindings = {
+            {.binding=0,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
+            {.binding=1,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
+            {.binding=2,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
+            {.binding=3,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
+            {.binding=4,.type=DT::UniformBuffer,        .count=1,.stages=SS::Fragment},
+        },
+        .count=5, .name="MaterialLayout"
+    });
+
+    // set 0 for lighting pass: 4 G-Buffer + shadow map
+    m_LightingLayout0 = rhi::descriptor_layout_create({
+        .bindings = {
+            {.binding=0,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
+            {.binding=1,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
+            {.binding=2,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
+            {.binding=3,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
+            {.binding=4,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
+        },
+        .count=5, .name="LightingGBufLayout"
+    });
+
+    // set 1 for lighting pass: light UBO
+    m_LightingLayout1 = rhi::descriptor_layout_create({
+        .bindings = {
+            {.binding=0,.type=DT::UniformBuffer,.count=1,.stages=SS::Fragment},
+        },
+        .count=1, .name="LightUBOLayout"
+    });
+}
+
+// ================================================================
+//  Pipelines
+// ================================================================
+void SceneRenderer::CreatePipelines()
+{
+    auto loadSpv = [](const std::string& p) { return ReadSpv(AssetManager::GetAssetPath(p).string()); };
+
+    auto gvert = loadSpv("shaders/gbuffer.vert.spv");
+    auto gfrag = loadSpv("shaders/gbuffer.frag.spv");
+    auto lvert = loadSpv("shaders/lighting.vert.spv");
+    auto lfrag = loadSpv("shaders/lighting.frag.spv");
+    auto svert = loadSpv("shaders/shadow.vert.spv");
+
+    m_GBufferVS  = rhi::shader_create({.bytecode=gvert.data(),.size=gvert.size(),.stage=rhi::ShaderStage::Vertex,  .name="GBufVS"});
+    m_GBufferFS  = rhi::shader_create({.bytecode=gfrag.data(),.size=gfrag.size(),.stage=rhi::ShaderStage::Fragment,.name="GBufFS"});
+    m_LightingVS = rhi::shader_create({.bytecode=lvert.data(),.size=lvert.size(),.stage=rhi::ShaderStage::Vertex,  .name="LightVS"});
+    m_LightingFS = rhi::shader_create({.bytecode=lfrag.data(),.size=lfrag.size(),.stage=rhi::ShaderStage::Fragment,.name="LightFS"});
+    m_ShadowVS   = rhi::shader_create({.bytecode=svert.data(),.size=svert.size(),.stage=rhi::ShaderStage::Vertex,  .name="ShadowVS"});
+
+    // Geometry pipeline — writes to 4 color targets + depth
+    m_GeometryPipeline = rhi::pipeline_create({
+        .vertex_shader   = m_GBufferVS,
+        .fragment_shader = m_GBufferFS,
+        .layout          = m_MaterialLayout,
+        .attribs = {
+            {.binding=0,.location=0,.format=rhi::Format::RGB32_Float,.offset=offsetof(Vertex,Position)},
+            {.binding=0,.location=1,.format=rhi::Format::RGB32_Float,.offset=offsetof(Vertex,Normal)},
+            {.binding=0,.location=2,.format=rhi::Format::RG32_Float, .offset=offsetof(Vertex,TexCoords)},
+            {.binding=0,.location=3,.format=rhi::Format::RGB32_Float,.offset=offsetof(Vertex,Tangent)},
+            {.binding=0,.location=4,.format=rhi::Format::RGB32_Float,.offset=offsetof(Vertex,Bitangent)},
+        },
+        .attrib_count  = 5,
+        .bindings      = {{.binding=0,.stride=sizeof(Vertex),.input_rate=rhi::VertexInputRate::Vertex}},
+        .binding_count = 1,
+        .color_formats = {rhi::Format::RGBA16_Float,rhi::Format::RGBA16_Float,rhi::Format::RGBA8_Unorm,rhi::Format::RGBA8_Unorm},
+        .color_count   = 4,
+        .depth_format  = rhi::Format::D32_Float,
+        .depth         = {.test_enable=true,.write_enable=true,.compare_op=rhi::CompareOp::Less},
+        .push_constant_size = sizeof(GeometryPushConstants),
+        .name = "GeometryPipeline"
+    });
+
+    // Lighting pipeline — full-screen quad, no vertex input, one color target
+    m_LightingPipeline = rhi::pipeline_create({
+        .vertex_shader   = m_LightingVS,
+        .fragment_shader = m_LightingFS,
+        .layout          = m_LightingLayout0,
+        .color_formats   = {rhi::Format::RGBA16_Float},
+        .color_count     = 1,
+        .depth           = {.test_enable=false,.write_enable=false},
+        .name = "LightingPipeline"
+    });
+
+    // Shadow pipeline — depth-only, no fragment shader
+    m_ShadowPipeline = rhi::pipeline_create({
+        .vertex_shader = m_ShadowVS,
+        .attribs       = {{.binding=0,.location=0,.format=rhi::Format::RGB32_Float,.offset=offsetof(Vertex,Position)}},
+        .attrib_count  = 1,
+        .bindings      = {{.binding=0,.stride=sizeof(Vertex),.input_rate=rhi::VertexInputRate::Vertex}},
+        .binding_count = 1,
+        .depth_format  = rhi::Format::D32_Float,
+        .depth         = {.test_enable=true,.write_enable=true,.compare_op=rhi::CompareOp::Less},
+        .raster        = {.cull_mode=rhi::CullMode::Front}, // peter-panning fix
+        .push_constant_size = sizeof(ShadowPushConstants),
+        .name = "ShadowPipeline"
+    });
+}
+
+void SceneRenderer::DestroyPipelines()
+{
+    rhi::pipeline_destroy(m_GeometryPipeline);
+    rhi::pipeline_destroy(m_LightingPipeline);
+    rhi::pipeline_destroy(m_ShadowPipeline);
+    rhi::shader_destroy(m_GBufferVS);  rhi::shader_destroy(m_GBufferFS);
+    rhi::shader_destroy(m_LightingVS); rhi::shader_destroy(m_LightingFS);
+    rhi::shader_destroy(m_ShadowVS);
+}
+
+// ================================================================
+//  Light Space Matrix helper (orthographic, sun-like directional)
+// ================================================================
+static glm::mat4 CalcLightSpaceMatrix(const glm::vec3& direction)
+{
+    glm::vec3 dir = glm::normalize(direction);
+    glm::mat4 lightView = glm::lookAt(-dir * 50.0f, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::mat4 lightProj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, 0.1f, 200.0f);
+    lightProj[1][1] *= -1.0f; // Vulkan Y-flip
+    return lightProj * lightView;
+}
+
+// ================================================================
+//  UploadLightUBO
+// ================================================================
+void SceneRenderer::UploadLightUBO(const Ref<Scene>& scene,
+                                    const glm::vec3& cameraPos,
+                                    const glm::mat4& lightSpaceMatrix,
+                                    uint32_t /*frameIndex*/)
+{
+    GPULightUBO ubo{};
+    ubo.CameraPos        = cameraPos;
+    ubo.LightSpaceMatrix = lightSpaceMatrix;
+
+    auto view = scene->GetRegistry().view<TransformComponent, LightComponent>();
+    for (auto entity : view)
+    {
+        if (ubo.LightCount >= 64) break;
+        auto& [tc, lc] = view.get<TransformComponent, LightComponent>(entity);
+        GPULightData& ld = ubo.Lights[ubo.LightCount++];
+
+        ld.ColorIntensity = { lc.Color, lc.Intensity };
+        ld.Position       = { tc.Translation, (float)lc.Type };
+        // Direction from rotation (simple: use -Y rotated by transform)
+        glm::vec3 dir = glm::normalize(glm::vec3(
+            glm::sin(tc.Rotation.y) * glm::cos(tc.Rotation.x),
+           -glm::sin(tc.Rotation.x),
+           -glm::cos(tc.Rotation.y) * glm::cos(tc.Rotation.x)));
+        ld.Direction = { dir, lc.InnerCutoff };
+        ld.Params    = { lc.OuterCutoff, lc.Radius, lc.CastShadows ? 1.0f : 0.0f, 0.0f };
+    }
+
+    auto mapped = rhi::buffer_map(m_LightUBOs[0]);
+    memcpy(mapped.ptr, &ubo, sizeof(ubo));
+    rhi::buffer_unmap(m_LightUBOs[0]);
+}
+
+// ================================================================
+//  Shadow Pass
+// ================================================================
+void SceneRenderer::ShadowPass(const rhi::CmdBuf& cmd, const Ref<Scene>& scene,
+                                const glm::mat4& lightSpaceMatrix)
+{
+    rhi::begin_region(cmd, "ShadowPass", 0.8f, 0.6f, 0.2f);
+
+    rhi::TextureBarrier bar{
+        .tex=m_ShadowMap,
+        .old_layout=rhi::TextureLayout::Undefined,.new_layout=rhi::TextureLayout::DepthStencilTarget,
+        .src_stage=rhi::PipelineStage::Top,.dst_stage=rhi::PipelineStage::EarlyDepth|rhi::PipelineStage::LateDepth,
+        .src_access=rhi::Access::None,.dst_access=rhi::Access::DepthWrite,
+        .base_mip=0,.mip_count=1,.base_layer=0,.layer_count=1
+    };
+    rhi::texture_barrier(cmd, &bar, 1);
+
+    rhi::begin_render_pass(cmd, {
+        .depth={ .texture=m_ShadowMap, .load_op=rhi::LoadOp::Clear, .store_op=rhi::StoreOp::Store,
+                 .clear={1.0f,0} },
+        .has_depth=true
+    });
+
+    rhi::set_viewport(cmd, {0,0,(float)m_ShadowRes,(float)m_ShadowRes,0,1});
+    rhi::set_scissor (cmd, {0,0,m_ShadowRes,m_ShadowRes});
+    rhi::bind_pipeline(cmd, m_ShadowPipeline);
+
+    auto meshView = scene->GetRegistry().view<TransformComponent, MeshComponent>();
+    for (auto entity : meshView)
+    {
+        auto [tc, mc] = meshView.get<TransformComponent, MeshComponent>(entity);
+        if (!mc.CastShadow || !mc.VertexBuffer) continue;
+
+        ShadowPushConstants pushConst{ lightSpaceMatrix, tc.GetTransform() };
+        rhi::push_constants_raw(cmd, rhi::ShaderStage::Vertex, 0, sizeof(pushConst), &pushConst);
+        rhi::bind_vertex_buffer(cmd, mc.VertexBuffer, 0);
+        rhi::bind_index_buffer(cmd, mc.IndexBuffer, 0, rhi::IndexType::Uint32);
+        rhi::draw_indexed(cmd, {.index_count=mc.IndexCount});
+    }
+
+    rhi::end_render_pass(cmd);
+
+    rhi::TextureBarrier barSample{
+        .tex=m_ShadowMap,
+        .old_layout=rhi::TextureLayout::DepthStencilTarget,.new_layout=rhi::TextureLayout::ShaderReadOnly,
+        .src_stage=rhi::PipelineStage::LateDepth,.dst_stage=rhi::PipelineStage::Fragment,
+        .src_access=rhi::Access::DepthWrite,.dst_access=rhi::Access::ShaderRead,
+        .base_mip=0,.mip_count=1,.base_layer=0,.layer_count=1
+    };
+    rhi::texture_barrier(cmd, &barSample, 1);
+    rhi::end_region(cmd);
+}
+
+// ================================================================
+//  Geometry Pass
+// ================================================================
+void SceneRenderer::GeometryPass(const rhi::CmdBuf& cmd, const Ref<Scene>& scene,
+                                  const glm::mat4& view, const glm::mat4& proj)
+{
+    rhi::begin_region(cmd, "GeometryPass", 0.2f, 0.8f, 0.4f);
+
+    rhi::TextureBarrier bars[5];
+    auto mkBar = [](rhi::Texture t, rhi::TextureLayout newL, rhi::Access dstA, rhi::PipelineStage dstS) {
+        return rhi::TextureBarrier{
+            .tex=t,.old_layout=rhi::TextureLayout::Undefined,.new_layout=newL,
+            .src_stage=rhi::PipelineStage::Top,.dst_stage=dstS,
+            .src_access=rhi::Access::None,.dst_access=dstA,
+            .base_mip=0,.mip_count=1,.base_layer=0,.layer_count=1
+        };
+    };
+    bars[0]=mkBar(m_GPosition,rhi::TextureLayout::ColorTarget,rhi::Access::ColorWrite,rhi::PipelineStage::ColorOutput);
+    bars[1]=mkBar(m_GNormal,  rhi::TextureLayout::ColorTarget,rhi::Access::ColorWrite,rhi::PipelineStage::ColorOutput);
+    bars[2]=mkBar(m_GAlbedo,  rhi::TextureLayout::ColorTarget,rhi::Access::ColorWrite,rhi::PipelineStage::ColorOutput);
+    bars[3]=mkBar(m_GPBR,     rhi::TextureLayout::ColorTarget,rhi::Access::ColorWrite,rhi::PipelineStage::ColorOutput);
+    bars[4]=mkBar(m_GDepth,   rhi::TextureLayout::DepthStencilTarget,rhi::Access::DepthWrite,rhi::PipelineStage::EarlyDepth|rhi::PipelineStage::LateDepth);
+    rhi::texture_barrier(cmd, bars, 5);
+
+    rhi::begin_render_pass(cmd, {
+        .color = {
+            {.texture=m_GPosition,.load_op=rhi::LoadOp::Clear,.store_op=rhi::StoreOp::Store,.clear={0,0,0,1}},
+            {.texture=m_GNormal,  .load_op=rhi::LoadOp::Clear,.store_op=rhi::StoreOp::Store,.clear={0,0,0,1}},
+            {.texture=m_GAlbedo,  .load_op=rhi::LoadOp::Clear,.store_op=rhi::StoreOp::Store,.clear={0,0,0,1}},
+            {.texture=m_GPBR,     .load_op=rhi::LoadOp::Clear,.store_op=rhi::StoreOp::Store,.clear={0,0,0,1}},
+        },
+        .color_count=4,
+        .depth={.texture=m_GDepth,.load_op=rhi::LoadOp::Clear,.store_op=rhi::StoreOp::Store,.clear={1.0f,0}},
+        .has_depth=true
+    });
+
+    rhi::set_viewport(cmd, {0,0,(float)m_Width,(float)m_Height,0,1});
+    rhi::set_scissor (cmd, {0,0,m_Width,m_Height});
+    rhi::bind_pipeline(cmd, m_GeometryPipeline);
+
+    glm::mat4 viewProj = proj * view;
+
+    auto meshView = scene->GetRegistry().view<TransformComponent, MeshComponent>();
+    for (auto entity : meshView)
+    {
+        auto [tc, mc] = meshView.get<TransformComponent, MeshComponent>(entity);
+        if (!mc.VertexBuffer) continue;
+
+        GeometryPushConstants pushConst{ tc.GetTransform(), viewProj };
+        rhi::push_constants_raw(cmd, rhi::ShaderStage::Vertex, 0, sizeof(pushConst), &pushConst);
+
+        rhi::bind_vertex_buffer(cmd, mc.VertexBuffer, 0);
+        rhi::bind_index_buffer(cmd, mc.IndexBuffer, 0, rhi::IndexType::Uint32);
+        rhi::draw_indexed(cmd, {.index_count=mc.IndexCount});
+    }
+
+    rhi::end_render_pass(cmd);
+
+    rhi::TextureBarrier readBars[4];
+    auto mkRead = [](rhi::Texture t) {
+        return rhi::TextureBarrier{
+            .tex=t,.old_layout=rhi::TextureLayout::ColorTarget,.new_layout=rhi::TextureLayout::ShaderReadOnly,
+            .src_stage=rhi::PipelineStage::ColorOutput,.dst_stage=rhi::PipelineStage::Fragment,
+            .src_access=rhi::Access::ColorWrite,.dst_access=rhi::Access::ShaderRead,
+            .base_mip=0,.mip_count=1,.base_layer=0,.layer_count=1
+        };
+    };
+    readBars[0]=mkRead(m_GPosition);
+    readBars[1]=mkRead(m_GNormal);
+    readBars[2]=mkRead(m_GAlbedo);
+    readBars[3]=mkRead(m_GPBR);
+    rhi::texture_barrier(cmd, readBars, 4);
+    rhi::end_region(cmd);
+}
+
+// ================================================================
+//  Lighting Pass
+// ================================================================
+void SceneRenderer::LightingPass(const rhi::CmdBuf& cmd, const Ref<Scene>& scene,
+                                  const glm::vec3& cameraPos,
+                                  const glm::mat4& lightSpaceMatrix,
+                                  const RenderSettings& settings)
+{
+    (void)scene; (void)cameraPos; (void)lightSpaceMatrix; (void)settings;
+    rhi::begin_region(cmd, "LightingPass", 0.3f, 0.4f, 0.9f);
+
+    rhi::TextureBarrier bar{
+        .tex=m_LightPassColor,
+        .old_layout=rhi::TextureLayout::Undefined,.new_layout=rhi::TextureLayout::ColorTarget,
+        .src_stage=rhi::PipelineStage::Top,.dst_stage=rhi::PipelineStage::ColorOutput,
+        .src_access=rhi::Access::None,.dst_access=rhi::Access::ColorWrite,
+        .base_mip=0,.mip_count=1,.base_layer=0,.layer_count=1
+    };
+    rhi::texture_barrier(cmd, &bar, 1);
+
+    rhi::begin_render_pass(cmd, {
+        .color={{.texture=m_LightPassColor,.load_op=rhi::LoadOp::Clear,.store_op=rhi::StoreOp::Store,.clear={0,0,0,1}}},
+        .color_count=1
+    });
+
+    rhi::set_viewport(cmd, {0,0,(float)m_Width,(float)m_Height,0,1});
+    rhi::set_scissor (cmd, {0,0,m_Width,m_Height});
+    rhi::bind_pipeline(cmd, m_LightingPipeline);
+
+    rhi::draw(cmd, {.vertex_count=3});
+
+    rhi::end_render_pass(cmd);
+
+    rhi::TextureBarrier finalBar{
+        .tex=m_LightPassColor,
+        .old_layout=rhi::TextureLayout::ColorTarget,.new_layout=rhi::TextureLayout::ShaderReadOnly,
+        .src_stage=rhi::PipelineStage::ColorOutput,.dst_stage=rhi::PipelineStage::Fragment,
+        .src_access=rhi::Access::ColorWrite,.dst_access=rhi::Access::ShaderRead,
+        .base_mip=0,.mip_count=1,.base_layer=0,.layer_count=1
+    };
+    rhi::texture_barrier(cmd, &finalBar, 1);
+    rhi::end_region(cmd);
+}
+
+// ================================================================
+//  RenderScene  (main entry point)
+// ================================================================
+void SceneRenderer::RenderScene(const Ref<Scene>& scene, const EditorCamera& camera,
+                                 const RenderSettings& settings)
+{
+    // Compute light-space matrix from first shadow-casting directional light
+    glm::mat4 lightSpaceMatrix(1.0f);
+    {
+        auto lv = scene->GetRegistry().view<TransformComponent, LightComponent>();
+        for (auto e : lv)
+        {
+            auto& [tc, lc] = lv.get<TransformComponent, LightComponent>(e);
+            if (lc.Type == LightType::Directional && lc.CastShadows)
+            {
+                glm::vec3 dir = glm::normalize(glm::vec3(
+                    glm::sin(tc.Rotation.y)*glm::cos(tc.Rotation.x),
+                   -glm::sin(tc.Rotation.x),
+                   -glm::cos(tc.Rotation.y)*glm::cos(tc.Rotation.x)));
+                lightSpaceMatrix = CalcLightSpaceMatrix(dir);
+                break;
+            }
+        }
+    }
+
+    UploadLightUBO(scene, camera.GetPosition(), lightSpaceMatrix, 0);
+
+    rhi::cmdbuf_reset(m_Cmd);
+    rhi::cmdbuf_begin(m_Cmd);
+
+    if (settings.EnableShadows)
+        ShadowPass(m_Cmd, scene, lightSpaceMatrix);
+
+    GeometryPass(m_Cmd, scene, camera.GetViewMatrix(), camera.GetProjection());
+    LightingPass(m_Cmd, scene, camera.GetPosition(), lightSpaceMatrix, settings);
+
+    rhi::cmdbuf_end(m_Cmd);
+    rhi::queue_submit(&m_Cmd, 1, nullptr, 0, nullptr, 0, m_Fence);
+    rhi::fence_wait(m_Fence);
+    rhi::fence_reset(m_Fence);
+}
+
+} // namespace Engine

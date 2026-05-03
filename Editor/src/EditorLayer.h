@@ -4,6 +4,7 @@
 #include "Engine.h"
 #include "Panels/SceneHierarchyPanel.h"
 #include "Engine/Renderer/Camera/EditorCamera.h"
+#include "Engine/Renderer/SceneRenderer.h"
 #include "RHI/rhi_types.hpp"
 namespace Engine
 {
@@ -33,16 +34,17 @@ namespace Engine
     private:
         EditorCamera m_EditorCamera;
         CameraController m_CameraController;
-        //once there are different features in the renderer,
-        //this stuff can be ported into a seperate editor layer in future
-        rhi::Texture m_ColorTex;
-        rhi::Texture m_DepthTex;
-        rhi::CmdBuf m_Cmd;
-        rhi::Fence m_Fence;
-        bool m_BlockEvents = true;
+        // Render settings exposed to the ImGui "Renderer" panel
+        RenderSettings m_RenderSettings;
 
+        // Scene renderer (owns G-Buffer, light/shadow pipelines)
+        SceneRenderer m_SceneRenderer;
+
+        bool m_BlockEvents = true;
         bool m_ViewportFocused = false, m_ViewportHovered = false;
-        glm::vec2 m_ViewportBounds[2];
+        glm::vec2 m_ViewportBounds[2] = {};
+
+        // Raw viewport size tracker for resize detection
         glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
         glm::vec2 m_AllocatedViewportSize = { 0.0f, 0.0f };
 
