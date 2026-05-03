@@ -467,8 +467,6 @@ struct UploadContext
         return ctx;
     }
 
-    // Upload a region of data into a GPU buffer.
-    // staging_offset must be tracked by the caller if batching.
     void upload_buffer(Buffer dst, const void* src, u64 size, u64 dst_offset = 0)
     {
         assert(size <= staging_size);
@@ -477,6 +475,47 @@ struct UploadContext
             .src = staging, .src_offset = 0,
             .dst = dst,     .dst_offset = dst_offset,
             .size = size,
+        });
+    }
+
+    void upload_texture(Texture dst, const void* src, u64 size, u32 width, u32 height)
+    {
+        assert(size <= staging_size);
+        memcpy(staging_ptr, src, size);
+
+        texture_barrier(transfer_cmd, {
+            .tex = dst,
+            .old_layout = TextureLayout::Undefined,
+            .new_layout = TextureLayout::TransferDst,
+            .src_stage = PipelineStage::Top,
+            .dst_stage = PipelineStage::Transfer,
+            .src_access = Access::None,
+            .dst_access = Access::TransferWrite,
+            .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
+        });
+
+        copy_buffer_to_texture(transfer_cmd, {
+            .buf = staging,
+            .buf_offset = 0,
+            .buf_row_len = width,
+            .buf_img_h = height,
+            .tex = dst,
+            .mip = 0,
+            .base_layer = 0,
+            .layer_count = 1,
+            .x = 0, .y = 0, .z = 0,
+            .w = width, .h = height, .d = 1
+        });
+
+        texture_barrier(transfer_cmd, {
+            .tex = dst,
+            .old_layout = TextureLayout::TransferDst,
+            .new_layout = TextureLayout::ShaderReadOnly,
+            .src_stage = PipelineStage::Transfer,
+            .dst_stage = PipelineStage::AllGraphics,
+            .src_access = Access::TransferWrite,
+            .dst_access = Access::ShaderRead,
+            .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
         });
     }
 

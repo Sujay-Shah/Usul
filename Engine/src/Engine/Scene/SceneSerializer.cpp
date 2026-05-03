@@ -139,12 +139,51 @@ namespace Engine {
 		if (entity.HasComponent<SpriteRendererComponent>())
 		{
 			out << YAML::Key << "SpriteRendererComponent";
-			out << YAML::BeginMap; // SpriteRendererComponent
+			out << YAML::BeginMap;
+			auto& src = entity.GetComponent<SpriteRendererComponent>();
+			out << YAML::Key << "Color" << YAML::Value << src.Color;
+			out << YAML::EndMap;
+		}
 
-			auto& spriteRendererComponent = entity.GetComponent<SpriteRendererComponent>();
-			out << YAML::Key << "Color" << YAML::Value << spriteRendererComponent.Color;
+		if (entity.HasComponent<MeshComponent>())
+		{
+			out << YAML::Key << "MeshComponent";
+			out << YAML::BeginMap;
+			auto& mc = entity.GetComponent<MeshComponent>();
+			out << YAML::Key << "ModelPath"  << YAML::Value << mc.ModelPath;
+			out << YAML::Key << "CastShadow" << YAML::Value << mc.CastShadow;
+			out << YAML::EndMap;
+		}
 
-			out << YAML::EndMap; // SpriteRendererComponent
+		if (entity.HasComponent<MaterialComponent>())
+		{
+			out << YAML::Key << "MaterialComponent";
+			out << YAML::BeginMap;
+			auto& mat = entity.GetComponent<MaterialComponent>();
+			out << YAML::Key << "AlbedoColor"              << YAML::Value << mat.AlbedoColor;
+			out << YAML::Key << "Metallic"                  << YAML::Value << mat.Metallic;
+			out << YAML::Key << "Roughness"                 << YAML::Value << mat.Roughness;
+			out << YAML::Key << "AO"                        << YAML::Value << mat.AO;
+			out << YAML::Key << "AlbedoMapPath"             << YAML::Value << mat.AlbedoMapPath;
+			out << YAML::Key << "NormalMapPath"             << YAML::Value << mat.NormalMapPath;
+			out << YAML::Key << "MetallicRoughnessMapPath"  << YAML::Value << mat.MetallicRoughnessMapPath;
+			out << YAML::Key << "AOMapPath"                 << YAML::Value << mat.AOMapPath;
+			out << YAML::EndMap;
+		}
+
+		if (entity.HasComponent<LightComponent>())
+		{
+			out << YAML::Key << "LightComponent";
+			out << YAML::BeginMap;
+			auto& lc = entity.GetComponent<LightComponent>();
+			out << YAML::Key << "Type"         << YAML::Value << (uint32_t)lc.Type;
+			out << YAML::Key << "Color"        << YAML::Value << lc.Color;
+			out << YAML::Key << "Intensity"    << YAML::Value << lc.Intensity;
+			out << YAML::Key << "CastShadows"  << YAML::Value << lc.CastShadows;
+			out << YAML::Key << "InnerCutoff"  << YAML::Value << lc.InnerCutoff;
+			out << YAML::Key << "OuterCutoff"  << YAML::Value << lc.OuterCutoff;
+			out << YAML::Key << "Radius"       << YAML::Value << lc.Radius;
+			out << YAML::EndMap;
 		}
 
 		out << YAML::EndMap; // Entity
@@ -241,6 +280,43 @@ namespace Engine {
 				{
 					auto& src = deserializedEntity.AddComponent<SpriteRendererComponent>();
 					src.Color = spriteRendererComponent["Color"].as<glm::vec4>();
+				}
+
+				auto meshNode = entity["MeshComponent"];
+				if (meshNode)
+				{
+					auto& mc  = deserializedEntity.AddComponent<MeshComponent>();
+					mc.ModelPath  = meshNode["ModelPath"].as<std::string>();
+					mc.CastShadow = meshNode["CastShadow"].as<bool>(true);
+					// Note: GPU buffers are populated by the SceneRenderer on first use.
+				}
+
+				auto matNode = entity["MaterialComponent"];
+				if (matNode)
+				{
+					auto& mat = deserializedEntity.AddComponent<MaterialComponent>();
+					mat.AlbedoColor             = matNode["AlbedoColor"].as<glm::vec4>(glm::vec4(1.0f));
+					mat.Metallic                = matNode["Metallic"].as<float>(0.0f);
+					mat.Roughness               = matNode["Roughness"].as<float>(0.5f);
+					mat.AO                      = matNode["AO"].as<float>(1.0f);
+					mat.AlbedoMapPath           = matNode["AlbedoMapPath"].as<std::string>("");
+					mat.NormalMapPath           = matNode["NormalMapPath"].as<std::string>("");
+					mat.MetallicRoughnessMapPath= matNode["MetallicRoughnessMapPath"].as<std::string>("");
+					mat.AOMapPath               = matNode["AOMapPath"].as<std::string>("");
+					// Note: GPU textures are loaded lazily by the SceneRenderer.
+				}
+
+				auto lightNode = entity["LightComponent"];
+				if (lightNode)
+				{
+					auto& lc = deserializedEntity.AddComponent<LightComponent>();
+					lc.Type        = (LightType)lightNode["Type"].as<uint32_t>(0);
+					lc.Color       = lightNode["Color"].as<glm::vec3>(glm::vec3(1.0f));
+					lc.Intensity   = lightNode["Intensity"].as<float>(1.0f);
+					lc.CastShadows = lightNode["CastShadows"].as<bool>(false);
+					lc.InnerCutoff = lightNode["InnerCutoff"].as<float>(glm::radians(12.5f));
+					lc.OuterCutoff = lightNode["OuterCutoff"].as<float>(glm::radians(17.5f));
+					lc.Radius      = lightNode["Radius"].as<float>(10.0f);
 				}
 			}
 		}

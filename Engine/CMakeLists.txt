@@ -39,6 +39,7 @@ file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS
 # Add specific ImGui source files needed for GLFW and OpenGL3 backend
 list(APPEND ENGINE_SOURCES
     vendor/imgui/imgui.cpp
+    vendor/imgui/imgui_demo.cpp
     vendor/imgui/imgui_draw.cpp
     vendor/imgui/imgui_widgets.cpp
     vendor/imgui/imgui_tables.cpp

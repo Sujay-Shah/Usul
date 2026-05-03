@@ -47,49 +47,6 @@ namespace Engine
         m_Fence = rhi::fence_create(false);
 
 		m_ActiveScene = CreateRef<Scene>();
-#if 0
-		// Entity
-		auto square = m_ActiveScene->CreateEntity("Green Square");
-		square.AddComponent<SpriteRendererComponent>(glm::vec4{0.0f, 1.0f, 0.0f, 1.0f});
-
-		m_SquareEntity = square;
-
-		m_CameraEntity = m_ActiveScene->CreateEntity("Camera Entity");
-		m_CameraEntity.AddComponent<CameraComponent>();
-
-		class CameraController : public ScriptableEntity
-		{
-		public:
-			virtual void OnCreate() override
-			{
-				auto& translation = GetComponent<TransformComponent>().Translation;
-				translation.x = rand() % 10 - 5.0f;
-			}
-
-			virtual void OnDestroy() override
-			{
-			}
-
-			virtual void OnUpdate(Timestep ts) override
-			{
-				auto& translation = GetComponent<TransformComponent>().Translation;
-
-				float speed = 5.0f;
-
-				if (Input::IsKeyPressed(Key::A))
-					translation.x += speed * (float)ts;
-				if (Input::IsKeyPressed(Key::D))
-					translation.x -= speed * ts;
-				if (Input::IsKeyPressed(Key::W))
-					translation.y -= speed * ts;
-				if (Input::IsKeyPressed(Key::S))
-					translation.y += speed * ts;
-			}
-		};
-
-		
-		m_CameraEntity.AddComponent<NativeScriptComponent>().Bind<CameraController>();
-#endif
 		m_SceneHierarchyPanel.SetContext(m_ActiveScene);
     }
 
@@ -191,23 +148,11 @@ namespace Engine
 
 			ImGui::EndMenuBar();
 		}
-        static bool show = false;
+        static bool show = true;
         ImGui::End();
-        //ImGui::ShowDemoWindow(&show);
+        ImGui::ShowDemoWindow(&show);
 
 		m_SceneHierarchyPanel.OnImGuiRender();
-
-		ImGui::Begin("Settings");
-
-		//auto stats = Renderer2D::GetStats();
-		//ImGui::Text("Renderer2D Stats:");
-		//ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-		//ImGui::Text("Quads: %d", stats.QuadCount);
-		//ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
-		//ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
-
-		ImGui::End();
-
 
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
@@ -262,6 +207,30 @@ namespace Engine
         rhi::cmdbuf_reset(m_Cmd);
         rhi::cmdbuf_begin(m_Cmd);
         
+        rhi::TextureBarrier barriers_begin[] = {
+            {
+                .tex = m_ColorTex,
+                .old_layout = rhi::TextureLayout::Undefined,
+                .new_layout = rhi::TextureLayout::ColorTarget,
+                .src_stage = rhi::PipelineStage::Top,
+                .dst_stage = rhi::PipelineStage::ColorOutput,
+                .src_access = rhi::Access::None,
+                .dst_access = rhi::Access::ColorWrite,
+                .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
+            },
+            {
+                .tex = m_DepthTex,
+                .old_layout = rhi::TextureLayout::Undefined,
+                .new_layout = rhi::TextureLayout::DepthStencilTarget,
+                .src_stage = rhi::PipelineStage::Top,
+                .dst_stage = rhi::PipelineStage::EarlyDepth | rhi::PipelineStage::LateDepth,
+                .src_access = rhi::Access::None,
+                .dst_access = rhi::Access::DepthWrite,
+                .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
+            }
+        };
+        rhi::texture_barrier(m_Cmd, barriers_begin, 2);
+        
         rhi::begin_render_pass(m_Cmd, {
             .color = {{
                 .texture = m_ColorTex,
@@ -283,6 +252,19 @@ namespace Engine
 		m_ActiveScene->OnUpdateEditor(ts,m_EditorCamera);
 
         rhi::end_render_pass(m_Cmd);
+
+        rhi::TextureBarrier barrier_end = {
+            .tex = m_ColorTex,
+            .old_layout = rhi::TextureLayout::ColorTarget,
+            .new_layout = rhi::TextureLayout::ShaderReadOnly,
+            .src_stage = rhi::PipelineStage::ColorOutput,
+            .dst_stage = rhi::PipelineStage::Fragment,
+            .src_access = rhi::Access::ColorWrite,
+            .dst_access = rhi::Access::ShaderRead,
+            .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
+        };
+        rhi::texture_barrier(m_Cmd, &barrier_end, 1);
+
         rhi::cmdbuf_end(m_Cmd);
         
         rhi::queue_submit(&m_Cmd, 1, nullptr, 0, nullptr, 0, m_Fence);

@@ -11,9 +11,7 @@ namespace Engine
             {
                 //Push different example
                 //PushLayer(new MaterialExample());
-    #if API_OPENGL
                 PushLayer(new EditorLayer());
-    #endif
             }
             ~Editor() {}
     }; 
