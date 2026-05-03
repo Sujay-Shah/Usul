@@ -11,10 +11,10 @@ ModelExample::~ModelExample() {
 void ModelExample::OnUpdate(const Engine::Timestep &ts)
 {
     m_cameraController.OnUpdate(ts);
-    Engine::Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 1 });
-    Engine::Renderer::Clear();
+//     Engine::Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 1 });
+//     Engine::Renderer::Clear();
 
-    Engine::Renderer::BeginScene(m_cameraController.GetCamera());
+//     Engine::Renderer::BeginScene(m_cameraController.GetCamera());
     auto modelShader = m_shaderLibrary.Get("Model");
     modelShader->Bind();
     modelShader->UploadUniformMat4("projection", m_cameraController.GetCamera().GetProjectionMatrix());

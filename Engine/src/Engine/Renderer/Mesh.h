@@ -5,39 +5,35 @@
 #ifndef USUL_MESH_H
 #define USUL_MESH_H
 
-#include "Renderer/Texture.h"
+#include "RHI/rhi_types.hpp"
 #include "Renderer/Vertex.h"
-#include "Buffer.h"
-#include "Renderer.h"
+#include "Engine/Core/EngineDefines.h"
 
 namespace Engine
 {
+    class Shader;
     class Mesh
     {
     public:
 
-        Mesh(std::vector<Vertex>& vertices, std::vector<uint32>& indices, std::vector<Ref<Texture2D>>& textures);
+        Mesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& indices, std::vector<rhi::Texture>& textures);
 
         virtual void Draw(Ref<Shader> shader){};
 
         virtual ~Mesh(){};
 
-        static Ref<Mesh> CreateMesh(std::vector<Vertex> vertices, std::vector<uint32> indices, std::vector<Ref<Texture2D>> textures);
+        static Ref<Mesh> CreateMesh(std::vector<Vertex> vertices, std::vector<uint32_t> indices, std::vector<rhi::Texture> textures);
 
         std::vector<Vertex> m_vertices;
         std::vector<uint32_t> m_indices;
-        std::vector<Ref<Texture2D>> m_textures;
+        std::vector<rhi::Texture> m_textures;
 
     protected:
-        Ref<VertexArray> m_vao;
-        Ref<VertexBuffer> m_vbo;
-        Ref<IndexBuffer> m_ibo;
+        rhi::Buffer m_vbo;
+        rhi::Buffer m_ibo;
 
         virtual void SetupMesh(){};
     };
-
-
-
 
 } // Engine
 

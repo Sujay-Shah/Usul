@@ -1,9 +1,12 @@
 #ifndef Material_h__
 #define Material_h__
 
+#include <glm/glm.hpp>
+#include "RHI/rhi_types.hpp"
+#include "Engine/Core/EngineDefines.h"
+
 namespace Engine
 {
-    class Texture;
     class Shader;
 
     struct MaterialProperties
@@ -28,7 +31,7 @@ namespace Engine
         MaterialProperties m_materialProperty;
 
     private:
-        std::vector<Ref<Texture>> m_textures;
+        std::vector<rhi::Texture> m_textures;
         Ref<Shader> m_shader;
 	};
 

@@ -37,33 +37,33 @@ MaterialExample::MaterialExample()
     };
 
     //normal cube
-    m_cubeVA = Engine::VertexArray::Create();
-    Engine::Ref<Engine::VertexBuffer> cubeVB;
-    cubeVB = Engine::VertexBuffer::Create(vertices, sizeof(vertices));
-    cubeVB->SetLayout({
-                              { Engine::ShaderDataType::Float3, "aPos"},
-                              { Engine::ShaderDataType::Float3, "aNormal"},
-                              { Engine::ShaderDataType::Float2, "aTexCoords"}
+//     m_cubeVA = Engine::VertexArray::Create();
+//     Engine::Ref<Engine::VertexBuffer> cubeVB;
+//     cubeVB = Engine::VertexBuffer::Create(vertices, sizeof(vertices));
+//     cubeVB->SetLayout({
+//                               { Engine::ShaderDataType::Float3, "aPos"},
+//                               { Engine::ShaderDataType::Float3, "aNormal"},
+//                               { Engine::ShaderDataType::Float2, "aTexCoords"}
                       });
-    m_cubeVA->AddVertexBuffer(cubeVB);
+//     m_cubeVA->AddVertexBuffer(cubeVB);
 
-    Engine::Ref<Engine::IndexBuffer> cubeIB;
-    cubeIB = Engine::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
-    m_cubeVA->SetIndexBuffer(cubeIB);
+//     Engine::Ref<Engine::IndexBuffer> cubeIB;
+//     cubeIB = Engine::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
+//     m_cubeVA->SetIndexBuffer(cubeIB);
 
     //light cube uses same coords, so just set buffers
-    m_lightCubeVA = Engine::VertexArray::Create();
-    Engine::Ref<Engine::VertexBuffer> lightcubeVB;
-    lightcubeVB = Engine::VertexBuffer::Create(vertices, sizeof(vertices));
-    lightcubeVB->SetLayout({
-                                   { Engine::ShaderDataType::Float3, "aPos"},
-                                   { Engine::ShaderDataType::Float3, "aNormal"},
-                                   { Engine::ShaderDataType::Float2, "aTexCoords"}
+//     m_lightCubeVA = Engine::VertexArray::Create();
+//     Engine::Ref<Engine::VertexBuffer> lightcubeVB;
+//     lightcubeVB = Engine::VertexBuffer::Create(vertices, sizeof(vertices));
+//     lightcubeVB->SetLayout({
+//                                    { Engine::ShaderDataType::Float3, "aPos"},
+//                                    { Engine::ShaderDataType::Float3, "aNormal"},
+//                                    { Engine::ShaderDataType::Float2, "aTexCoords"}
                            });
-    m_lightCubeVA->AddVertexBuffer(lightcubeVB);
-    Engine::Ref<Engine::IndexBuffer> lightcubeIB;
-    lightcubeIB = Engine::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
-    m_lightCubeVA->SetIndexBuffer(lightcubeIB);
+//     m_lightCubeVA->AddVertexBuffer(lightcubeVB);
+//     Engine::Ref<Engine::IndexBuffer> lightcubeIB;
+//     lightcubeIB = Engine::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
+//     m_lightCubeVA->SetIndexBuffer(lightcubeIB);
 
 
     m_shaderLibrary.Add(Engine::Shader::Create(path + "shaders/LightMaps.glsl"));
@@ -86,10 +86,10 @@ void MaterialExample::OnUpdate(const Engine::Timestep &ts) {
 
     m_cameraController.OnUpdate(ts);
 
-    Engine::Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 1 });
-    Engine::Renderer::Clear();
+//     Engine::Renderer::SetClearColor({ 0.0f, 0.0f, 0.0f, 1 });
+//     Engine::Renderer::Clear();
 
-    Engine::Renderer::BeginScene(m_cameraController.GetCamera());
+//     Engine::Renderer::BeginScene(m_cameraController.GetCamera());
 
     m_lightPos.x = 2.0f * sinf(Engine::GetTime());
     m_lightPos.z = 1.5f * cosf(Engine::GetTime());
@@ -112,7 +112,7 @@ void MaterialExample::OnUpdate(const Engine::Timestep &ts) {
     m_material->Use();
 
     lightShader->UploadUniformMat4("model", glm::mat4(1.0f));
-    Engine::Renderer::Submit(lightShader, m_cubeVA);
+//     Engine::Renderer::Submit(lightShader, m_cubeVA);
 
     auto LightcubeShader = m_shaderLibrary.Get("CubeLight");
     LightcubeShader->Bind();
@@ -127,7 +127,7 @@ void MaterialExample::OnUpdate(const Engine::Timestep &ts) {
     LightcubeShader->UploadUniformMat4("model", model);
     LightcubeShader->UploadUniformMat4("projection", m_cameraController.GetCamera().GetProjectionMatrix());
     LightcubeShader->UploadUniformMat4("view", m_cameraController.GetCamera().GetViewMatrix());
-    Engine::Renderer::Submit(LightcubeShader, m_lightCubeVA);
+//     Engine::Renderer::Submit(LightcubeShader, m_lightCubeVA);
 
 }
 

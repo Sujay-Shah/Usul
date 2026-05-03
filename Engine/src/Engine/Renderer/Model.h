@@ -21,7 +21,7 @@ namespace Engine
         {
             loadModel(AssetManager::GetAssetPath(path).string());
         }
-        std::vector<Ref<Texture2D>> m_textures_loaded;
+        std::vector<rhi::Texture> m_textures_loaded;
         std::vector<Ref<Mesh>> m_meshes;
         std::string m_directory;
         bool m_gammaCorrection;
@@ -36,10 +36,10 @@ namespace Engine
 
         // checks all material textures of a given type and loads the textures if they're not loaded yet.
 // the required info is returned as a Texture struct.
-        std::vector<Ref<Texture2D>> loadMaterialTextures(aiMaterial *mat, aiTextureType type, TextureType::Type typeName)
+        std::vector<rhi::Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, int typeName)
         {
-            std::vector<Ref<Texture2D>> textures;
-            for(unsigned int i = 0; i < mat->GetTextureCount(type); i++)
+            std::vector<rhi::Texture> textures;
+            /*for(unsigned int i = 0; i < mat->GetTextureCount(type); i++)
             {
                 aiString str;
                 mat->GetTexture(type, i, &str);
@@ -47,23 +47,11 @@ namespace Engine
                 bool skip = false;
                 for(unsigned int j = 0; j < m_textures_loaded.size(); j++)
                 {
-
-                    std::string tex = m_textures_loaded[j]->m_path.substr(m_textures_loaded[j]->m_path.find_last_of('/')+1,m_textures_loaded[j]->m_path.size());
-                    if(std::strcmp(tex.c_str(), str.C_Str()) == 0)
-                    {
-                        textures.push_back(m_textures_loaded[j]);
-                        skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)
-                        break;
-                    }
                 }
                 if(!skip)
                 {   // if texture hasn't been loaded already, load it
-                    Ref<Texture2D> texture = Texture2D::Create( m_directory + str.C_Str() );
-                    texture->m_type = typeName;
-                    textures.push_back(texture);
-                    m_textures_loaded.push_back(texture);  // store it as texture loaded for entire model, to ensure we won't unnecessary load duplicate textures.
                 }
-            }
+            }*/
             return textures;
         }
 
@@ -106,7 +94,7 @@ namespace Engine
             // data to fill
             std::vector<Vertex> vertices;
             std::vector<uint32_t> indices;
-            std::vector<Ref<Texture2D>> textures;
+            std::vector<rhi::Texture> textures;
 
 // walk through each of the mesh's vertices
             for(uint32_t i = 0; i < mesh->mNumVertices; i++)
@@ -169,16 +157,16 @@ namespace Engine
 // normal: texture_normalN
 
 // 1. diffuse maps
-            std::vector<Ref<Texture2D>> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, TextureType::Type::Diffuse);
+            std::vector<rhi::Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, 0);
             textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 // 2. specular maps
-            std::vector<Ref<Texture2D>> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, TextureType::Type::Specular);
+            std::vector<rhi::Texture> specularMaps = loadMaterialTextures(material, aiTextureType_SPECULAR, 1);
             textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 // 3. normal maps
-            std::vector<Ref<Texture2D>> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, TextureType::Type::HeightMap);
+            std::vector<rhi::Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, 2);
             textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 // 4. height maps
-            std::vector<Ref<Texture2D>> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, TextureType::Type::HeightMap);
+            std::vector<rhi::Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, 3);
             textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
 // return a mesh object created from the extracted mesh data

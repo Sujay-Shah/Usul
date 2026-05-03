@@ -8,8 +8,7 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include "Renderer/Renderer.h"
-#include "Renderer/FrameBuffer.h"
+#include "RHI/rhi.hpp"
 #include "Event/ApplicationEvent.h"
 #include "Engine/Scene/SceneSerializer.h"
 #include "Engine/Utils/PlatformUtils.h"
@@ -28,11 +27,24 @@ namespace Engine
 
     void EditorLayer::OnAttach()
     {
-        FramebufferSpecification fbSpec;
-        fbSpec.Attachments = { FramebufferTextureFormat::RGBA8, FramebufferTextureFormat::RED_INTEGER, FramebufferTextureFormat::Depth };
-        fbSpec.Width = 1280;
-        fbSpec.Height = 720;
-        m_Framebuffer = Framebuffer::Create(fbSpec);
+        m_ColorTex = rhi::texture_create({
+            .width = 1280,
+            .height = 720,
+            .format = rhi::Format::BGRA8_Srgb,
+            .usage = rhi::TextureUsage::ColorTarget | rhi::TextureUsage::Sampled,
+            .name = "EditorColorTex"
+        });
+
+        m_DepthTex = rhi::texture_create({
+            .width = 1280,
+            .height = 720,
+            .format = rhi::Format::D32_Float,
+            .usage = rhi::TextureUsage::DepthTarget,
+            .name = "EditorDepthTex"
+        });
+
+        m_Cmd = rhi::cmdbuf_create(0);
+        m_Fence = rhi::fence_create(false);
 
 		m_ActiveScene = CreateRef<Scene>();
 #if 0
@@ -83,6 +95,11 @@ namespace Engine
 
     void EditorLayer::OnDetach()
     {
+        rhi::device_wait_idle();
+        rhi::texture_destroy(m_ColorTex);
+        rhi::texture_destroy(m_DepthTex);
+        rhi::cmdbuf_destroy(m_Cmd);
+        rhi::fence_destroy(m_Fence);
     }
 
     void EditorLayer::OnImGuiRender()
@@ -182,12 +199,12 @@ namespace Engine
 
 		ImGui::Begin("Settings");
 
-		auto stats = Renderer2D::GetStats();
-		ImGui::Text("Renderer2D Stats:");
-		ImGui::Text("Draw Calls: %d", stats.DrawCalls);
-		ImGui::Text("Quads: %d", stats.QuadCount);
-		ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
-		ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
+		//auto stats = Renderer2D::GetStats();
+		//ImGui::Text("Renderer2D Stats:");
+		//ImGui::Text("Draw Calls: %d", stats.DrawCalls);
+		//ImGui::Text("Quads: %d", stats.QuadCount);
+		//ImGui::Text("Vertices: %d", stats.GetTotalVertexCount());
+		//ImGui::Text("Indices: %d", stats.GetTotalIndexCount());
 
 		ImGui::End();
 
@@ -202,8 +219,7 @@ namespace Engine
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
-		uint64_t textureID = m_Framebuffer->GetColorAttachmentRendererID();
-		ImGui::Image(reinterpret_cast<void*>(textureID), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		ImGui::Image((ImTextureID)(uintptr_t)m_ColorTex.id, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::End();
 		ImGui::PopStyleVar();
     }
@@ -211,30 +227,67 @@ namespace Engine
     void EditorLayer::OnUpdate(const Timestep &ts)
     {
 		//resize
-		if (Engine::FramebufferSpecification spec = m_Framebuffer->GetSpecification();
-			m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized framebuffer is invalid
-			(spec.Width != m_ViewportSize.x || spec.Height != m_ViewportSize.y))
+		if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f && // zero sized viewport is invalid
+			(m_AllocatedViewportSize.x != m_ViewportSize.x || m_AllocatedViewportSize.y != m_ViewportSize.y))
 		{
-			m_Framebuffer->Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
-			m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+            rhi::device_wait_idle();
+            rhi::texture_destroy(m_ColorTex);
+            rhi::texture_destroy(m_DepthTex);
 
+            m_ColorTex = rhi::texture_create({
+                .width = (uint32_t)m_ViewportSize.x,
+                .height = (uint32_t)m_ViewportSize.y,
+                .format = rhi::Format::BGRA8_Srgb,
+                .usage = rhi::TextureUsage::ColorTarget | rhi::TextureUsage::Sampled,
+                .name = "EditorColorTex"
+            });
+
+            m_DepthTex = rhi::texture_create({
+                .width = (uint32_t)m_ViewportSize.x,
+                .height = (uint32_t)m_ViewportSize.y,
+                .format = rhi::Format::D32_Float,
+                .usage = rhi::TextureUsage::DepthTarget,
+                .name = "EditorDepthTex"
+            });
+            
+            m_AllocatedViewportSize = m_ViewportSize;
+
+			m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
 
 		if(m_ViewportFocused)
 			m_CameraController.OnUpdate(ts);
 
-		Renderer2D::ResetStats();
-        m_Framebuffer->Bind();
-        Renderer::SetClearColor({ 0.1f, 0.1f, 0.1f, 1 });
-		Renderer::Clear();
-        m_Framebuffer->ClearAttachment(1, -1);
-        //record Editor render operations
-    	
+        rhi::cmdbuf_reset(m_Cmd);
+        rhi::cmdbuf_begin(m_Cmd);
+        
+        rhi::begin_render_pass(m_Cmd, {
+            .color = {{
+                .texture = m_ColorTex,
+                .load_op = rhi::LoadOp::Clear,
+                .store_op = rhi::StoreOp::Store,
+                .clear = {0.1f, 0.1f, 0.1f, 1.0f}
+            }},
+            .color_count = 1,
+            .depth = {
+                .texture = m_DepthTex,
+                .load_op = rhi::LoadOp::Clear,
+                .store_op = rhi::StoreOp::Store,
+                .clear = {1.0f, 0}
+            },
+            .has_depth = true
+        });
+
 		// Update scene
 		m_ActiveScene->OnUpdateEditor(ts,m_EditorCamera);
 
-        m_Framebuffer->Unbind();
+        rhi::end_render_pass(m_Cmd);
+        rhi::cmdbuf_end(m_Cmd);
+        
+        rhi::queue_submit(&m_Cmd, 1, nullptr, 0, nullptr, 0, m_Fence);
+        rhi::fence_wait(m_Fence);
+        rhi::fence_reset(m_Fence);
     }
 
     void EditorLayer::OnEvent(Event &e)

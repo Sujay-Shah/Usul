@@ -1,6 +1,6 @@
 #include "Material.h"
 #include "Shader.h"
-#include "Texture.h"
+#include "Shader.h"
 
 namespace Engine
 {
@@ -22,7 +22,7 @@ namespace Engine
 
         for(int i=0;i<m_textures.size();++i)
         {
-            m_textures[i]->Bind(uint32_t(i));
+            // m_textures[i]->Bind(uint32_t(i));
         }
 
     }
@@ -35,7 +35,7 @@ namespace Engine
     {
         for(int i=0;i<texturePaths.size();++i)
         {
-            m_textures.emplace_back(Engine::Texture2D::Create(texturePaths[i]));
+            // m_textures.emplace_back(Engine::Texture2D::Create(texturePaths[i]));
         }
 
         //default properties

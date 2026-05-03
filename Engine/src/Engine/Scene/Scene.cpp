@@ -2,7 +2,6 @@
 #include "Scene.h"
 
 #include "Components.h"
-#include "Engine/Renderer/Renderer2D.h"
 
 #include <glm/glm.hpp>
 
@@ -65,33 +64,33 @@ namespace Engine {
 
 		if (mainCamera)
 		{
-			Renderer2D::BeginScene(*mainCamera, cameraTransform);
+			//Renderer2D::BeginScene(*mainCamera, cameraTransform);
 
 			auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 			for (auto entity : group)
 			{
 				auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 
-				Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+				//Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
 			}
 
-			Renderer2D::EndScene();
+			//Renderer2D::EndScene();
 		}
 	}
 	
 	void Scene::OnUpdateEditor(Timestep ts, EditorCamera& camera)
 	{
-		Renderer2D::BeginScene(camera);
+		//Renderer2D::BeginScene(camera);
 
 		auto group = m_Registry.group<TransformComponent>(entt::get<SpriteRendererComponent>);
 		for (auto entity : group)
 		{
 			auto [transform, sprite] = group.get<TransformComponent, SpriteRendererComponent>(entity);
 
-			Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
+			//Renderer2D::DrawQuad(transform.GetTransform(), sprite.Color);
 		}
 
-		Renderer2D::EndScene();
+		//Renderer2D::EndScene();
 	}
 
 	void Scene::OnViewportResize(uint32_t width, uint32_t height)

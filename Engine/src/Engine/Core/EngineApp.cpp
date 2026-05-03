@@ -4,7 +4,6 @@
 #include "EngineDefines.h"
 #include "Platform/GLFW/TimeGLFW.h"
 #include "Timestep.h"
-#include "Renderer/Renderer.h"
 #include "RHI/rhi.hpp"
 #include <GLFW/glfw3.h>
 
@@ -49,9 +48,6 @@ namespace Engine
 
         m_imguiLayer = new ImGuiLayer();
         PushOverlay(m_imguiLayer);
-#if !API_VULKAN
-        Renderer::Init();
-#endif
     }
 
     EngineApp::~EngineApp()
@@ -81,7 +77,7 @@ namespace Engine
                 {
                     //TODO: refactor this in future
                     #if ENABLE_EXAMPLE
-                        //if(layer->GetName() == m_imguiLayer->GetCurrentExampleName())
+                        if(layer->GetName() == m_imguiLayer->GetCurrentExampleName())
                     #endif
                     {
                         layer->OnUpdate(timestep);
@@ -155,7 +151,6 @@ namespace Engine
         }
 
         m_isMinimized = false;
-        Renderer::OnWindowResize(e.GetWidth(), e.GetHeight());
 
         return false;
     }

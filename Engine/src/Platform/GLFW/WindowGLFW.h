@@ -3,7 +3,6 @@
 
 #include "Engine/Core/Window.h"
 #include "Event/Event.h"
-#include "Renderer/RenderContext.h"
 
 struct GLFWwindow;
 
@@ -30,7 +29,6 @@ namespace Engine
     private:
             GLFWwindow* m_window = nullptr;
             WindowProps m_windowData;
-            RenderContext* m_renderContext = nullptr;
 
             void Init(const WindowProps& props);
 

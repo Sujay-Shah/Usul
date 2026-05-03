@@ -17,8 +17,8 @@ public:
 private:
 	Engine::ShaderLibrary m_shaderLibrary;
 
-	Engine::Ref<Engine::VertexArray> m_cubeVA;
-	Engine::Ref<Engine::VertexArray> m_lightCubeVA;
+// 	Engine::Ref<Engine::VertexArray> m_cubeVA;
+// 	Engine::Ref<Engine::VertexArray> m_lightCubeVA;
 
 	Engine::CameraController m_cameraController;
 	glm::vec3 m_cameraPosition;

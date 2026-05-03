@@ -1,6 +1,4 @@
 #include "Shader.h"
-#include "Renderer.h"
-#include "Backends/OpenGL/ShaderOpenGL.h"
 
 #include "Engine/Core/Logging.h"
 #include "Engine/Core/EngineDefines.h"
@@ -9,32 +7,14 @@ namespace Engine
 {
     Ref<Shader> Shader::Create(const std::string& filename)
     {
-        switch(Renderer::Get())
-        {
-            case RendererAPI::API::None:
-                ENGINE_ASSERT(0, "No render API is not supported!");
-                return nullptr;
-            case RendererAPI::API::OpenGL:
-                return std::make_unique<ShaderOpenGL>(filename);
-            default:
-                ENGINE_ASSERT(0, "Unknown renderer API!");
-                return nullptr;
-        }
+        // RHI shader creation goes here
+        return nullptr;
     }
 
     Ref<Shader> Shader::Create(const std::string& name, const std::string& vertexSrc, const std::string& fragSrc)
     {
-        switch(Renderer::Get())
-        {
-            case RendererAPI::API::None:
-                ENGINE_ASSERT(0, "No render API is not supported!");
-                return nullptr;
-            case RendererAPI::API::OpenGL:
-                return std::make_unique<ShaderOpenGL>(name, vertexSrc, fragSrc);
-            default:
-                ENGINE_ASSERT(0, "Unknown renderer API!");
-                return nullptr;
-        }
+        // RHI shader creation goes here
+        return nullptr;
     }
 
     bool ShaderLibrary::Exists(const std::string& name)

@@ -16,9 +16,9 @@ class TextureDemo : public Engine::Layer
         Engine::ShaderLibrary m_shaderLibrary;
     
 
-        Engine::Ref<Engine::VertexArray> m_squareVA;
+//         Engine::Ref<Engine::VertexArray> m_squareVA;
 
-        std::vector<Engine::Ref<Engine::Texture2D>> m_texture;
+//         std::vector<Engine::Ref<Engine::Texture2D>> m_texture;
 
         Engine::CameraController m_cameraController;
         glm::vec3 m_cameraPosition;

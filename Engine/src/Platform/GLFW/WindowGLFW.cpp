@@ -2,9 +2,8 @@
 #include "Event/KeyboardEvent.h"
 #include "Event/ApplicationEvent.h"
 #include "Event/MouseEvent.h"
-#include "Renderer/Backends/OpenGL/RenderContextOpenGL.h"
-#include "Renderer/Backends/Vulkan/RenderContextVulkan.h"
 #include "Engine/Core/EngineDefines.h"
+#include <GLFW/glfw3.h>
 
 namespace Engine
 {
@@ -59,12 +58,6 @@ namespace Engine
             m_windowData.width,
             m_windowData.height,
             m_windowData.title);
-#if API_OPENGL
-        m_renderContext = new RenderContextOpenGL(m_window);
-#elif API_VULKAN
-        //m_renderContext = new RenderContextVulkan(m_window);
-#endif
-        //m_renderContext->Init();
 
         glfwSetWindowUserPointer(m_window, &m_windowData);
 
@@ -83,12 +76,10 @@ namespace Engine
     void WindowGLFW::Update()
     {
         glfwPollEvents();
-       // m_renderContext->SwapBuffers();
     }
 
     void WindowGLFW::Destroy()
     {
-        //m_renderContext->Cleanup();
 
         ENGINE_ERROR("Destroying window.");
         glfwDestroyWindow(m_window);

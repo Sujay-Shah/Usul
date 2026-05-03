@@ -4,9 +4,9 @@
 #include "Engine.h"
 #include "Panels/SceneHierarchyPanel.h"
 #include "Engine/Renderer/Camera/EditorCamera.h"
+#include "RHI/rhi_types.hpp"
 namespace Engine
 {
-    class Framebuffer;
     class EditorLayer : public Layer
     {
         public:
@@ -35,15 +35,19 @@ namespace Engine
         CameraController m_CameraController;
         //once there are different features in the renderer,
         //this stuff can be ported into a seperate editor layer in future
-        Ref<Framebuffer> m_Framebuffer;
+        rhi::Texture m_ColorTex;
+        rhi::Texture m_DepthTex;
+        rhi::CmdBuf m_Cmd;
+        rhi::Fence m_Fence;
         bool m_BlockEvents = true;
 
         bool m_ViewportFocused = false, m_ViewportHovered = false;
         glm::vec2 m_ViewportBounds[2];
         glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
+        glm::vec2 m_AllocatedViewportSize = { 0.0f, 0.0f };
 
         //Temp
-        Ref<VertexArray> m_SquareVA;
+        //Ref<VertexArray> m_SquareVA;
 		Ref<Shader> m_FlatColorShader;
         Ref<Scene> m_ActiveScene;
 		Entity m_SquareEntity;
