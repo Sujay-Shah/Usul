@@ -15,7 +15,7 @@ layout(set = 0, binding = 2) uniform sampler2D u_GAlbedo;   // RGB = albedo, A =
 layout(set = 0, binding = 3) uniform sampler2D u_GPBR;      // R = metallic, G = roughness
 
 // Shadow map (optional — may be a 1x1 white texture when shadows off)
-layout(set = 0, binding = 4) uniform sampler2DShadow u_ShadowMap;
+layout(set = 0, binding = 4) uniform sampler2D u_ShadowMap;
 
 // ---- Light data ----
 struct LightData
@@ -26,7 +26,7 @@ struct LightData
     vec4  Params;          // X = outer cutoff, Y = radius, Z = castShadow, W = unused
 };
 
-layout(set = 1, binding = 0) uniform LightUBO
+layout(set = 0, binding = 5) uniform LightUBO
 {
     LightData Lights[64];
     int       LightCount;
@@ -79,7 +79,10 @@ float ShadowFactor(vec3 worldPos)
     vec2 texelSize = 1.0 / textureSize(u_ShadowMap, 0);
     for (int x = -1; x <= 1; ++x)
     for (int y = -1; y <= 1; ++y)
-        shadow += texture(u_ShadowMap, vec3(shadowCoord.xy + vec2(x, y) * texelSize, shadowCoord.z - 0.005));
+    {
+        float depth = texture(u_ShadowMap, shadowCoord.xy + vec2(x, y) * texelSize).r;
+        shadow += (shadowCoord.z - 0.005 < depth) ? 1.0 : 0.0;
+    }
     return shadow / 9.0;
 }
 

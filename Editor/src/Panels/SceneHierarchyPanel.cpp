@@ -63,6 +63,24 @@ namespace Engine {
 					ImGui::CloseCurrentPopup();
 				}
 
+				if (ImGui::MenuItem("Mesh"))
+				{
+					m_SelectionContext.AddComponent<MeshComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+
+				if (ImGui::MenuItem("Material"))
+				{
+					m_SelectionContext.AddComponent<MaterialComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+
+				if (ImGui::MenuItem("Light"))
+				{
+					m_SelectionContext.AddComponent<LightComponent>();
+					ImGui::CloseCurrentPopup();
+				}
+
 				ImGui::EndPopup();
 			}
 
@@ -266,7 +284,7 @@ namespace Engine {
 			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
 			bool open = ImGui::TreeNodeEx((void*)typeid(SpriteRendererComponent).hash_code(), treeNodeFlags, "Sprite Renderer");
 			ImGui::SameLine(ImGui::GetWindowWidth() - 25.0f);
-			if (ImGui::Button("+", ImVec2{ 20, 20 }))
+			if (ImGui::Button("+##SpriteRenderer", ImVec2{ 20, 20 }))
 			{
 				ImGui::OpenPopup("ComponentSettings");
 			}
@@ -290,6 +308,168 @@ namespace Engine {
 
 			if (removeComponent)
 				entity.RemoveComponent<SpriteRendererComponent>();
+		}
+
+		if (entity.HasComponent<MeshComponent>())
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
+			bool open = ImGui::TreeNodeEx((void*)typeid(MeshComponent).hash_code(), treeNodeFlags, "Mesh");
+			ImGui::SameLine(ImGui::GetWindowWidth() - 25.0f);
+			if (ImGui::Button("+##Mesh", ImVec2{ 20, 20 }))
+			{
+				ImGui::OpenPopup("ComponentSettings");
+			}
+			ImGui::PopStyleVar();
+
+			bool removeComponent = false;
+			if (ImGui::BeginPopup("ComponentSettings"))
+			{
+				if (ImGui::MenuItem("Remove component"))
+					removeComponent = true;
+
+				ImGui::EndPopup();
+			}
+
+			if (open)
+			{
+				auto& mc = entity.GetComponent<MeshComponent>();
+				
+				char buffer[256];
+				memset(buffer, 0, sizeof(buffer));
+				ImStrncpy(buffer, mc.ModelPath.c_str(), sizeof(buffer));
+				if (ImGui::InputText("Model Path", buffer, sizeof(buffer)))
+					mc.ModelPath = std::string(buffer);
+
+				ImGui::Checkbox("Cast Shadow", &mc.CastShadow);
+				ImGui::TreePop();
+			}
+
+			if (removeComponent)
+				entity.RemoveComponent<MeshComponent>();
+		}
+
+		if (entity.HasComponent<MaterialComponent>())
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
+			bool open = ImGui::TreeNodeEx((void*)typeid(MaterialComponent).hash_code(), treeNodeFlags, "Material");
+			ImGui::SameLine(ImGui::GetWindowWidth() - 25.0f);
+			if (ImGui::Button("+##Material", ImVec2{ 20, 20 }))
+			{
+				ImGui::OpenPopup("ComponentSettings");
+			}
+			ImGui::PopStyleVar();
+
+			bool removeComponent = false;
+			if (ImGui::BeginPopup("ComponentSettings"))
+			{
+				if (ImGui::MenuItem("Remove component"))
+					removeComponent = true;
+
+				ImGui::EndPopup();
+			}
+
+			if (open)
+			{
+				auto& mat = entity.GetComponent<MaterialComponent>();
+				
+				ImGui::ColorEdit4("Albedo Color", glm::value_ptr(mat.AlbedoColor));
+				ImGui::SliderFloat("Metallic", &mat.Metallic, 0.0f, 1.0f);
+				ImGui::SliderFloat("Roughness", &mat.Roughness, 0.0f, 1.0f);
+				ImGui::SliderFloat("AO", &mat.AO, 0.0f, 1.0f);
+
+				char buffer[256];
+				memset(buffer, 0, sizeof(buffer));
+				ImStrncpy(buffer, mat.AlbedoMapPath.c_str(), sizeof(buffer));
+				if (ImGui::InputText("Albedo Map", buffer, sizeof(buffer))) mat.AlbedoMapPath = std::string(buffer);
+				
+				memset(buffer, 0, sizeof(buffer));
+				ImStrncpy(buffer, mat.NormalMapPath.c_str(), sizeof(buffer));
+				if (ImGui::InputText("Normal Map", buffer, sizeof(buffer))) mat.NormalMapPath = std::string(buffer);
+				
+				memset(buffer, 0, sizeof(buffer));
+				ImStrncpy(buffer, mat.MetallicRoughnessMapPath.c_str(), sizeof(buffer));
+				if (ImGui::InputText("Metalness/Roughness Map", buffer, sizeof(buffer))) mat.MetallicRoughnessMapPath = std::string(buffer);
+
+				memset(buffer, 0, sizeof(buffer));
+				ImStrncpy(buffer, mat.AOMapPath.c_str(), sizeof(buffer));
+				if (ImGui::InputText("AO Map", buffer, sizeof(buffer))) mat.AOMapPath = std::string(buffer);
+
+				ImGui::TreePop();
+			}
+
+			if (removeComponent)
+				entity.RemoveComponent<MaterialComponent>();
+		}
+
+		if (entity.HasComponent<LightComponent>())
+		{
+			ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2{ 4, 4 });
+			bool open = ImGui::TreeNodeEx((void*)typeid(LightComponent).hash_code(), treeNodeFlags, "Light");
+			ImGui::SameLine(ImGui::GetWindowWidth() - 25.0f);
+			if (ImGui::Button("+##Light", ImVec2{ 20, 20 }))
+			{
+				ImGui::OpenPopup("ComponentSettings");
+			}
+			ImGui::PopStyleVar();
+
+			bool removeComponent = false;
+			if (ImGui::BeginPopup("ComponentSettings"))
+			{
+				if (ImGui::MenuItem("Remove component"))
+					removeComponent = true;
+
+				ImGui::EndPopup();
+			}
+
+			if (open)
+			{
+				auto& lc = entity.GetComponent<LightComponent>();
+				
+				const char* lightTypeStrings[] = { "Directional", "Point", "Spot" };
+				const char* currentLightTypeString = lightTypeStrings[(int)lc.Type];
+				if (ImGui::BeginCombo("Type", currentLightTypeString))
+				{
+					for (int i = 0; i < 3; i++)
+					{
+						bool isSelected = currentLightTypeString == lightTypeStrings[i];
+						if (ImGui::Selectable(lightTypeStrings[i], isSelected))
+						{
+							currentLightTypeString = lightTypeStrings[i];
+							lc.Type = (LightType)i;
+						}
+
+						if (isSelected)
+							ImGui::SetItemDefaultFocus();
+					}
+
+					ImGui::EndCombo();
+				}
+
+				ImGui::ColorEdit3("Color", glm::value_ptr(lc.Color));
+				ImGui::DragFloat("Intensity", &lc.Intensity, 0.1f, 0.0f, 100.0f);
+				ImGui::Checkbox("Cast Shadows", &lc.CastShadows);
+
+				if (lc.Type == LightType::Point || lc.Type == LightType::Spot)
+				{
+					ImGui::DragFloat("Radius", &lc.Radius, 0.1f, 0.0f, 1000.0f);
+				}
+
+				if (lc.Type == LightType::Spot)
+				{
+					float inner = glm::degrees(lc.InnerCutoff);
+					if (ImGui::DragFloat("Inner Cutoff", &inner, 1.0f, 0.0f, 90.0f))
+						lc.InnerCutoff = glm::radians(inner);
+
+					float outer = glm::degrees(lc.OuterCutoff);
+					if (ImGui::DragFloat("Outer Cutoff", &outer, 1.0f, 0.0f, 90.0f))
+						lc.OuterCutoff = glm::radians(outer);
+				}
+
+				ImGui::TreePop();
+			}
+
+			if (removeComponent)
+				entity.RemoveComponent<LightComponent>();
 		}
 	}
 

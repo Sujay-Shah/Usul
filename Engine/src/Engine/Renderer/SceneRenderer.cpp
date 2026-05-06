@@ -12,7 +12,10 @@ namespace Engine {
 static std::vector<char> ReadSpv(const std::string& path)
 {
     std::ifstream f(path, std::ios::ate | std::ios::binary);
-    ENGINE_CORE_ASSERT(f.is_open(), "SceneRenderer: Cannot open shader: {0}", path);
+    if (!f.is_open()) {
+        ENGINE_CORE_ERROR("SceneRenderer: Cannot open shader: {0}", path);
+        ENGINE_DEBUGBREAK();
+    }
     size_t size = (size_t)f.tellg();
     std::vector<char> buf(size);
     f.seekg(0);
@@ -36,9 +39,14 @@ void SceneRenderer::Init(uint32_t width, uint32_t height)
     CreateLightPassTargets(width, height);
     CreateShadowMap(m_ShadowRes);
 
-    // Per-frame UBOs
+    m_LightingSet = rhi::descriptor_set_create(m_LightingLayout0);
+
+    // Per-frame UBOs and material descriptor sets
     for (uint32_t i = 0; i < k_MaxFrames; ++i)
     {
+        for (uint32_t j = 0; j < 64; ++j)
+            m_MaterialSets[i][j] = rhi::descriptor_set_create(m_MaterialLayout);
+
         m_LightUBOs[i] = rhi::buffer_create({
             .size   = sizeof(GPULightUBO),
             .usage  = rhi::BufferUsage::Uniform,
@@ -90,6 +98,8 @@ void SceneRenderer::Shutdown()
     {
         rhi::buffer_destroy(m_LightUBOs[i]);
         rhi::buffer_destroy(m_MaterialUBOs[i]);
+        for (uint32_t j = 0; j < 64; ++j)
+            rhi::descriptor_set_destroy(m_MaterialSets[i][j]);
     }
 
     rhi::texture_destroy(m_WhiteTex);
@@ -98,7 +108,7 @@ void SceneRenderer::Shutdown()
 
     rhi::descriptor_layout_destroy(m_MaterialLayout);
     rhi::descriptor_layout_destroy(m_LightingLayout0);
-    rhi::descriptor_layout_destroy(m_LightingLayout1);
+    rhi::descriptor_set_destroy(m_LightingSet);
 
     m_Initialised = false;
 }
@@ -190,8 +200,8 @@ void SceneRenderer::CreateSamplers()
         .mag_filter=rhi::SamplerFilter::Linear,
         .address_u=rhi::SamplerAddress::ClampToEdge,
         .address_v=rhi::SamplerAddress::ClampToEdge,
-        .compare=true,
-        .compare_op=rhi::CompareOp::LessEqual,
+        .compare=false,
+        .compare_op=rhi::CompareOp::Always,
         .name="ShadowPCF"
     });
 }
@@ -222,7 +232,7 @@ void SceneRenderer::CreateDescriptorLayouts()
         .count=5, .name="MaterialLayout"
     });
 
-    // set 0 for lighting pass: 4 G-Buffer + shadow map
+    // set 0 for lighting pass: 4 G-Buffer + shadow map + light UBO
     m_LightingLayout0 = rhi::descriptor_layout_create({
         .bindings = {
             {.binding=0,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
@@ -230,16 +240,9 @@ void SceneRenderer::CreateDescriptorLayouts()
             {.binding=2,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
             {.binding=3,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
             {.binding=4,.type=DT::CombinedImageSampler,.count=1,.stages=SS::Fragment},
+            {.binding=5,.type=DT::UniformBuffer,       .count=1,.stages=SS::Fragment},
         },
-        .count=5, .name="LightingGBufLayout"
-    });
-
-    // set 1 for lighting pass: light UBO
-    m_LightingLayout1 = rhi::descriptor_layout_create({
-        .bindings = {
-            {.binding=0,.type=DT::UniformBuffer,.count=1,.stages=SS::Fragment},
-        },
-        .count=1, .name="LightUBOLayout"
+        .count=6, .name="LightingGBufLayout"
     });
 }
 
@@ -349,7 +352,7 @@ void SceneRenderer::UploadLightUBO(const Ref<Scene>& scene,
     for (auto entity : view)
     {
         if (ubo.LightCount >= 64) break;
-        auto& [tc, lc] = view.get<TransformComponent, LightComponent>(entity);
+        auto [tc, lc] = view.get<TransformComponent, LightComponent>(entity);
         GPULightData& ld = ubo.Lights[ubo.LightCount++];
 
         ld.ColorIntensity = { lc.Color, lc.Intensity };
@@ -366,6 +369,45 @@ void SceneRenderer::UploadLightUBO(const Ref<Scene>& scene,
     auto mapped = rhi::buffer_map(m_LightUBOs[0]);
     memcpy(mapped.ptr, &ubo, sizeof(ubo));
     rhi::buffer_unmap(m_LightUBOs[0]);
+}
+
+void SceneRenderer::BindMaterial(const rhi::CmdBuf& cmd, const MaterialComponent& mat,
+                                  uint32_t frameIndex, uint32_t materialIdx)
+{
+    if (materialIdx >= m_MaterialUBOCount) return;
+
+    // Map UBO slab
+    auto mapped = rhi::buffer_map(m_MaterialUBOs[frameIndex]);
+    GPUMaterialUBO* uboArray = static_cast<GPUMaterialUBO*>(mapped.ptr);
+    GPUMaterialUBO& ubo = uboArray[materialIdx];
+
+    ubo.AlbedoColor = mat.AlbedoColor;
+    ubo.Metallic    = mat.Metallic;
+    ubo.Roughness   = mat.Roughness;
+    ubo.AO          = mat.AO;
+
+    ubo.HasAlbedoMap            = mat.AlbedoMap ? 1.0f : 0.0f;
+    ubo.HasNormalMap            = mat.NormalMap ? 1.0f : 0.0f;
+    ubo.HasMetallicRoughnessMap = mat.MetallicRoughnessMap ? 1.0f : 0.0f;
+    ubo.HasAOMap                = mat.AOMap ? 1.0f : 0.0f;
+    rhi::buffer_unmap(m_MaterialUBOs[frameIndex]);
+
+    rhi::DescriptorSet set = m_MaterialSets[frameIndex][materialIdx];
+    rhi::Texture texAlbedo = mat.AlbedoMap ? mat.AlbedoMap : m_WhiteTex;
+    rhi::Texture texNormal = mat.NormalMap ? mat.NormalMap : m_WhiteTex;
+    rhi::Texture texMR     = mat.MetallicRoughnessMap ? mat.MetallicRoughnessMap : m_WhiteTex;
+    rhi::Texture texAO     = mat.AOMap ? mat.AOMap : m_WhiteTex;
+
+    rhi::DescriptorWrite writes[5] = {
+        {.binding=0, .type=rhi::DescriptorType::CombinedImageSampler, .texture={texAlbedo, m_LinearSampler}},
+        {.binding=1, .type=rhi::DescriptorType::CombinedImageSampler, .texture={texNormal, m_LinearSampler}},
+        {.binding=2, .type=rhi::DescriptorType::CombinedImageSampler, .texture={texMR,     m_LinearSampler}},
+        {.binding=3, .type=rhi::DescriptorType::CombinedImageSampler, .texture={texAO,     m_LinearSampler}},
+        {.binding=4, .type=rhi::DescriptorType::UniformBuffer,        .buffer ={m_MaterialUBOs[frameIndex], materialIdx * sizeof(GPUMaterialUBO), sizeof(GPUMaterialUBO)}}
+    };
+
+    rhi::descriptor_set_write(set, writes, 5);
+    rhi::bind_descriptor_set(cmd, set, 0);
 }
 
 // ================================================================
@@ -463,18 +505,28 @@ void SceneRenderer::GeometryPass(const rhi::CmdBuf& cmd, const Ref<Scene>& scene
 
     glm::mat4 viewProj = proj * view;
 
+    uint32_t materialIdx = 0;
     auto meshView = scene->GetRegistry().view<TransformComponent, MeshComponent>();
     for (auto entity : meshView)
     {
         auto [tc, mc] = meshView.get<TransformComponent, MeshComponent>(entity);
         if (!mc.VertexBuffer) continue;
 
+        MaterialComponent defaultMat;
+        MaterialComponent* mat = &defaultMat;
+        if (scene->GetRegistry().all_of<MaterialComponent>(entity))
+            mat = &scene->GetRegistry().get<MaterialComponent>(entity);
+
+        BindMaterial(cmd, *mat, 0, materialIdx); // Using frameIndex 0 for now as it's hardcoded elsewhere
+        
         GeometryPushConstants pushConst{ tc.GetTransform(), viewProj };
         rhi::push_constants_raw(cmd, rhi::ShaderStage::Vertex, 0, sizeof(pushConst), &pushConst);
 
         rhi::bind_vertex_buffer(cmd, mc.VertexBuffer, 0);
         rhi::bind_index_buffer(cmd, mc.IndexBuffer, 0, rhi::IndexType::Uint32);
         rhi::draw_indexed(cmd, {.index_count=mc.IndexCount});
+        
+        materialIdx++;
     }
 
     rhi::end_render_pass(cmd);
@@ -525,6 +577,17 @@ void SceneRenderer::LightingPass(const rhi::CmdBuf& cmd, const Ref<Scene>& scene
     rhi::set_scissor (cmd, {0,0,m_Width,m_Height});
     rhi::bind_pipeline(cmd, m_LightingPipeline);
 
+    rhi::DescriptorWrite writes[6] = {
+        {.binding=0,.type=rhi::DescriptorType::CombinedImageSampler, .texture={m_GPosition, m_LinearSampler}},
+        {.binding=1,.type=rhi::DescriptorType::CombinedImageSampler, .texture={m_GNormal,   m_LinearSampler}},
+        {.binding=2,.type=rhi::DescriptorType::CombinedImageSampler, .texture={m_GAlbedo,   m_LinearSampler}},
+        {.binding=3,.type=rhi::DescriptorType::CombinedImageSampler, .texture={m_GPBR,      m_LinearSampler}},
+        {.binding=4,.type=rhi::DescriptorType::CombinedImageSampler, .texture={m_ShadowMap, m_ShadowSampler}},
+        {.binding=5,.type=rhi::DescriptorType::UniformBuffer,        .buffer ={m_LightUBOs[0], 0, sizeof(GPULightUBO)}}
+    };
+    rhi::descriptor_set_write(m_LightingSet, writes, 6);
+    rhi::bind_descriptor_set(cmd, m_LightingSet);
+
     rhi::draw(cmd, {.vertex_count=3});
 
     rhi::end_render_pass(cmd);
@@ -552,7 +615,7 @@ void SceneRenderer::RenderScene(const Ref<Scene>& scene, const EditorCamera& cam
         auto lv = scene->GetRegistry().view<TransformComponent, LightComponent>();
         for (auto e : lv)
         {
-            auto& [tc, lc] = lv.get<TransformComponent, LightComponent>(e);
+            auto [tc, lc] = lv.get<TransformComponent, LightComponent>(e);
             if (lc.Type == LightType::Directional && lc.CastShadows)
             {
                 glm::vec3 dir = glm::normalize(glm::vec3(
@@ -571,9 +634,22 @@ void SceneRenderer::RenderScene(const Ref<Scene>& scene, const EditorCamera& cam
     rhi::cmdbuf_begin(m_Cmd);
 
     if (settings.EnableShadows)
+    {
         ShadowPass(m_Cmd, scene, lightSpaceMatrix);
+    }
+    else
+    {
+        rhi::TextureBarrier dummyBar{
+            .tex=m_ShadowMap,
+            .old_layout=rhi::TextureLayout::Undefined,.new_layout=rhi::TextureLayout::ShaderReadOnly,
+            .src_stage=rhi::PipelineStage::Top,.dst_stage=rhi::PipelineStage::Fragment,
+            .src_access=rhi::Access::None,.dst_access=rhi::Access::ShaderRead,
+            .base_mip=0,.mip_count=1,.base_layer=0,.layer_count=1
+        };
+        rhi::texture_barrier(m_Cmd, &dummyBar, 1);
+    }
 
-    GeometryPass(m_Cmd, scene, camera.GetViewMatrix(), camera.GetProjection());
+    GeometryPass(m_Cmd, scene, camera.GetViewMatrix(), camera.GetProjectionMatrix());
     LightingPass(m_Cmd, scene, camera.GetPosition(), lightSpaceMatrix, settings);
 
     rhi::cmdbuf_end(m_Cmd);

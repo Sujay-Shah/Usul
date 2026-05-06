@@ -60,3 +60,10 @@ bin_xcode/
 /cmake-*
 *.cache
 *.ini
+.aider*
+.clang-format
+.gitignore
+*.log
+*.py
+*.md
+temp/*

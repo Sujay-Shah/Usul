@@ -139,7 +139,7 @@ private:
 
     // Upload material UBO + write descriptors for one mesh entity
     void BindMaterial(const rhi::CmdBuf& cmd, const MaterialComponent& mat,
-                      uint32_t frameIndex);
+                      uint32_t frameIndex, uint32_t materialIdx);
 
     // Lazy-load GPU mesh data from a MeshComponent
     void EnsureMeshUploaded(MeshComponent& mc, const std::string& modelPath);
@@ -170,15 +170,16 @@ private:
 
     // ----- Descriptor layouts -----
     rhi::DescriptorLayout m_MaterialLayout;   // set 0: material textures + UBO
-    rhi::DescriptorLayout m_LightingLayout0;  // set 0: G-Buffer + shadow map
-    rhi::DescriptorLayout m_LightingLayout1;  // set 1: light UBO
+    rhi::DescriptorLayout m_LightingLayout0;  // set 0: G-Buffer + shadow map + Light UBO
 
-    // ----- Samplers -----
+    static constexpr uint32_t k_MaxFrames = 3;
+
+    rhi::DescriptorSet m_LightingSet;
+    rhi::DescriptorSet m_MaterialSets[k_MaxFrames][64];
     rhi::Sampler m_LinearSampler;
     rhi::Sampler m_ShadowSampler; // comparison sampler for PCF
 
     // ----- Per-frame uniform buffers (triple-buffered) -----
-    static constexpr uint32_t k_MaxFrames = 3;
     rhi::Buffer m_LightUBOs[k_MaxFrames];
 
     // Per-mesh material UBOs (one per entity per frame, simple slab)
