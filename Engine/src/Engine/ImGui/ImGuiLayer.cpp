@@ -25,13 +25,23 @@ static rhi::Fence s_Fence = {};
 static uint32_t s_ViewportWidth = 1280;
 static uint32_t s_ViewportHeight = 720;
 
+// Per-frame present resources
+struct PresentFrame {
+    rhi::CmdBuf   cmd          = {};
+    rhi::Fence    fence        = {};
+    rhi::Semaphore image_ready = {};
+    rhi::Semaphore render_done = {};
+};
+static PresentFrame s_Frames[rhi::MAX_FRAMES_IN_FLIGHT];
+static uint32_t     s_FrameIndex = 0;
+
 ImGuiLayer::ImGuiLayer() : Layer("ImGuiLayer") {}
 
 ImGuiLayer::~ImGuiLayer() {}
 
 void ImGuiLayer::OnAttach()
 {
-#if ENABLE_EXAMPLE
+#if ENABLE_EDITOR_MODE
   s_ViewportWidth = 1280;
   s_ViewportHeight = 720;
 
@@ -83,6 +93,15 @@ void ImGuiLayer::OnAttach()
 
   // Setup Platform/Renderer bindings
   rhi::imgui_init();
+
+  // Create per-frame present resources (always, regardless of editor mode)
+  for (uint32_t i = 0; i < rhi::MAX_FRAMES_IN_FLIGHT; ++i)
+  {
+    s_Frames[i].cmd          = rhi::cmdbuf_create(0);
+    s_Frames[i].fence        = rhi::fence_create(true);
+    s_Frames[i].image_ready  = rhi::semaphore_create();
+    s_Frames[i].render_done  = rhi::semaphore_create();
+  }
 }
 
 void ImGuiLayer::OnDetach()
@@ -91,12 +110,20 @@ void ImGuiLayer::OnDetach()
   rhi::device_wait_idle();
   rhi::imgui_shutdown();
   ImGui::DestroyContext();
-#if ENABLE_EXAMPLE
+#if ENABLE_EDITOR_MODE
   rhi::texture_destroy(s_ColorTex);
   rhi::texture_destroy(s_DepthTex);
   rhi::cmdbuf_destroy(s_Cmd);
   rhi::fence_destroy(s_Fence);
 #endif
+
+  for (uint32_t i = 0; i < rhi::MAX_FRAMES_IN_FLIGHT; ++i)
+  {
+    rhi::cmdbuf_destroy(s_Frames[i].cmd);
+    rhi::fence_destroy(s_Frames[i].fence);
+    rhi::semaphore_destroy(s_Frames[i].image_ready);
+    rhi::semaphore_destroy(s_Frames[i].render_done);
+  }
 }
 
 void ImGuiLayer::OnImGuiRender()
@@ -117,7 +144,7 @@ void ImGuiLayer::Begin()
 
   ImGuizmo::BeginFrame();
 
-#if ENABLE_EXAMPLE && ENABLE_EDITOR_MODE
+#if ENABLE_EXAMPLE
   ImGui::DockSpaceOverViewport(0, ImGui::GetMainViewport());
   ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{0, 0});
   ImGui::Begin("Viewport");
@@ -137,9 +164,8 @@ void ImGuiLayer::Begin()
   ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
   m_ViewportSize = {viewportPanelSize.x, viewportPanelSize.y};
 
-  // Note: Casting rhi::Texture handle to ImTextureID. Backend must support this
-  // or use a descriptor set.
-  ImGui::Image((ImTextureID)(uintptr_t)s_ColorTex.id,
+  // Note: Backend maps rhi::Texture to VkDescriptorSet via imgui_add_texture.
+  ImGui::Image((ImTextureID)rhi::imgui_add_texture(s_ColorTex),
                ImVec2{m_ViewportSize.x, m_ViewportSize.y}, ImVec2{0, 1},
                ImVec2{1, 0});
 
@@ -152,31 +178,78 @@ void ImGuiLayer::End()
 {
   ImGuiIO &io = ImGui::GetIO();
   EngineApp &app = EngineApp::Get();
-  io.DisplaySize =
-      ImVec2(app.GetWindow().GetWidth(), app.GetWindow().GetHeight());
 
-  // Rendering
   ImGui::Render();
 
-  // Update and Render additional Platform Windows
-  // (Platform functions may change the current OpenGL context, so we
-  // save/restore it to make it easier to paste this code elsewhere.
-  //  For this specific demo app we could also call
-  //  glfwMakeContextCurrent(window) directly)
+  // Required when ViewportsEnable is set — must call every frame after Render()
   if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
   {
-    GLFWwindow *backup_current_context = glfwGetCurrentContext();
+    GLFWwindow* backup = glfwGetCurrentContext();
     ImGui::UpdatePlatformWindows();
     ImGui::RenderPlatformWindowsDefault();
-    glfwMakeContextCurrent(backup_current_context);
+    glfwMakeContextCurrent(backup);
   }
+
+  // --- Present ImGui to the swapchain ---
+  auto& f = s_Frames[s_FrameIndex];
+  rhi::fence_wait(f.fence);
+  rhi::fence_reset(f.fence);
+
+  rhi::SwapchainFrame sw;
+  if (!rhi::swapchain_acquire(sw, f.image_ready))
+    return;
+
+  rhi::cmdbuf_reset(f.cmd);
+  rhi::cmdbuf_begin(f.cmd);
+
+  // Transition backbuffer to color attachment
+  rhi::texture_barrier(f.cmd, {
+      .tex        = sw.backbuffer,
+      .old_layout = rhi::TextureLayout::Undefined,
+      .new_layout = rhi::TextureLayout::ColorTarget,
+      .src_stage  = rhi::PipelineStage::Top,
+      .dst_stage  = rhi::PipelineStage::ColorOutput,
+      .src_access = rhi::Access::None,
+      .dst_access = rhi::Access::ColorWrite
+  });
+
+  rhi::begin_render_pass(f.cmd, {
+      .color = {{
+          .texture   = sw.backbuffer,
+          .load_op   = rhi::LoadOp::Clear,
+          .store_op  = rhi::StoreOp::Store,
+          .clear     = { .r = 0.1f, .g = 0.1f, .b = 0.1f, .a = 1.0f }
+      }},
+      .color_count = 1
+  });
+
+  rhi::imgui_render(f.cmd);
+
+  rhi::end_render_pass(f.cmd);
+
+  // Transition backbuffer to presentable
+  rhi::texture_barrier(f.cmd, {
+      .tex        = sw.backbuffer,
+      .old_layout = rhi::TextureLayout::ColorTarget,
+      .new_layout = rhi::TextureLayout::Present,
+      .src_stage  = rhi::PipelineStage::ColorOutput,
+      .dst_stage  = rhi::PipelineStage::Bottom,
+      .src_access = rhi::Access::ColorWrite,
+      .dst_access = rhi::Access::None
+  });
+
+  rhi::cmdbuf_end(f.cmd);
+  rhi::queue_submit(&f.cmd, 1, &f.image_ready, 1, &f.render_done, 1, f.fence);
+  rhi::swapchain_present(f.render_done);
+
+  s_FrameIndex = (s_FrameIndex + 1) % rhi::MAX_FRAMES_IN_FLIGHT;
 }
 
 void ImGuiLayer::OnUpdate(const Timestep &ts) {}
 
 void ImGuiLayer::OnEvent(Event &e)
 {
-#if ENABLE_EXAMPLE
+#if ENABLE_EDITOR_MODE
   // resize
   WindowResizeEvent *we = dynamic_cast<WindowResizeEvent *>(&e);
   if (we)
@@ -226,13 +299,34 @@ void ImGuiLayer::OnEvent(Event &e)
     e.Handled |= e.IsInCategory(EventCategoryKeyboard) & io.WantCaptureKeyboard;
   }
 }
-#if ENABLE_EXAMPLE
+
+
+#if ENABLE_EDITOR_MODE
 void ImGuiLayer::BindOrUnbindFrameBuffer(bool val)
 {
   if (val)
   {
     rhi::cmdbuf_reset(s_Cmd);
     rhi::cmdbuf_begin(s_Cmd);
+
+    rhi::TextureBarrier barriers[2] = {
+        {
+            .tex = s_ColorTex,
+            .old_layout = rhi::TextureLayout::Undefined, .new_layout = rhi::TextureLayout::ColorTarget,
+            .src_stage = rhi::PipelineStage::Top, .dst_stage = rhi::PipelineStage::ColorOutput,
+            .src_access = rhi::Access::None, .dst_access = rhi::Access::ColorWrite,
+            .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
+        },
+        {
+            .tex = s_DepthTex,
+            .old_layout = rhi::TextureLayout::Undefined, .new_layout = rhi::TextureLayout::DepthStencilTarget,
+            .src_stage = rhi::PipelineStage::Top, .dst_stage = rhi::PipelineStage::EarlyDepth | rhi::PipelineStage::LateDepth,
+            .src_access = rhi::Access::None, .dst_access = rhi::Access::DepthWrite,
+            .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
+        }
+    };
+    rhi::texture_barrier(s_Cmd, barriers, 2);
+
     rhi::begin_render_pass(s_Cmd,
                            {.color = {{.texture = s_ColorTex,
                                        .load_op = rhi::LoadOp::Clear,
@@ -247,15 +341,27 @@ void ImGuiLayer::BindOrUnbindFrameBuffer(bool val)
   } else
   {
     rhi::end_render_pass(s_Cmd);
+
+    rhi::TextureBarrier resolveBar = {
+        .tex = s_ColorTex,
+        .old_layout = rhi::TextureLayout::ColorTarget, .new_layout = rhi::TextureLayout::ShaderReadOnly,
+        .src_stage = rhi::PipelineStage::ColorOutput, .dst_stage = rhi::PipelineStage::Fragment,
+        .src_access = rhi::Access::ColorWrite, .dst_access = rhi::Access::ShaderRead,
+        .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
+    };
+    rhi::texture_barrier(s_Cmd, &resolveBar, 1);
+
     rhi::cmdbuf_end(s_Cmd);
     rhi::queue_submit(&s_Cmd, 1, nullptr, 0, nullptr, 0, s_Fence);
     rhi::fence_wait(s_Fence);
     rhi::fence_reset(s_Fence);
   }
 }
+#endif // ENABLE_EDITOR_MODE
 
 bool ImGuiLayer::IsViewportFocused() const { return m_ViewportFocused; }
 
+#if ENABLE_EXAMPLE
 void ImGuiLayer::AddExample(const std::string &name)
 {
   _Examples.push_back(name.data());
@@ -292,5 +398,6 @@ const char *ImGuiLayer::GetCurrentExampleName()
   return _Examples[_currentExampleIndex];
 }
 
-#endif
+#endif // ENABLE_EXAMPLE
+
 } // namespace Engine

@@ -175,7 +175,7 @@ private:
     static constexpr uint32_t k_MaxFrames = 3;
 
     rhi::DescriptorSet m_LightingSet;
-    rhi::DescriptorSet m_MaterialSets[k_MaxFrames][64];
+    rhi::DescriptorSet m_MaterialSets[k_MaxFrames]; // one set per frame, updated per-draw
     rhi::Sampler m_LinearSampler;
     rhi::Sampler m_ShadowSampler; // comparison sampler for PCF
 

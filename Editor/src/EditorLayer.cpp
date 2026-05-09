@@ -28,6 +28,10 @@ namespace Engine
     void EditorLayer::OnAttach()
     {
         m_ActiveScene = CreateRef<Scene>();
+        
+        SceneSerializer serializer(m_ActiveScene);
+        serializer.Deserialize("assets/scenes/demo.yml");
+
         m_SceneHierarchyPanel.SetContext(m_ActiveScene);
         m_SceneRenderer.Init(1280, 720);
     }
@@ -144,7 +148,7 @@ namespace Engine
 
 		// Display the final lit scene output from SceneRenderer
 		rhi::Texture colorOut = m_SceneRenderer.GetColorOutput();
-		ImGui::Image((ImTextureID)(uintptr_t)colorOut.id, ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		ImGui::Image((ImTextureID)rhi::imgui_add_texture(colorOut), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
 		ImGui::End();
 		ImGui::PopStyleVar();
 

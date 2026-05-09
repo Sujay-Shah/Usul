@@ -793,6 +793,10 @@ static void vk_texture_destroy(rhi::Texture h)
 {
     TextureSlot* s = s_textures.get(h);
     if (!s) return;
+    if (s->imgui_ds)
+    {
+        ImGui_ImplVulkan_RemoveTexture(s->imgui_ds);
+    }
     if (!s->is_swapchain)
     {
         vkDestroyImageView(g_ctx.device, s->view, nullptr);
@@ -2014,10 +2018,17 @@ static void vk_imgui_init()
 #endif
     ImGui_ImplVulkan_Init(&init_info);
 }
+static VkSampler g_imgui_sampler = VK_NULL_HANDLE;
+
 static void vk_imgui_shutdown()
 {
     ImGui_ImplVulkan_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    if (g_imgui_sampler)
+    {
+        vkDestroySampler(g_ctx.device, g_imgui_sampler, nullptr);
+        g_imgui_sampler = VK_NULL_HANDLE;
+    }
 }
 static void vk_imgui_new_frame()
 {
@@ -2033,6 +2044,30 @@ static void vk_imgui_render(rhi::CmdBuf cb)
     {
         ImGui_ImplVulkan_RenderDrawData(draw_data, s->cmd);
     }
+}
+
+static void* vk_imgui_add_texture(rhi::Texture h)
+{
+    TextureSlot* s = s_textures.get(h);
+    if (!s) return nullptr;
+
+    if (s->imgui_ds != VK_NULL_HANDLE)
+        return (void*)s->imgui_ds;
+
+    if (g_imgui_sampler == VK_NULL_HANDLE)
+    {
+        VkSamplerCreateInfo info = { .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO };
+        info.magFilter = VK_FILTER_LINEAR;
+        info.minFilter = VK_FILTER_LINEAR;
+        info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        vkCreateSampler(g_ctx.device, &info, nullptr, &g_imgui_sampler);
+    }
+
+    s->imgui_ds = ImGui_ImplVulkan_AddTexture(g_imgui_sampler, s->view, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+    return (void*)s->imgui_ds;
 }
 
 // =============================================================
@@ -2114,6 +2149,7 @@ static const rhi::BackendApi k_api{
     .imgui_shutdown            = vk_imgui_shutdown,
     .imgui_new_frame           = vk_imgui_new_frame,
     .imgui_render              = vk_imgui_render,
+    .imgui_add_texture         = vk_imgui_add_texture,
 };
 
 const rhi::BackendApi* get_api() noexcept { return &k_api; }

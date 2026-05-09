@@ -33,10 +33,12 @@ namespace Engine
 
         // 2. Create Swapchain
         GLFWwindow* nativeWindow = static_cast<GLFWwindow*>(m_window->GetNativeWindow());
+        int fb_width, fb_height;
+        glfwGetFramebufferSize(nativeWindow, &fb_width, &fb_height);
         if (!rhi::swapchain_create({
             .window_handle = nativeWindow,
-            .width = m_window->GetWidth(),
-            .height = m_window->GetHeight(),
+            .width = (uint32_t)fb_width,
+            .height = (uint32_t)fb_height,
             .image_count = rhi::MAX_FRAMES_IN_FLIGHT,
             .format = rhi::Format::BGRA8_Srgb,
             .vsync = true,
@@ -69,7 +71,7 @@ namespace Engine
 
             if (!m_isMinimized)
             {
-            #if ENABLE_EXAMPLE & ENABLE_EDITOR_MODE
+            #if ENABLE_EDITOR_MODE
                 //record draw calls in imgui layer frame buffer to display it in the viewport
                 m_imguiLayer->BindOrUnbindFrameBuffer(true);
             #endif
@@ -84,7 +86,7 @@ namespace Engine
                         break;
                     }
                 }
-            #if ENABLE_EXAMPLE && ENABLE_EDITOR_MODE
+            #if ENABLE_EDITOR_MODE
                 m_imguiLayer->BindOrUnbindFrameBuffer(false);
             #endif
             }
@@ -151,6 +153,11 @@ namespace Engine
         }
 
         m_isMinimized = false;
+
+        GLFWwindow* nativeWindow = static_cast<GLFWwindow*>(m_window->GetNativeWindow());
+        int fb_width, fb_height;
+        glfwGetFramebufferSize(nativeWindow, &fb_width, &fb_height);
+        rhi::swapchain_resize((uint32_t)fb_width, (uint32_t)fb_height);
 
         return false;
     }

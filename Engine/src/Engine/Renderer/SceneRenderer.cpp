@@ -44,8 +44,7 @@ void SceneRenderer::Init(uint32_t width, uint32_t height)
     // Per-frame UBOs and material descriptor sets
     for (uint32_t i = 0; i < k_MaxFrames; ++i)
     {
-        for (uint32_t j = 0; j < 64; ++j)
-            m_MaterialSets[i][j] = rhi::descriptor_set_create(m_MaterialLayout);
+        m_MaterialSets[i] = rhi::descriptor_set_create(m_MaterialLayout);
 
         m_LightUBOs[i] = rhi::buffer_create({
             .size   = sizeof(GPULightUBO),
@@ -54,7 +53,7 @@ void SceneRenderer::Init(uint32_t width, uint32_t height)
             .name   = "LightUBO"
         });
         m_MaterialUBOs[i] = rhi::buffer_create({
-            .size   = sizeof(GPUMaterialUBO) * m_MaterialUBOCount,
+            .size   = sizeof(GPUMaterialUBO),
             .usage  = rhi::BufferUsage::Uniform,
             .memory = rhi::MemoryType::CpuToGpu,
             .name   = "MaterialUBO"
@@ -98,8 +97,7 @@ void SceneRenderer::Shutdown()
     {
         rhi::buffer_destroy(m_LightUBOs[i]);
         rhi::buffer_destroy(m_MaterialUBOs[i]);
-        for (uint32_t j = 0; j < 64; ++j)
-            rhi::descriptor_set_destroy(m_MaterialSets[i][j]);
+        rhi::descriptor_set_destroy(m_MaterialSets[i]);
     }
 
     rhi::texture_destroy(m_WhiteTex);
@@ -372,38 +370,35 @@ void SceneRenderer::UploadLightUBO(const Ref<Scene>& scene,
 }
 
 void SceneRenderer::BindMaterial(const rhi::CmdBuf& cmd, const MaterialComponent& mat,
-                                  uint32_t frameIndex, uint32_t materialIdx)
+                                  uint32_t frameIndex, uint32_t /*materialIdx*/)
 {
-    if (materialIdx >= m_MaterialUBOCount) return;
-
-    // Map UBO slab
+    // Map the UBO slot for this frame (single slot, overwritten per draw)
     auto mapped = rhi::buffer_map(m_MaterialUBOs[frameIndex]);
-    GPUMaterialUBO* uboArray = static_cast<GPUMaterialUBO*>(mapped.ptr);
-    GPUMaterialUBO& ubo = uboArray[materialIdx];
+    GPUMaterialUBO& ubo = *static_cast<GPUMaterialUBO*>(mapped.ptr);
 
     ubo.AlbedoColor = mat.AlbedoColor;
     ubo.Metallic    = mat.Metallic;
     ubo.Roughness   = mat.Roughness;
     ubo.AO          = mat.AO;
 
-    ubo.HasAlbedoMap            = mat.AlbedoMap ? 1.0f : 0.0f;
-    ubo.HasNormalMap            = mat.NormalMap ? 1.0f : 0.0f;
+    ubo.HasAlbedoMap            = mat.AlbedoMap            ? 1.0f : 0.0f;
+    ubo.HasNormalMap            = mat.NormalMap            ? 1.0f : 0.0f;
     ubo.HasMetallicRoughnessMap = mat.MetallicRoughnessMap ? 1.0f : 0.0f;
-    ubo.HasAOMap                = mat.AOMap ? 1.0f : 0.0f;
+    ubo.HasAOMap                = mat.AOMap                ? 1.0f : 0.0f;
     rhi::buffer_unmap(m_MaterialUBOs[frameIndex]);
 
-    rhi::DescriptorSet set = m_MaterialSets[frameIndex][materialIdx];
-    rhi::Texture texAlbedo = mat.AlbedoMap ? mat.AlbedoMap : m_WhiteTex;
-    rhi::Texture texNormal = mat.NormalMap ? mat.NormalMap : m_WhiteTex;
+    rhi::DescriptorSet set = m_MaterialSets[frameIndex];
+    rhi::Texture texAlbedo = mat.AlbedoMap            ? mat.AlbedoMap            : m_WhiteTex;
+    rhi::Texture texNormal = mat.NormalMap            ? mat.NormalMap            : m_WhiteTex;
     rhi::Texture texMR     = mat.MetallicRoughnessMap ? mat.MetallicRoughnessMap : m_WhiteTex;
-    rhi::Texture texAO     = mat.AOMap ? mat.AOMap : m_WhiteTex;
+    rhi::Texture texAO     = mat.AOMap                ? mat.AOMap                : m_WhiteTex;
 
     rhi::DescriptorWrite writes[5] = {
         {.binding=0, .type=rhi::DescriptorType::CombinedImageSampler, .texture={texAlbedo, m_LinearSampler}},
         {.binding=1, .type=rhi::DescriptorType::CombinedImageSampler, .texture={texNormal, m_LinearSampler}},
         {.binding=2, .type=rhi::DescriptorType::CombinedImageSampler, .texture={texMR,     m_LinearSampler}},
         {.binding=3, .type=rhi::DescriptorType::CombinedImageSampler, .texture={texAO,     m_LinearSampler}},
-        {.binding=4, .type=rhi::DescriptorType::UniformBuffer,        .buffer ={m_MaterialUBOs[frameIndex], materialIdx * sizeof(GPUMaterialUBO), sizeof(GPUMaterialUBO)}}
+        {.binding=4, .type=rhi::DescriptorType::UniformBuffer,        .buffer ={m_MaterialUBOs[frameIndex], 0, sizeof(GPUMaterialUBO)}}
     };
 
     rhi::descriptor_set_write(set, writes, 5);

@@ -9,7 +9,7 @@ file(GLOB SOURCES
 
 add_executable(Editor ${SOURCES})
 
-target_compile_definitions(Editor PUBLIC GLM_ENABLE_EXPERIMENTAL)
+target_compile_definitions(Editor PUBLIC GLM_ENABLE_EXPERIMENTAL ENABLE_EDITOR_MODE=1)
 
 target_include_directories(Editor
     PRIVATE

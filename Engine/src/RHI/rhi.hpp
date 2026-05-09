@@ -153,6 +153,7 @@ struct BackendApi
     void (*imgui_shutdown)   ();
     void (*imgui_new_frame)  ();
     void (*imgui_render)     (CmdBuf);
+    void*(*imgui_add_texture)(Texture);
 };
 
 // =============================================================
@@ -389,6 +390,8 @@ inline void imgui_new_frame()
     { _RHI_CHECK(); g_rhi->imgui_new_frame(); }
 inline void imgui_render(CmdBuf c)
     { _RHI_CHECK(); g_rhi->imgui_render(c); }
+inline void* imgui_add_texture(Texture t)
+    { _RHI_CHECK(); return g_rhi->imgui_add_texture(t); }
 
 #undef _RHI_CHECK
 

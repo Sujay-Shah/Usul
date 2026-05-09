@@ -23,26 +23,30 @@ namespace Engine
             void BlockEvents(bool block) { m_BlockEvents = block; }
 
             void OnEvent(Event &e) override;
-#if ENABLE_EXAMPLE
+#if ENABLE_EDITOR_MODE
             void BindOrUnbindFrameBuffer(bool);
 
             bool IsViewportFocused() const;
-
-            void AddExample(const std::string& name);
-            void ShowExamples();
-            const char* GetCurrentExampleName();
     private:
-        //This is to run and switch examples on the fly
-        std::vector<const char *> _Examples;
-        int _currentExampleIndex = 0;
-        bool _showExamples = true;
-
         bool m_ViewportFocused = false, m_ViewportHovered = false;
         glm::vec2 m_ViewportBounds[2];
         glm::vec2 m_ViewportSize = { 0.0f, 0.0f };
         Ref<Framebuffer> m_Framebuffer;
     
 #endif
+
+#if ENABLE_EXAMPLE
+public:
+        void AddExample(const std::string& name);
+        void ShowExamples();
+        const char* GetCurrentExampleName();
+private:
+        //This is to run and switch examples on the fly
+        std::vector<const char *> _Examples;
+        int _currentExampleIndex = 0;
+        bool _showExamples = true;
+#endif
+
     private:
         bool _dockspaceOpen = true;
         bool m_BlockEvents = true;

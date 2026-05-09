@@ -168,6 +168,7 @@ struct TextureSlot
     u32              array_layers= 1;
     u32              sample_count= 1;
     bool             is_swapchain= false; // skip VMA free on destroy
+    VkDescriptorSet  imgui_ds    = VK_NULL_HANDLE; // Cached ImGui descriptor set
 };
 
 struct SamplerSlot
