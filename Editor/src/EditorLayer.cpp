@@ -132,9 +132,7 @@ namespace Engine
 
 			ImGui::EndMenuBar();
 		}
-        static bool show = false;
         ImGui::End();
-        ImGui::ShowDemoWindow(&show);
 
 		m_SceneHierarchyPanel.OnImGuiRender();
 
@@ -150,7 +148,7 @@ namespace Engine
 
 		// Display the final lit scene output from SceneRenderer
 		rhi::Texture colorOut = m_SceneRenderer.GetColorOutput();
-		ImGui::Image((ImTextureID)rhi::imgui_add_texture(colorOut), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 1 }, ImVec2{ 1, 0 });
+		ImGui::Image((ImTextureID)rhi::imgui_add_texture(colorOut), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 0 }, ImVec2{ 1, 1 });
 		ImGui::End();
 		ImGui::PopStyleVar();
 

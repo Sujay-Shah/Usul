@@ -227,7 +227,7 @@ namespace Engine {
 			return false;
 
 		std::string sceneName = data["Scene"].as<std::string>();
-		ENGINE_CORE_INFO("Deserializing scene '{0}' from '{1}'", sceneName, filepath);
+		//ENGINE_CORE_INFO("Deserializing scene '{0}' from '{1}'", sceneName, filepath);
 
 		auto entities = data["Entities"];
 		if (entities)
@@ -241,7 +241,7 @@ namespace Engine {
 				if (tagComponent)
 					name = tagComponent["Tag"].as<std::string>();
 
-				//HZ_CORE_TRACE("Deserialized entity with ID = {0}, name = {1}", uuid, name);
+				//ENGINE_CORE_INFO("Deserialized entity with ID = {0}, name = {1}", uuid, name);
 
 				Entity deserializedEntity = m_Scene->CreateEntity(name);
 

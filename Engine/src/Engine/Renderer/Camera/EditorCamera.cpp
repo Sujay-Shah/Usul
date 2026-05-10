@@ -62,18 +62,38 @@ namespace Engine {
 
 	void EditorCamera::OnUpdate(Timestep ts)
 	{
-		if (Input::IsKeyPressed(Key::LeftAlt))
-		{
-			const glm::vec2& mouse{ Input::GetMouseX(), Input::GetMouseY() };
-			glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.003f;
-			m_InitialMousePosition = mouse;
+		const glm::vec2& mouse{ Input::GetMouseX(), Input::GetMouseY() };
+		glm::vec2 delta = (mouse - m_InitialMousePosition) * 0.003f;
+		m_InitialMousePosition = mouse;
 
-			if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
-				MousePan(delta);
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonLeft))
-				MouseRotate(delta);
-			else if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
-				MouseZoom(delta.y);
+		if (Input::IsMouseButtonPressed(Mouse::ButtonRight))
+		{
+			MouseRotate(delta);
+
+			float moveSpeed = 5.0f * (float)ts;
+			if (Input::IsKeyPressed(Key::LeftShift))
+				moveSpeed *= 4.0f;
+
+			if (Input::IsKeyPressed(Key::W))
+				m_FocalPoint += GetForwardDirection() * moveSpeed;
+			if (Input::IsKeyPressed(Key::S))
+				m_FocalPoint -= GetForwardDirection() * moveSpeed;
+			if (Input::IsKeyPressed(Key::A))
+				m_FocalPoint -= GetRightDirection() * moveSpeed;
+			if (Input::IsKeyPressed(Key::D))
+				m_FocalPoint += GetRightDirection() * moveSpeed;
+			if (Input::IsKeyPressed(Key::Q))
+				m_FocalPoint -= GetUpDirection() * moveSpeed;
+			if (Input::IsKeyPressed(Key::E))
+				m_FocalPoint += GetUpDirection() * moveSpeed;
+		}
+		else if (Input::IsMouseButtonPressed(Mouse::ButtonMiddle))
+		{
+			MousePan(delta);
+		}
+		else if (Input::IsKeyPressed(Key::LeftAlt) && Input::IsMouseButtonPressed(Mouse::ButtonLeft))
+		{
+			MouseRotate(delta);
 		}
 
 		UpdateView();
