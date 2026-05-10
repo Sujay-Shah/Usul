@@ -144,7 +144,14 @@ void main()
 {
     // Sample G-Buffer
     vec3  worldPos  = texture(u_GPosition, v_TexCoord).rgb;
-    vec3  N         = normalize(texture(u_GNormal,  v_TexCoord).rgb * 2.0 - 1.0);
+    vec3  normalTex = texture(u_GNormal,  v_TexCoord).rgb;
+    if (length(normalTex) < 0.1)
+    {
+        // Background color
+        o_Color = vec4(0.1, 0.1, 0.1, 1.0);
+        return;
+    }
+    vec3  N         = normalize(normalTex * 2.0 - 1.0);
     vec4  albedoAO  = texture(u_GAlbedo,   v_TexCoord);
     vec2  pbr       = texture(u_GPBR,      v_TexCoord).rg;
 

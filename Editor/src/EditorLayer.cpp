@@ -12,6 +12,7 @@
 #include "Event/ApplicationEvent.h"
 #include "Engine/Scene/SceneSerializer.h"
 #include "Engine/Utils/PlatformUtils.h"
+#include "Engine/Core/AssetManager.h"
 
 namespace Engine
 {
@@ -30,7 +31,7 @@ namespace Engine
         m_ActiveScene = CreateRef<Scene>();
         
         SceneSerializer serializer(m_ActiveScene);
-        serializer.Deserialize("assets/scenes/demo.yml");
+        serializer.Deserialize(AssetManager::GetAssetPath("scenes/demo.yml").string());
 
         m_SceneHierarchyPanel.SetContext(m_ActiveScene);
         m_SceneRenderer.Init(1280, 720);

@@ -227,7 +227,7 @@ namespace Engine {
 			return false;
 
 		std::string sceneName = data["Scene"].as<std::string>();
-		//HZ_CORE_TRACE("Deserializing scene '{0}'", sceneName);
+		ENGINE_CORE_INFO("Deserializing scene '{0}' from '{1}'", sceneName, filepath);
 
 		auto entities = data["Entities"];
 		if (entities)

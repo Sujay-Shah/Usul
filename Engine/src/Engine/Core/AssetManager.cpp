@@ -32,7 +32,16 @@ void AssetManager::Init()
 // ---- Path helper ----
 std::filesystem::path AssetManager::GetAssetPath(const std::filesystem::path& relativePath)
 {
-    return (s_AssetPath / relativePath).lexically_normal();
+    std::string pathStr = relativePath.string();
+    if (pathStr.rfind("assets/", 0) == 0) // starts_with
+    {
+        pathStr = pathStr.substr(7);
+    }
+    else if (pathStr.rfind("assets\\", 0) == 0)
+    {
+        pathStr = pathStr.substr(7);
+    }
+    return (s_AssetPath / pathStr).lexically_normal();
 }
 
 // ---- Texture loading ----
