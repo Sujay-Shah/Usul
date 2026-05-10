@@ -604,6 +604,68 @@ void SceneRenderer::LightingPass(const rhi::CmdBuf& cmd, const Ref<Scene>& scene
 void SceneRenderer::RenderScene(const Ref<Scene>& scene, const EditorCamera& camera,
                                  const RenderSettings& settings)
 {
+    // Lazy load GPU resources
+    auto meshView = scene->GetRegistry().view<MeshComponent>();
+    for (auto entity : meshView)
+    {
+        auto& mc = meshView.get<MeshComponent>(entity);
+        if (!mc.VertexBuffer && !mc.ModelPath.empty())
+        {
+            Ref<Model> model = AssetManager::GetModel(mc.ModelPath);
+            if (model && !model->m_meshes.empty())
+            {
+                std::vector<Vertex> all_vertices;
+                std::vector<uint32_t> all_indices;
+                for (auto& mesh : model->m_meshes)
+                {
+                    uint32_t base_index = all_vertices.size();
+                    all_vertices.insert(all_vertices.end(), mesh->m_vertices.begin(), mesh->m_vertices.end());
+                    for (uint32_t idx : mesh->m_indices)
+                        all_indices.push_back(base_index + idx);
+                }
+                mc.VertexCount = all_vertices.size();
+                mc.IndexCount = all_indices.size();
+                if (mc.VertexCount > 0 && mc.IndexCount > 0)
+                {
+                    mc.VertexBuffer = rhi::buffer_create({
+                        .size = (uint32_t)(mc.VertexCount * sizeof(Vertex)),
+                        .usage = rhi::BufferUsage::Vertex,
+                        .memory = rhi::MemoryType::CpuToGpu,
+                        .name = "MeshVB"
+                    });
+                    mc.IndexBuffer = rhi::buffer_create({
+                        .size = (uint32_t)(mc.IndexCount * sizeof(uint32_t)),
+                        .usage = rhi::BufferUsage::Index,
+                        .memory = rhi::MemoryType::CpuToGpu,
+                        .name = "MeshIB"
+                    });
+                    
+                    auto vmap = rhi::buffer_map(mc.VertexBuffer);
+                    memcpy(vmap.ptr, all_vertices.data(), mc.VertexCount * sizeof(Vertex));
+                    rhi::buffer_unmap(mc.VertexBuffer);
+
+                    auto imap = rhi::buffer_map(mc.IndexBuffer);
+                    memcpy(imap.ptr, all_indices.data(), mc.IndexCount * sizeof(uint32_t));
+                    rhi::buffer_unmap(mc.IndexBuffer);
+                }
+            }
+        }
+    }
+
+    auto matView = scene->GetRegistry().view<MaterialComponent>();
+    for (auto entity : matView)
+    {
+        auto& mat = matView.get<MaterialComponent>(entity);
+        if (!mat.AlbedoMap && !mat.AlbedoMapPath.empty())
+            mat.AlbedoMap = AssetManager::GetTexture(mat.AlbedoMapPath);
+        if (!mat.NormalMap && !mat.NormalMapPath.empty())
+            mat.NormalMap = AssetManager::GetTexture(mat.NormalMapPath);
+        if (!mat.MetallicRoughnessMap && !mat.MetallicRoughnessMapPath.empty())
+            mat.MetallicRoughnessMap = AssetManager::GetTexture(mat.MetallicRoughnessMapPath);
+        if (!mat.AOMap && !mat.AOMapPath.empty())
+            mat.AOMap = AssetManager::GetTexture(mat.AOMapPath);
+    }
+
     // Compute light-space matrix from first shadow-casting directional light
     glm::mat4 lightSpaceMatrix(1.0f);
     {

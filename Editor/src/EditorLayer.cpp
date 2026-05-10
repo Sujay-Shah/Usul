@@ -34,6 +34,7 @@ namespace Engine
 
         m_SceneHierarchyPanel.SetContext(m_ActiveScene);
         m_SceneRenderer.Init(1280, 720);
+        m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
     }
 
     void EditorLayer::OnDetach()
@@ -130,7 +131,7 @@ namespace Engine
 
 			ImGui::EndMenuBar();
 		}
-        static bool show = true;
+        static bool show = false;
         ImGui::End();
         ImGui::ShowDemoWindow(&show);
 
@@ -139,9 +140,9 @@ namespace Engine
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0, 0 });
 		ImGui::Begin("Viewport");
 
-		bool viewportFocused = ImGui::IsWindowFocused();
-		bool viewportHovered = ImGui::IsWindowHovered();
-		EngineApp::Get().GetImGuiLayer()->BlockEvents(!viewportFocused || !viewportHovered);
+		m_ViewportFocused = ImGui::IsWindowFocused();
+		m_ViewportHovered = ImGui::IsWindowHovered();
+		EngineApp::Get().GetImGuiLayer()->BlockEvents(!m_ViewportFocused || !m_ViewportHovered);
 
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
@@ -168,8 +169,12 @@ namespace Engine
 			m_AllocatedViewportSize = m_ViewportSize;
 			m_SceneRenderer.Resize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 			m_CameraController.OnResize(m_ViewportSize.x, m_ViewportSize.y);
+			m_EditorCamera.SetViewportSize(m_ViewportSize.x, m_ViewportSize.y);
 			m_ActiveScene->OnViewportResize((uint32_t)m_ViewportSize.x, (uint32_t)m_ViewportSize.y);
 		}
+
+		if (m_ViewportFocused)
+			m_EditorCamera.OnUpdate(ts);
 
 		if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f)
 			m_SceneRenderer.RenderScene(m_ActiveScene, m_EditorCamera, m_RenderSettings);
@@ -178,6 +183,8 @@ namespace Engine
     void EditorLayer::OnEvent(Event &e)
     {
 		m_CameraController.OnEvent(e);
+		if (m_ViewportHovered)
+			m_EditorCamera.OnEvent(e);
 		
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(ENGINE_BIND_EVENT_FN(EditorLayer::OnKeyPressed));

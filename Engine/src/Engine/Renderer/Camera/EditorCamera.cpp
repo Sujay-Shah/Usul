@@ -5,22 +5,24 @@
 #include "Engine/Event/KeyCodes.h"
 #include "Engine/Event/MouseCodes.h"
 
-#include <glfw/glfw3.h>
+#include <GLFW/glfw3.h>
 
 #include <glm/gtx/quaternion.hpp>
 
 namespace Engine {
 
 	EditorCamera::EditorCamera(float fov, float aspectRatio, float nearClip, float farClip)
-		: m_FOV(fov), m_AspectRatio(aspectRatio), m_NearClip(nearClip), m_FarClip(farClip), Camera(glm::perspective(glm::radians(fov), aspectRatio, nearClip, farClip))
+		: m_FOV(fov), m_AspectRatio(aspectRatio), m_NearClip(nearClip), m_FarClip(farClip), Camera(glm::perspectiveZO(glm::radians(fov), aspectRatio, nearClip, farClip))
 	{
+		m_ProjectionMatrix[1][1] *= -1.0f; // Fix Y axis for Vulkan
 		UpdateView();
 	}
 
 	void EditorCamera::UpdateProjection()
 	{
 		m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
-		m_ProjectionMatrix = glm::perspective(glm::radians(m_FOV), m_AspectRatio, m_NearClip, m_FarClip);
+		m_ProjectionMatrix = glm::perspectiveZO(glm::radians(m_FOV), m_AspectRatio, m_NearClip, m_FarClip);
+		m_ProjectionMatrix[1][1] *= -1.0f; // Fix Y axis for Vulkan
 	}
 
 	void EditorCamera::UpdateView()
