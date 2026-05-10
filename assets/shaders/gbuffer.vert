@@ -15,12 +15,14 @@ layout(push_constant) uniform PushConstants
 {
     mat4 u_Model;
     mat4 u_ViewProj;
+    int  u_EntityID;
 } pc;
 
 layout(location = 0) out vec3 v_WorldPos;
 layout(location = 1) out vec3 v_Normal;
 layout(location = 2) out vec2 v_TexCoord;
 layout(location = 3) out mat3 v_TBN;
+layout(location = 4) flat out int v_EntityID;
 
 void main()
 {
@@ -36,6 +38,7 @@ void main()
 
     v_Normal   = N;
     v_TexCoord = a_TexCoord;
+    v_EntityID = pc.u_EntityID;
 
     gl_Position = pc.u_ViewProj * worldPos;
 }

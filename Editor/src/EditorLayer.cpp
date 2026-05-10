@@ -14,6 +14,9 @@
 #include "Engine/Utils/PlatformUtils.h"
 #include "Engine/Core/AssetManager.h"
 
+#include <yaml-cpp/yaml.h>
+#include <fstream>
+
 namespace Engine
 {
     static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_PassthruCentralNode;
@@ -35,11 +38,46 @@ namespace Engine
 
         m_SceneHierarchyPanel.SetContext(m_ActiveScene);
         m_SceneRenderer.Init(1280, 720);
+
+		// Load render settings
+		std::string settingsPath = AssetManager::GetAssetPath("settings.yaml").string();
+		if (std::ifstream in(settingsPath); in.is_open())
+		{
+			try {
+				YAML::Node data = YAML::Load(in);
+				if (auto rs = data["RenderSettings"]) {
+					if (rs["EnableShadows"]) m_RenderSettings.EnableShadows = rs["EnableShadows"].as<bool>();
+					if (rs["EnableWireframe"]) m_RenderSettings.EnableWireframe = rs["EnableWireframe"].as<bool>();
+					if (rs["OutlineColor"]) {
+						auto c = rs["OutlineColor"];
+						m_RenderSettings.OutlineColor = glm::vec4(c[0].as<float>(), c[1].as<float>(), c[2].as<float>(), c[3].as<float>());
+					}
+				}
+			} catch (...) {}
+		}
         m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
     }
 
     void EditorLayer::OnDetach()
     {
+		// Save render settings
+		YAML::Emitter out;
+		out << YAML::BeginMap;
+		out << YAML::Key << "RenderSettings" << YAML::Value << YAML::BeginMap;
+		out << YAML::Key << "EnableShadows" << YAML::Value << m_RenderSettings.EnableShadows;
+		out << YAML::Key << "EnableWireframe" << YAML::Value << m_RenderSettings.EnableWireframe;
+		out << YAML::Key << "OutlineColor" << YAML::Value << YAML::Flow << YAML::BeginSeq
+			<< m_RenderSettings.OutlineColor.r << m_RenderSettings.OutlineColor.g
+			<< m_RenderSettings.OutlineColor.b << m_RenderSettings.OutlineColor.a << YAML::EndSeq;
+		out << YAML::EndMap;
+		out << YAML::EndMap;
+
+		std::string settingsPath = AssetManager::GetAssetPath("settings.yaml").string();
+		if (std::ofstream fout(settingsPath); fout.is_open())
+		{
+			fout << out.c_str();
+		}
+
         m_SceneRenderer.Shutdown();
     }
 
@@ -146,6 +184,12 @@ namespace Engine
 		ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
 		m_ViewportSize = { viewportPanelSize.x, viewportPanelSize.y };
 
+		auto viewportMinRegion = ImGui::GetWindowContentRegionMin();
+		auto viewportMaxRegion = ImGui::GetWindowContentRegionMax();
+		auto viewportOffset = ImGui::GetWindowPos();
+		m_ViewportBounds[0] = { viewportMinRegion.x + viewportOffset.x, viewportMinRegion.y + viewportOffset.y };
+		m_ViewportBounds[1] = { viewportMaxRegion.x + viewportOffset.x, viewportMaxRegion.y + viewportOffset.y };
+
 		// Display the final lit scene output from SceneRenderer
 		rhi::Texture colorOut = m_SceneRenderer.GetColorOutput();
 		ImGui::Image((ImTextureID)rhi::imgui_add_texture(colorOut), ImVec2{ m_ViewportSize.x, m_ViewportSize.y }, ImVec2{ 0, 0 }, ImVec2{ 1, 1 });
@@ -156,6 +200,7 @@ namespace Engine
 		ImGui::Begin("Renderer Settings");
 		ImGui::Checkbox("Shadows",   &m_RenderSettings.EnableShadows);
 		ImGui::Checkbox("Wireframe", &m_RenderSettings.EnableWireframe);
+		ImGui::ColorEdit4("Outline Color", glm::value_ptr(m_RenderSettings.OutlineColor));
 		ImGui::End();
     }
 
@@ -176,7 +221,10 @@ namespace Engine
 			m_EditorCamera.OnUpdate(ts);
 
 		if (m_ViewportSize.x > 0.0f && m_ViewportSize.y > 0.0f)
+		{
+			m_SceneRenderer.SetSelectedEntity(m_SceneHierarchyPanel.GetSelectedEntity());
 			m_SceneRenderer.RenderScene(m_ActiveScene, m_EditorCamera, m_RenderSettings);
+		}
     }
 
     void EditorLayer::OnEvent(Event &e)
@@ -187,6 +235,7 @@ namespace Engine
 		
 		EventDispatcher dispatcher(e);
 		dispatcher.Dispatch<KeyPressedEvent>(ENGINE_BIND_EVENT_FN(EditorLayer::OnKeyPressed));
+		dispatcher.Dispatch<MouseButtonPressedEvent>(ENGINE_BIND_EVENT_FN(EditorLayer::OnMouseButtonPressed));
 
         //resize
         /*WindowResizeEvent * we = dynamic_cast<WindowResizeEvent*>(&e);
@@ -243,6 +292,36 @@ namespace Engine
 			}
 		}
 		return true;
+	}
+
+	bool EditorLayer::OnMouseButtonPressed(MouseButtonPressedEvent& e)
+	{
+		if (e.GetMouseButton() == Mouse::ButtonLeft)
+		{
+			if (m_ViewportHovered && !Input::IsKeyPressed(Key::LeftAlt))
+			{
+				auto [mx, my] = ImGui::GetMousePos();
+				mx -= m_ViewportBounds[0].x;
+				my -= m_ViewportBounds[0].y;
+				glm::vec2 viewportSize = m_ViewportBounds[1] - m_ViewportBounds[0];
+
+				if (mx >= 0 && my >= 0 && mx < viewportSize.x && my < viewportSize.y)
+				{
+					// Mouse is within the viewport, perform picking
+					int entityID = m_SceneRenderer.GetEntityAtPixel((int)mx, (int)my);
+					if (entityID != -1)
+					{
+						Entity entity = { (entt::entity)entityID, m_ActiveScene.get() };
+						m_SceneHierarchyPanel.SetSelectedEntity(entity);
+					}
+					else
+					{
+						m_SceneHierarchyPanel.SetSelectedEntity({});
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	void EditorLayer::NewScene()

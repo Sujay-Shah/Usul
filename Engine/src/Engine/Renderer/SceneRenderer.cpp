@@ -60,6 +60,13 @@ void SceneRenderer::Init(uint32_t width, uint32_t height)
         });
     }
 
+    m_EntityIDReadbackBuffer = rhi::buffer_create({
+        .size   = sizeof(int),
+        .usage  = rhi::BufferUsage::TransferDst,
+        .memory = rhi::MemoryType::GpuToCpu,
+        .name   = "EntityIDReadback"
+    });
+
     // Fallback 1x1 white texture
     {
         uint32_t white = 0xFFFFFFFF;
@@ -100,6 +107,8 @@ void SceneRenderer::Shutdown()
         rhi::descriptor_set_destroy(m_MaterialSets[i]);
     }
 
+    rhi::buffer_destroy(m_EntityIDReadbackBuffer);
+
     rhi::texture_destroy(m_WhiteTex);
     rhi::cmdbuf_destroy(m_Cmd);
     rhi::fence_destroy(m_Fence);
@@ -126,6 +135,79 @@ void SceneRenderer::Resize(uint32_t w, uint32_t h)
     CreateLightPassTargets(w, h);
 }
 
+int SceneRenderer::GetEntityAtPixel(int x, int y)
+{
+    if (x < 0 || y < 0 || x >= m_Width || y >= m_Height)
+        return -1;
+
+    // We must wait for the GPU to finish rendering to m_GEntityID before copying from it
+    rhi::device_wait_idle();
+
+    // Create a temporary command buffer for the transfer
+    rhi::CmdBuf cmd = rhi::cmdbuf_create(0);
+    rhi::Fence fence = rhi::fence_create(false);
+
+    rhi::cmdbuf_begin(cmd);
+
+    // Transition texture to transfer source
+    rhi::TextureBarrier barSrc = {
+        .tex = m_GEntityID,
+        .old_layout = rhi::TextureLayout::ColorTarget,
+        .new_layout = rhi::TextureLayout::TransferSrc,
+        .src_stage = rhi::PipelineStage::ColorOutput,
+        .dst_stage = rhi::PipelineStage::Transfer,
+        .src_access = rhi::Access::ColorWrite,
+        .dst_access = rhi::Access::TransferRead,
+        .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
+    };
+    rhi::texture_barrier(cmd, &barSrc, 1);
+
+    // Copy 1 pixel to readback buffer
+    rhi::BufferTextureCopy copy = {
+        .buf = m_EntityIDReadbackBuffer,
+        .buf_offset = 0,
+        .buf_row_len = 0,
+        .buf_img_h = 0,
+        .tex = m_GEntityID,
+        .mip = 0,
+        .base_layer = 0,
+        .layer_count = 1,
+        .x = (uint32_t)x,
+        .y = (uint32_t)y,
+        .z = 0,
+        .w = 1,
+        .h = 1,
+        .d = 1
+    };
+    rhi::copy_texture_to_buffer(cmd, copy);
+
+    // Transition texture back to color target (for next frame)
+    rhi::TextureBarrier barDst = {
+        .tex = m_GEntityID,
+        .old_layout = rhi::TextureLayout::TransferSrc,
+        .new_layout = rhi::TextureLayout::ColorTarget,
+        .src_stage = rhi::PipelineStage::Transfer,
+        .dst_stage = rhi::PipelineStage::ColorOutput,
+        .src_access = rhi::Access::TransferRead,
+        .dst_access = rhi::Access::ColorWrite,
+        .base_mip = 0, .mip_count = 1, .base_layer = 0, .layer_count = 1
+    };
+    rhi::texture_barrier(cmd, &barDst, 1);
+
+    rhi::cmdbuf_end(cmd);
+    rhi::queue_submit(&cmd, 1, nullptr, 0, nullptr, 0, fence);
+    rhi::fence_wait(fence);
+
+    rhi::cmdbuf_destroy(cmd);
+    rhi::fence_destroy(fence);
+
+    auto mapped = rhi::buffer_map(m_EntityIDReadbackBuffer);
+    int entityID = *(int*)mapped.ptr;
+    rhi::buffer_unmap(m_EntityIDReadbackBuffer);
+
+    return entityID;
+}
+
 // ================================================================
 //  G-Buffer helpers
 // ================================================================
@@ -139,6 +221,7 @@ void SceneRenderer::CreateGBuffer(uint32_t w, uint32_t h)
     m_GNormal   = mkTex(rhi::Format::RGBA16_Float, TU::ColorTarget|TU::Sampled, "GNormal");
     m_GAlbedo   = mkTex(rhi::Format::RGBA8_Unorm,  TU::ColorTarget|TU::Sampled, "GAlbedo");
     m_GPBR      = mkTex(rhi::Format::RGBA8_Unorm,  TU::ColorTarget|TU::Sampled, "GPBR");
+    m_GEntityID = mkTex(rhi::Format::R32_Uint,     TU::ColorTarget|TU::TransferSrc, "GEntityID");
     m_GDepth    = mkTex(rhi::Format::D32_Float,    TU::DepthTarget,             "GDepth");
 }
 
@@ -148,6 +231,7 @@ void SceneRenderer::DestroyGBuffer()
     rhi::texture_destroy(m_GNormal);
     rhi::texture_destroy(m_GAlbedo);
     rhi::texture_destroy(m_GPBR);
+    rhi::texture_destroy(m_GEntityID);
     rhi::texture_destroy(m_GDepth);
 }
 
@@ -263,6 +347,11 @@ void SceneRenderer::CreatePipelines()
     m_LightingFS = rhi::shader_create({.bytecode=lfrag.data(),.size=lfrag.size(),.stage=rhi::ShaderStage::Fragment,.name="LightFS"});
     m_ShadowVS   = rhi::shader_create({.bytecode=svert.data(),.size=svert.size(),.stage=rhi::ShaderStage::Vertex,  .name="ShadowVS"});
 
+    auto overt = loadSpv("shaders/outline.vert.spv");
+    auto ofrag = loadSpv("shaders/outline.frag.spv");
+    m_OutlineVS  = rhi::shader_create({.bytecode=overt.data(),.size=overt.size(),.stage=rhi::ShaderStage::Vertex,  .name="OutlineVS"});
+    m_OutlineFS  = rhi::shader_create({.bytecode=ofrag.data(),.size=ofrag.size(),.stage=rhi::ShaderStage::Fragment,.name="OutlineFS"});
+
     // Geometry pipeline — writes to 4 color targets + depth
     m_GeometryPipeline = rhi::pipeline_create({
         .vertex_shader   = m_GBufferVS,
@@ -278,12 +367,35 @@ void SceneRenderer::CreatePipelines()
         .attrib_count  = 5,
         .bindings      = {{.binding=0,.stride=sizeof(Vertex),.input_rate=rhi::VertexInputRate::Vertex}},
         .binding_count = 1,
-        .color_formats = {rhi::Format::RGBA16_Float,rhi::Format::RGBA16_Float,rhi::Format::RGBA8_Unorm,rhi::Format::RGBA8_Unorm},
-        .color_count   = 4,
+        .color_formats = {rhi::Format::RGBA16_Float,rhi::Format::RGBA16_Float,rhi::Format::RGBA8_Unorm,rhi::Format::RGBA8_Unorm,rhi::Format::R32_Uint},
+        .color_count   = 5,
         .depth_format  = rhi::Format::D32_Float,
         .depth         = {.test_enable=true,.write_enable=true,.compare_op=rhi::CompareOp::Less},
         .push_constant_size = sizeof(GeometryPushConstants),
         .name = "GeometryPipeline"
+    });
+
+    m_GeometryWireframePipeline = rhi::pipeline_create({
+        .vertex_shader   = m_GBufferVS,
+        .fragment_shader = m_GBufferFS,
+        .layout          = m_MaterialLayout,
+        .attribs = {
+            {.binding=0,.location=0,.format=rhi::Format::RGB32_Float,.offset=offsetof(Vertex,Position)},
+            {.binding=0,.location=1,.format=rhi::Format::RGB32_Float,.offset=offsetof(Vertex,Normal)},
+            {.binding=0,.location=2,.format=rhi::Format::RG32_Float, .offset=offsetof(Vertex,TexCoords)},
+            {.binding=0,.location=3,.format=rhi::Format::RGB32_Float,.offset=offsetof(Vertex,Tangent)},
+            {.binding=0,.location=4,.format=rhi::Format::RGB32_Float,.offset=offsetof(Vertex,Bitangent)},
+        },
+        .attrib_count  = 5,
+        .bindings      = {{.binding=0,.stride=sizeof(Vertex),.input_rate=rhi::VertexInputRate::Vertex}},
+        .binding_count = 1,
+        .color_formats = {rhi::Format::RGBA16_Float,rhi::Format::RGBA16_Float,rhi::Format::RGBA8_Unorm,rhi::Format::RGBA8_Unorm,rhi::Format::R32_Uint},
+        .color_count   = 5,
+        .depth_format  = rhi::Format::D32_Float,
+        .depth         = {.test_enable=true,.write_enable=true,.compare_op=rhi::CompareOp::Less},
+        .raster        = {.fill_mode=rhi::FillMode::Wireframe},
+        .push_constant_size = sizeof(GeometryPushConstants),
+        .name = "GeometryWireframePipeline"
     });
 
     // Lighting pipeline — full-screen quad, no vertex input, one color target
@@ -310,16 +422,46 @@ void SceneRenderer::CreatePipelines()
         .push_constant_size = sizeof(ShadowPushConstants),
         .name = "ShadowPipeline"
     });
+
+    struct OutlinePushConstants {
+        glm::mat4 Model;
+        glm::mat4 ViewProj;
+        glm::vec4 Color;
+    };
+
+    m_OutlinePipeline = rhi::pipeline_create({
+        .vertex_shader   = m_OutlineVS,
+        .fragment_shader = m_OutlineFS,
+        .layout          = rhi::DescriptorLayout{}, // no layout needed
+        .attribs = {
+            {.binding=0,.location=0,.format=rhi::Format::RGB32_Float,.offset=offsetof(Vertex,Position)},
+            {.binding=0,.location=1,.format=rhi::Format::RGB32_Float,.offset=offsetof(Vertex,Normal)},
+        },
+        .attrib_count  = 2,
+        .bindings      = {{.binding=0,.stride=sizeof(Vertex),.input_rate=rhi::VertexInputRate::Vertex}},
+        .binding_count = 1,
+        .color_formats = {rhi::Format::RGBA16_Float}, // renders directly to LightPassColor
+        .color_count   = 1,
+        .depth_format  = rhi::Format::D32_Float,
+        // LessEqual so it renders over the existing depth, write_enable=false
+        .depth         = {.test_enable=true,.write_enable=false,.compare_op=rhi::CompareOp::LessEqual},
+        .raster        = {.cull_mode=rhi::CullMode::Front}, // Render back faces for outline
+        .push_constant_size = sizeof(OutlinePushConstants),
+        .name = "OutlinePipeline"
+    });
 }
 
 void SceneRenderer::DestroyPipelines()
 {
     rhi::pipeline_destroy(m_GeometryPipeline);
+    rhi::pipeline_destroy(m_GeometryWireframePipeline);
     rhi::pipeline_destroy(m_LightingPipeline);
     rhi::pipeline_destroy(m_ShadowPipeline);
+    rhi::pipeline_destroy(m_OutlinePipeline);
     rhi::shader_destroy(m_GBufferVS);  rhi::shader_destroy(m_GBufferFS);
     rhi::shader_destroy(m_LightingVS); rhi::shader_destroy(m_LightingFS);
     rhi::shader_destroy(m_ShadowVS);
+    rhi::shader_destroy(m_OutlineVS);  rhi::shader_destroy(m_OutlineFS);
 }
 
 // ================================================================
@@ -462,11 +604,12 @@ void SceneRenderer::ShadowPass(const rhi::CmdBuf& cmd, const Ref<Scene>& scene,
 //  Geometry Pass
 // ================================================================
 void SceneRenderer::GeometryPass(const rhi::CmdBuf& cmd, const Ref<Scene>& scene,
-                                  const glm::mat4& view, const glm::mat4& proj)
+                                  const glm::mat4& view, const glm::mat4& proj,
+                                  const RenderSettings& settings)
 {
     rhi::begin_region(cmd, "GeometryPass", 0.2f, 0.8f, 0.4f);
 
-    rhi::TextureBarrier bars[5];
+    rhi::TextureBarrier bars[6];
     auto mkBar = [](rhi::Texture t, rhi::TextureLayout newL, rhi::Access dstA, rhi::PipelineStage dstS) {
         return rhi::TextureBarrier{
             .tex=t,.old_layout=rhi::TextureLayout::Undefined,.new_layout=newL,
@@ -479,8 +622,13 @@ void SceneRenderer::GeometryPass(const rhi::CmdBuf& cmd, const Ref<Scene>& scene
     bars[1]=mkBar(m_GNormal,  rhi::TextureLayout::ColorTarget,rhi::Access::ColorWrite,rhi::PipelineStage::ColorOutput);
     bars[2]=mkBar(m_GAlbedo,  rhi::TextureLayout::ColorTarget,rhi::Access::ColorWrite,rhi::PipelineStage::ColorOutput);
     bars[3]=mkBar(m_GPBR,     rhi::TextureLayout::ColorTarget,rhi::Access::ColorWrite,rhi::PipelineStage::ColorOutput);
-    bars[4]=mkBar(m_GDepth,   rhi::TextureLayout::DepthStencilTarget,rhi::Access::DepthWrite,rhi::PipelineStage::EarlyDepth|rhi::PipelineStage::LateDepth);
-    rhi::texture_barrier(cmd, bars, 5);
+    bars[4]=mkBar(m_GEntityID,rhi::TextureLayout::ColorTarget,rhi::Access::ColorWrite,rhi::PipelineStage::ColorOutput);
+    bars[5]=mkBar(m_GDepth,   rhi::TextureLayout::DepthStencilTarget,rhi::Access::DepthWrite,rhi::PipelineStage::EarlyDepth|rhi::PipelineStage::LateDepth);
+    rhi::texture_barrier(cmd, bars, 6);
+
+    float clearEntityFloat;
+    int clearEntityInt = -1;
+    memcpy(&clearEntityFloat, &clearEntityInt, sizeof(float));
 
     rhi::begin_render_pass(cmd, {
         .color = {
@@ -488,15 +636,17 @@ void SceneRenderer::GeometryPass(const rhi::CmdBuf& cmd, const Ref<Scene>& scene
             {.texture=m_GNormal,  .load_op=rhi::LoadOp::Clear,.store_op=rhi::StoreOp::Store,.clear={0,0,0,1}},
             {.texture=m_GAlbedo,  .load_op=rhi::LoadOp::Clear,.store_op=rhi::StoreOp::Store,.clear={0,0,0,1}},
             {.texture=m_GPBR,     .load_op=rhi::LoadOp::Clear,.store_op=rhi::StoreOp::Store,.clear={0,0,0,1}},
+            {.texture=m_GEntityID,.load_op=rhi::LoadOp::Clear,.store_op=rhi::StoreOp::Store,.clear={clearEntityFloat,0,0,0}},
         },
-        .color_count=4,
+        .color_count=5,
         .depth={.texture=m_GDepth,.load_op=rhi::LoadOp::Clear,.store_op=rhi::StoreOp::Store,.clear={1.0f,0}},
         .has_depth=true
     });
 
     rhi::set_viewport(cmd, {0,0,(float)m_Width,(float)m_Height,0,1});
     rhi::set_scissor (cmd, {0,0,m_Width,m_Height});
-    rhi::bind_pipeline(cmd, m_GeometryPipeline);
+
+    rhi::bind_pipeline(cmd, settings.EnableWireframe ? m_GeometryWireframePipeline : m_GeometryPipeline);
 
     glm::mat4 viewProj = proj * view;
 
@@ -514,7 +664,7 @@ void SceneRenderer::GeometryPass(const rhi::CmdBuf& cmd, const Ref<Scene>& scene
 
         BindMaterial(cmd, *mat, 0, materialIdx); // Using frameIndex 0 for now as it's hardcoded elsewhere
         
-        GeometryPushConstants pushConst{ tc.GetTransform(), viewProj };
+        GeometryPushConstants pushConst{ tc.GetTransform(), viewProj, (int)(uint32_t)entity };
         rhi::push_constants_raw(cmd, rhi::ShaderStage::Vertex, 0, sizeof(pushConst), &pushConst);
 
         rhi::bind_vertex_buffer(cmd, mc.VertexBuffer, 0);
@@ -707,8 +857,72 @@ void SceneRenderer::RenderScene(const Ref<Scene>& scene, const EditorCamera& cam
         rhi::texture_barrier(m_Cmd, &dummyBar, 1);
     }
 
-    GeometryPass(m_Cmd, scene, camera.GetViewMatrix(), camera.GetProjectionMatrix());
+    GeometryPass(m_Cmd, scene, camera.GetViewMatrix(), camera.GetProjectionMatrix(), settings);
     LightingPass(m_Cmd, scene, camera.GetPosition(), lightSpaceMatrix, settings);
+    
+    // ----- Outline Pass -----
+    if (m_SelectedEntity && m_SelectedEntity.HasComponent<MeshComponent>())
+    {
+        rhi::begin_region(m_Cmd, "OutlinePass", 0.1f, 0.9f, 0.2f);
+        
+        // Transition LightPassColor back to ColorTarget
+        rhi::TextureBarrier outBar{
+            .tex=m_LightPassColor,
+            .old_layout=rhi::TextureLayout::ShaderReadOnly,.new_layout=rhi::TextureLayout::ColorTarget,
+            .src_stage=rhi::PipelineStage::Fragment,.dst_stage=rhi::PipelineStage::ColorOutput,
+            .src_access=rhi::Access::ShaderRead,.dst_access=rhi::Access::ColorWrite,
+            .base_mip=0,.mip_count=1,.base_layer=0,.layer_count=1
+        };
+        rhi::texture_barrier(m_Cmd, &outBar, 1);
+
+        rhi::begin_render_pass(m_Cmd, {
+            .color = {
+                {.texture=m_LightPassColor,.load_op=rhi::LoadOp::Load,.store_op=rhi::StoreOp::Store}
+            },
+            .color_count=1,
+            // Re-use G-Buffer depth to depth-test the outline!
+            .depth={.texture=m_GDepth,.load_op=rhi::LoadOp::Load,.store_op=rhi::StoreOp::Store},
+            .has_depth=true
+        });
+
+        rhi::set_viewport(m_Cmd, {0,0,(float)m_Width,(float)m_Height,0,1});
+        rhi::set_scissor (m_Cmd, {0,0,m_Width,m_Height});
+        rhi::bind_pipeline(m_Cmd, m_OutlinePipeline);
+
+        auto& tc = m_SelectedEntity.GetComponent<TransformComponent>();
+        auto& mc = m_SelectedEntity.GetComponent<MeshComponent>();
+
+        if (mc.VertexBuffer)
+        {
+            glm::mat4 viewProj = camera.GetProjectionMatrix() * camera.GetViewMatrix();
+            
+            struct OutlinePushConstants {
+                glm::mat4 Model;
+                glm::mat4 ViewProj;
+                glm::vec4 Color;
+            };
+            OutlinePushConstants pc{ tc.GetTransform(), viewProj, settings.OutlineColor };
+            rhi::push_constants_raw(m_Cmd, rhi::ShaderStage::Vertex | rhi::ShaderStage::Fragment, 0, sizeof(pc), &pc);
+
+            rhi::bind_vertex_buffer(m_Cmd, mc.VertexBuffer, 0);
+            rhi::bind_index_buffer(m_Cmd, mc.IndexBuffer, 0, rhi::IndexType::Uint32);
+            rhi::draw_indexed(m_Cmd, {.index_count=mc.IndexCount});
+        }
+
+        rhi::end_render_pass(m_Cmd);
+        
+        // Transition back to ShaderReadOnly
+        rhi::TextureBarrier finalBar{
+            .tex=m_LightPassColor,
+            .old_layout=rhi::TextureLayout::ColorTarget,.new_layout=rhi::TextureLayout::ShaderReadOnly,
+            .src_stage=rhi::PipelineStage::ColorOutput,.dst_stage=rhi::PipelineStage::Fragment,
+            .src_access=rhi::Access::ColorWrite,.dst_access=rhi::Access::ShaderRead,
+            .base_mip=0,.mip_count=1,.base_layer=0,.layer_count=1
+        };
+        rhi::texture_barrier(m_Cmd, &finalBar, 1);
+
+        rhi::end_region(m_Cmd);
+    }
 
     rhi::cmdbuf_end(m_Cmd);
     rhi::queue_submit(&m_Cmd, 1, nullptr, 0, nullptr, 0, m_Fence);

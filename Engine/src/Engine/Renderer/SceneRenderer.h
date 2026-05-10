@@ -66,6 +66,7 @@ struct GeometryPushConstants
 {
     glm::mat4 Model;
     glm::mat4 ViewProj;
+    int       EntityID;
 };
 
 // Push constants for shadow pass
@@ -80,8 +81,9 @@ struct ShadowPushConstants
 // ----------------------------------------------------------------
 struct RenderSettings
 {
-    bool EnableShadows    = false;
-    bool EnableWireframe  = false;
+    bool EnableShadows   = true;
+    bool EnableWireframe = false;
+    glm::vec4 OutlineColor = glm::vec4(0.2f, 0.8f, 0.2f, 1.0f);
     // Future: bloom, SSAO, etc.
 };
 
@@ -110,6 +112,12 @@ public:
     // Destroy all GPU resources (call before RHI shutdown).
     void Shutdown();
 
+    // Read the entity ID from the G-Buffer at pixel (x, y)
+    int GetEntityAtPixel(int x, int y);
+
+    // Selected entity for outline rendering
+    void SetSelectedEntity(Entity entity) { m_SelectedEntity = entity; }
+
 private:
     // ----- Resource creation helpers -----
     void CreateGBuffer(uint32_t w, uint32_t h);
@@ -128,7 +136,8 @@ private:
     void ShadowPass   (const rhi::CmdBuf& cmd, const Ref<Scene>& scene,
                        const glm::mat4& lightSpaceMatrix);
     void GeometryPass (const rhi::CmdBuf& cmd, const Ref<Scene>& scene,
-                       const glm::mat4& view, const glm::mat4& proj);
+                       const glm::mat4& view, const glm::mat4& proj,
+                       const RenderSettings& settings);
     void LightingPass (const rhi::CmdBuf& cmd, const Ref<Scene>& scene,
                        const glm::vec3& cameraPos, const glm::mat4& lightSpaceMatrix,
                        const RenderSettings& settings);
@@ -149,7 +158,10 @@ private:
     rhi::Texture m_GNormal;     // RGBA16F  world-space normal
     rhi::Texture m_GAlbedo;     // RGBA8    albedo + AO
     rhi::Texture m_GPBR;        // RGBA8    metallic + roughness
+    rhi::Texture m_GEntityID;   // R32_Sint entity ID
     rhi::Texture m_GDepth;      // D32_Float shared depth
+
+    rhi::Buffer  m_EntityIDReadbackBuffer;
 
     // ----- Lighting pass targets -----
     rhi::Texture m_LightPassColor; // RGBA16F final lit colour
@@ -161,12 +173,15 @@ private:
 
     // ----- Pipelines -----
     rhi::Pipeline m_GeometryPipeline;
+    rhi::Pipeline m_GeometryWireframePipeline;
     rhi::Pipeline m_LightingPipeline;
     rhi::Pipeline m_ShadowPipeline;
+    rhi::Pipeline m_OutlinePipeline;
 
     rhi::Shader   m_GBufferVS, m_GBufferFS;
     rhi::Shader   m_LightingVS, m_LightingFS;
     rhi::Shader   m_ShadowVS;
+    rhi::Shader   m_OutlineVS, m_OutlineFS;
 
     // ----- Descriptor layouts -----
     rhi::DescriptorLayout m_MaterialLayout;   // set 0: material textures + UBO
@@ -199,8 +214,9 @@ private:
     // ----- Dimensions -----
     uint32_t m_Width  = 1280;
     uint32_t m_Height = 720;
-
     bool m_Initialised = false;
+
+    Entity m_SelectedEntity = {};
 };
 
 } // namespace Engine

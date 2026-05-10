@@ -13,6 +13,7 @@ layout(location = 0) in vec3 v_WorldPos;
 layout(location = 1) in vec3 v_Normal;
 layout(location = 2) in vec2 v_TexCoord;
 layout(location = 3) in mat3 v_TBN;
+layout(location = 4) flat in int v_EntityID;
 
 // Descriptor set 0 — material textures
 layout(set = 0, binding = 0) uniform sampler2D u_AlbedoMap;
@@ -38,6 +39,7 @@ layout(location = 0) out vec4 o_Position; // RT0
 layout(location = 1) out vec4 o_Normal;   // RT1
 layout(location = 2) out vec4 o_Albedo;   // RT2
 layout(location = 3) out vec4 o_PBR;      // RT3
+layout(location = 4) out int o_EntityID;  // RT4
 
 void main()
 {
@@ -85,4 +87,5 @@ void main()
     o_Normal   = vec4(N * 0.5 + 0.5, 1.0); // pack [-1,1] → [0,1]
     o_Albedo   = vec4(albedo.rgb, ao);
     o_PBR      = vec4(metallic, roughness, 0.0, 1.0);
+    o_EntityID = v_EntityID;
 }
