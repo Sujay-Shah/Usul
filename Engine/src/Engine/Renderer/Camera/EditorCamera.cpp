@@ -14,7 +14,6 @@ namespace Engine {
 	EditorCamera::EditorCamera(float fov, float aspectRatio, float nearClip, float farClip)
 		: m_FOV(fov), m_AspectRatio(aspectRatio), m_NearClip(nearClip), m_FarClip(farClip), Camera(glm::perspectiveZO(glm::radians(fov), aspectRatio, nearClip, farClip))
 	{
-		m_ProjectionMatrix[1][1] *= -1.0f; // Fix Y axis for Vulkan
 		UpdateView();
 	}
 
@@ -22,7 +21,6 @@ namespace Engine {
 	{
 		m_AspectRatio = m_ViewportWidth / m_ViewportHeight;
 		m_ProjectionMatrix = glm::perspectiveZO(glm::radians(m_FOV), m_AspectRatio, m_NearClip, m_FarClip);
-		m_ProjectionMatrix[1][1] *= -1.0f; // Fix Y axis for Vulkan
 	}
 
 	void EditorCamera::UpdateView()

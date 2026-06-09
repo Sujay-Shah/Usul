@@ -472,7 +472,6 @@ static glm::mat4 CalcLightSpaceMatrix(const glm::vec3& direction)
     glm::vec3 dir = glm::normalize(direction);
     glm::mat4 lightView = glm::lookAt(-dir * 50.0f, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
     glm::mat4 lightProj = glm::ortho(-50.0f, 50.0f, -50.0f, 50.0f, 0.1f, 200.0f);
-    lightProj[1][1] *= -1.0f; // Vulkan Y-flip
     return lightProj * lightView;
 }
 

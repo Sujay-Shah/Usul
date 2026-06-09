@@ -72,8 +72,8 @@ float ShadowFactor(vec3 worldPos)
 {
     vec4 shadowCoord = u_Lights.LightSpaceMatrix * vec4(worldPos, 1.0);
     shadowCoord.xyz /= shadowCoord.w;
-    // Map NDC [-1,1] → [0,1]
-    shadowCoord.xy = shadowCoord.xy * 0.5 + 0.5;
+    // Map NDC [-1,1] → [0,1] and flip Y for Vulkan texture coordinates
+    shadowCoord.xy = shadowCoord.xy * vec2(0.5, -0.5) + vec2(0.5, 0.5);
     // PCF 3x3
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(u_ShadowMap, 0);
