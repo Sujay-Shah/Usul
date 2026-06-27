@@ -173,7 +173,7 @@ int SceneRenderer::GetEntityAtPixel(int x, int y)
         .base_layer = 0,
         .layer_count = 1,
         .x = (uint32_t)x,
-        .y = (uint32_t)y,
+        .y = (uint32_t)(m_Height - 1 - y),
         .z = 0,
         .w = 1,
         .h = 1,
