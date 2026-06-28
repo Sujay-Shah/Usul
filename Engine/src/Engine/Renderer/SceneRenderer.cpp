@@ -758,7 +758,7 @@ void SceneRenderer::RenderScene(const Ref<Scene>& scene, const EditorCamera& cam
     for (auto entity : meshView)
     {
         auto& mc = meshView.get<MeshComponent>(entity);
-        ENGINE_INFO("RenderScene: Mesh entity found. ModelPath='{0}'", mc.ModelPath);
+        //ENGINE_INFO("RenderScene: Mesh entity found. ModelPath='{0}'", mc.ModelPath);
         if (!mc.VertexBuffer && !mc.ModelPath.empty())
         {
             Ref<Model> model = AssetManager::GetModel(mc.ModelPath);

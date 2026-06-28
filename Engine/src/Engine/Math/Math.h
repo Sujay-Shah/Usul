@@ -1,5 +1,5 @@
-#ifndef __MATH_H__
-#define __MATH_H__
+#ifndef __USUL_ENGINE_MATH_H__
+#define __USUL_ENGINE_MATH_H__
 
 
 

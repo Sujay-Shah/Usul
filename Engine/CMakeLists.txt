@@ -89,6 +89,7 @@ target_include_directories( Engine
         src/Platform
 
         vendor/imgui
+        vendor/ImGuizmo/
         vendor/glm
         vendor/entt/single_include/entt
         vendor/spdlog/include
@@ -96,7 +97,6 @@ target_include_directories( Engine
 		${Vulkan_INCLUDE_DIRS}
         
     PRIVATE
-        vendor/ImGuizmo/
         vendor/glfw/include
         vendor/glad/include
         vendor/stb_image
