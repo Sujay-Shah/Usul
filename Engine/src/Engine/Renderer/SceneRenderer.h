@@ -144,7 +144,8 @@ private:
 
     // Upload light data for the current scene into m_LightUBOs
     void UploadLightUBO(const Ref<Scene>& scene, const glm::vec3& cameraPos,
-                        const glm::mat4& lightSpaceMatrix, uint32_t frameIndex);
+                        const glm::mat4& lightSpaceMatrix, uint32_t frameIndex,
+                        const RenderSettings& settings);
 
     // Upload material UBO + write descriptors for one mesh entity
     void BindMaterial(const rhi::CmdBuf& cmd, const MaterialComponent& mat,
@@ -190,7 +191,7 @@ private:
     static constexpr uint32_t k_MaxFrames = 3;
 
     rhi::DescriptorSet m_LightingSet;
-    rhi::DescriptorSet m_MaterialSets[k_MaxFrames]; // one set per frame, updated per-draw
+    rhi::DescriptorSet m_MaterialSets[k_MaxFrames][64]; // unique set per entity per frame, updated per-draw
     rhi::Sampler m_LinearSampler;
     rhi::Sampler m_ShadowSampler; // comparison sampler for PCF
 
@@ -199,7 +200,7 @@ private:
 
     // Per-mesh material UBOs (one per entity per frame, simple slab)
     // We allocate a pool and bump-allocate each frame.
-    rhi::Buffer m_MaterialUBOs[k_MaxFrames];
+    rhi::Buffer m_MaterialUBOs[k_MaxFrames][64];
     uint32_t    m_MaterialUBOCount = 64; // max entities per frame
 
     // ----- Sync -----

@@ -509,7 +509,7 @@ static bool vk_init(const rhi::InitDesc& desc)
         const VkPushConstantRange pcr{
             .stageFlags = VK_SHADER_STAGE_ALL,
             .offset     = 0,
-            .size       = 128,
+            .size       = 256,
         };
         const VkPipelineLayoutCreateInfo plci{
             .sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
@@ -907,11 +907,10 @@ static rhi::DescriptorLayout vk_descriptor_layout_create(const rhi::DescriptorLa
     DescLayoutSlot& slot = s_desc_layouts.get_checked(h);
     vkCreateDescriptorSetLayout(g_ctx.device, &dslci, nullptr, &slot.layout);
 
-    // Create a pipeline layout with a single push constant range (128 bytes)
     const VkPushConstantRange pcr{
         .stageFlags = VK_SHADER_STAGE_ALL,
         .offset     = 0,
-        .size       = 128,   // max guaranteed by Vulkan spec
+        .size       = 256,
     };
     const VkPipelineLayoutCreateInfo plci{
         .sType                  = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
@@ -1448,7 +1447,7 @@ static void vk_cmd_push_constants(rhi::CmdBuf ch, rhi::ShaderStage stages,
     CmdBufSlot* cmd = s_cmdbufs.get(ch);
     if (!cmd) return;
     vkCmdPushConstants(cmd->cmd, cmd->bound_pipeline_layout,
-                       to_vk_shader_stage(stages), offset, size, data);
+                       VK_SHADER_STAGE_ALL, offset, size, data);
 }
 
 // =============================================================

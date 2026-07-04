@@ -251,6 +251,17 @@ namespace Engine
 		ImGui::Checkbox("Shadows",   &m_RenderSettings.EnableShadows);
 		ImGui::Checkbox("Wireframe", &m_RenderSettings.EnableWireframe);
 		ImGui::ColorEdit4("Outline Color", glm::value_ptr(m_RenderSettings.OutlineColor));
+
+		ImGui::Separator();
+		ImGui::Text("Gizmo Tool:");
+		if (ImGui::RadioButton("Select (Q)", m_GizmoType == -1)) m_GizmoType = -1;
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Translate (W)", m_GizmoType == ImGuizmo::OPERATION::TRANSLATE)) m_GizmoType = ImGuizmo::OPERATION::TRANSLATE;
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Rotate (E)", m_GizmoType == ImGuizmo::OPERATION::ROTATE)) m_GizmoType = ImGuizmo::OPERATION::ROTATE;
+		ImGui::SameLine();
+		if (ImGui::RadioButton("Scale (R)", m_GizmoType == ImGuizmo::OPERATION::SCALE)) m_GizmoType = ImGuizmo::OPERATION::SCALE;
+
 		ImGui::End();
     }
 

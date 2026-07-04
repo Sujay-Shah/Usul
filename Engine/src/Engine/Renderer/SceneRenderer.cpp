@@ -44,20 +44,23 @@ void SceneRenderer::Init(uint32_t width, uint32_t height)
     // Per-frame UBOs and material descriptor sets
     for (uint32_t i = 0; i < k_MaxFrames; ++i)
     {
-        m_MaterialSets[i] = rhi::descriptor_set_create(m_MaterialLayout);
-
         m_LightUBOs[i] = rhi::buffer_create({
             .size   = sizeof(GPULightUBO),
             .usage  = rhi::BufferUsage::Uniform,
             .memory = rhi::MemoryType::CpuToGpu,
             .name   = "LightUBO"
         });
-        m_MaterialUBOs[i] = rhi::buffer_create({
-            .size   = sizeof(GPUMaterialUBO),
-            .usage  = rhi::BufferUsage::Uniform,
-            .memory = rhi::MemoryType::CpuToGpu,
-            .name   = "MaterialUBO"
-        });
+
+        for (uint32_t j = 0; j < 64; ++j)
+        {
+            m_MaterialSets[i][j] = rhi::descriptor_set_create(m_MaterialLayout);
+            m_MaterialUBOs[i][j] = rhi::buffer_create({
+                .size   = sizeof(GPUMaterialUBO),
+                .usage  = rhi::BufferUsage::Uniform,
+                .memory = rhi::MemoryType::CpuToGpu,
+                .name   = "MaterialUBO"
+            });
+        }
     }
 
     m_EntityIDReadbackBuffer = rhi::buffer_create({
@@ -103,8 +106,11 @@ void SceneRenderer::Shutdown()
     for (uint32_t i = 0; i < k_MaxFrames; ++i)
     {
         rhi::buffer_destroy(m_LightUBOs[i]);
-        rhi::buffer_destroy(m_MaterialUBOs[i]);
-        rhi::descriptor_set_destroy(m_MaterialSets[i]);
+        for (uint32_t j = 0; j < 64; ++j)
+        {
+            rhi::buffer_destroy(m_MaterialUBOs[i][j]);
+            rhi::descriptor_set_destroy(m_MaterialSets[i][j]);
+        }
     }
 
     rhi::buffer_destroy(m_EntityIDReadbackBuffer);
@@ -481,7 +487,8 @@ static glm::mat4 CalcLightSpaceMatrix(const glm::vec3& direction)
 void SceneRenderer::UploadLightUBO(const Ref<Scene>& scene,
                                     const glm::vec3& cameraPos,
                                     const glm::mat4& lightSpaceMatrix,
-                                    uint32_t /*frameIndex*/)
+                                    uint32_t /*frameIndex*/,
+                                    const RenderSettings& settings)
 {
     GPULightUBO ubo{};
     ubo.CameraPos        = cameraPos;
@@ -502,7 +509,7 @@ void SceneRenderer::UploadLightUBO(const Ref<Scene>& scene,
            -glm::sin(tc.Rotation.x),
            -glm::cos(tc.Rotation.y) * glm::cos(tc.Rotation.x)));
         ld.Direction = { dir, lc.InnerCutoff };
-        ld.Params    = { lc.OuterCutoff, lc.Radius, lc.CastShadows ? 1.0f : 0.0f, 0.0f };
+        ld.Params    = { lc.OuterCutoff, lc.Radius, (settings.EnableShadows && lc.CastShadows) ? 1.0f : 0.0f, 0.0f };
     }
 
     auto mapped = rhi::buffer_map(m_LightUBOs[0]);
@@ -511,10 +518,12 @@ void SceneRenderer::UploadLightUBO(const Ref<Scene>& scene,
 }
 
 void SceneRenderer::BindMaterial(const rhi::CmdBuf& cmd, const MaterialComponent& mat,
-                                  uint32_t frameIndex, uint32_t /*materialIdx*/)
+                                  uint32_t frameIndex, uint32_t materialIdx)
 {
+    if (materialIdx >= 64) materialIdx = 63;
+
     // Map the UBO slot for this frame (single slot, overwritten per draw)
-    auto mapped = rhi::buffer_map(m_MaterialUBOs[frameIndex]);
+    auto mapped = rhi::buffer_map(m_MaterialUBOs[frameIndex][materialIdx]);
     GPUMaterialUBO& ubo = *static_cast<GPUMaterialUBO*>(mapped.ptr);
 
     ubo.AlbedoColor = mat.AlbedoColor;
@@ -526,9 +535,9 @@ void SceneRenderer::BindMaterial(const rhi::CmdBuf& cmd, const MaterialComponent
     ubo.HasNormalMap            = mat.NormalMap            ? 1.0f : 0.0f;
     ubo.HasMetallicRoughnessMap = mat.MetallicRoughnessMap ? 1.0f : 0.0f;
     ubo.HasAOMap                = mat.AOMap                ? 1.0f : 0.0f;
-    rhi::buffer_unmap(m_MaterialUBOs[frameIndex]);
+    rhi::buffer_unmap(m_MaterialUBOs[frameIndex][materialIdx]);
 
-    rhi::DescriptorSet set = m_MaterialSets[frameIndex];
+    rhi::DescriptorSet set = m_MaterialSets[frameIndex][materialIdx];
     rhi::Texture texAlbedo = mat.AlbedoMap            ? mat.AlbedoMap            : m_WhiteTex;
     rhi::Texture texNormal = mat.NormalMap            ? mat.NormalMap            : m_WhiteTex;
     rhi::Texture texMR     = mat.MetallicRoughnessMap ? mat.MetallicRoughnessMap : m_WhiteTex;
@@ -539,7 +548,7 @@ void SceneRenderer::BindMaterial(const rhi::CmdBuf& cmd, const MaterialComponent
         {.binding=1, .type=rhi::DescriptorType::CombinedImageSampler, .texture={texNormal, m_LinearSampler}},
         {.binding=2, .type=rhi::DescriptorType::CombinedImageSampler, .texture={texMR,     m_LinearSampler}},
         {.binding=3, .type=rhi::DescriptorType::CombinedImageSampler, .texture={texAO,     m_LinearSampler}},
-        {.binding=4, .type=rhi::DescriptorType::UniformBuffer,        .buffer ={m_MaterialUBOs[frameIndex], 0, sizeof(GPUMaterialUBO)}}
+        {.binding=4, .type=rhi::DescriptorType::UniformBuffer,        .buffer ={m_MaterialUBOs[frameIndex][materialIdx], 0, sizeof(GPUMaterialUBO)}}
     };
 
     rhi::descriptor_set_write(set, writes, 5);
@@ -835,7 +844,7 @@ void SceneRenderer::RenderScene(const Ref<Scene>& scene, const EditorCamera& cam
         }
     }
 
-    UploadLightUBO(scene, camera.GetPosition(), lightSpaceMatrix, 0);
+    UploadLightUBO(scene, camera.GetPosition(), lightSpaceMatrix, 0, settings);
 
     rhi::cmdbuf_reset(m_Cmd);
     rhi::cmdbuf_begin(m_Cmd);
