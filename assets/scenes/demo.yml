@@ -1,4 +1,9 @@
 Scene: Untitled
+EditorCamera:
+  FocalPoint: [0, 0, 0]
+  Distance: 18.838774
+  Pitch: -0.33928752
+  Yaw: 0.52944696
 Entities:
   - Entity: 12837192831273
     TagComponent:

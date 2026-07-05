@@ -33,10 +33,12 @@ namespace Engine
 
     void EditorLayer::OnAttach()
     {
+        m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
+
         m_ActiveScene = CreateRef<Scene>();
         
         SceneSerializer serializer(m_ActiveScene);
-        serializer.Deserialize(AssetManager::GetAssetPath("scenes/demo.yml").string());
+        serializer.Deserialize(AssetManager::GetAssetPath("scenes/demo.yml").string(), &m_EditorCamera);
 
         m_SceneHierarchyPanel.SetContext(m_ActiveScene);
         m_SceneRenderer.Init(1280, 720);
@@ -57,7 +59,6 @@ namespace Engine
 				}
 			} catch (...) {}
 		}
-        m_EditorCamera = EditorCamera(30.0f, 1.778f, 0.1f, 1000.0f);
     }
 
     void EditorLayer::OnDetach()
@@ -172,6 +173,12 @@ namespace Engine
 				ImGui::EndMenu();
 			}
 
+			if (ImGui::BeginMenu("Window"))
+			{
+				ImGui::MenuItem("Camera Debug", nullptr, &m_ShowCameraDebug);
+				ImGui::EndMenu();
+			}
+
 			ImGui::EndMenuBar();
 		}
         ImGui::End();
@@ -263,6 +270,38 @@ namespace Engine
 		if (ImGui::RadioButton("Scale (R)", m_GizmoType == ImGuizmo::OPERATION::SCALE)) m_GizmoType = ImGuizmo::OPERATION::SCALE;
 
 		ImGui::End();
+
+		// ---- Camera Debug panel ----
+		if (m_ShowCameraDebug)
+		{
+			ImGui::Begin("Camera Debug", &m_ShowCameraDebug);
+
+			glm::vec3 focalPoint = m_EditorCamera.GetFocalPoint();
+			if (ImGui::DragFloat3("Focal Point", glm::value_ptr(focalPoint), 0.1f))
+				m_EditorCamera.SetFocalPoint(focalPoint);
+
+			float distance = m_EditorCamera.GetDistance();
+			if (ImGui::DragFloat("Distance", &distance, 0.1f, 1.0f, 1000.0f))
+				m_EditorCamera.SetDistance(distance);
+
+			float pitch = m_EditorCamera.GetPitch();
+			if (ImGui::DragFloat("Pitch", &pitch, 0.01f, -glm::half_pi<float>(), glm::half_pi<float>()))
+				m_EditorCamera.SetPitch(pitch);
+
+			float yaw = m_EditorCamera.GetYaw();
+			if (ImGui::DragFloat("Yaw", &yaw, 0.01f))
+				m_EditorCamera.SetYaw(yaw);
+
+			float fov = m_EditorCamera.GetFOV();
+			if (ImGui::DragFloat("FOV", &fov, 0.5f, 1.0f, 120.0f))
+				m_EditorCamera.SetFOV(fov);
+
+			ImGui::Separator();
+			glm::vec3 pos = m_EditorCamera.GetPosition();
+			ImGui::Text("Calculated Position: %.3f, %.3f, %.3f", pos.x, pos.y, pos.z);
+
+			ImGui::End();
+		}
     }
 
     void EditorLayer::OnUpdate(const Timestep &ts)
@@ -424,7 +463,7 @@ namespace Engine
 			m_SceneHierarchyPanel.SetContext(m_ActiveScene);
 
 			SceneSerializer serializer(m_ActiveScene);
-			serializer.Deserialize(filepath);
+			serializer.Deserialize(filepath, &m_EditorCamera);
 		}
 	}
 
@@ -435,7 +474,7 @@ namespace Engine
 		if (!filepath.empty())
 		{
 			SceneSerializer serializer(m_ActiveScene);
-			serializer.Serialize(filepath);
+			serializer.Serialize(filepath, &m_EditorCamera);
 		}
 	}
 

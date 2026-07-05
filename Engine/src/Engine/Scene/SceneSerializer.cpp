@@ -3,6 +3,7 @@
 
 #include "Entity.h"
 #include "Components.h"
+#include "Engine/Renderer/Camera/EditorCamera.h"
 
 #include <fstream>
 
@@ -189,11 +190,22 @@ namespace Engine {
 		out << YAML::EndMap; // Entity
 	}
 
-	void SceneSerializer::Serialize(const std::string& filepath)
+	void SceneSerializer::Serialize(const std::string& filepath, EditorCamera* camera)
 	{
 		YAML::Emitter out;
 		out << YAML::BeginMap;
 		out << YAML::Key << "Scene" << YAML::Value << "Untitled";
+
+		if (camera)
+		{
+			out << YAML::Key << "EditorCamera" << YAML::Value << YAML::BeginMap;
+			out << YAML::Key << "FocalPoint" << YAML::Value << camera->GetFocalPoint();
+			out << YAML::Key << "Distance" << YAML::Value << camera->GetDistance();
+			out << YAML::Key << "Pitch" << YAML::Value << camera->GetPitch();
+			out << YAML::Key << "Yaw" << YAML::Value << camera->GetYaw();
+			out << YAML::EndMap;
+		}
+
 		out << YAML::Key << "Entities" << YAML::Value << YAML::BeginSeq;
 		m_Scene->m_Registry.view<entt::entity>().each([&](auto entityID)
 		{
@@ -216,7 +228,7 @@ namespace Engine {
 		ENGINE_CORE_ASSERT(false);
 	}
 
-	bool SceneSerializer::Deserialize(const std::string& filepath)
+	bool SceneSerializer::Deserialize(const std::string& filepath, EditorCamera* camera)
 	{
 		std::ifstream stream(filepath);
 		std::stringstream strStream;
@@ -228,6 +240,15 @@ namespace Engine {
 
 		std::string sceneName = data["Scene"].as<std::string>();
 		//ENGINE_CORE_INFO("Deserializing scene '{0}' from '{1}'", sceneName, filepath);
+
+		if (camera && data["EditorCamera"])
+		{
+			auto cameraNode = data["EditorCamera"];
+			camera->SetFocalPoint(cameraNode["FocalPoint"].as<glm::vec3>());
+			camera->SetDistance(cameraNode["Distance"].as<float>());
+			camera->SetPitch(cameraNode["Pitch"].as<float>());
+			camera->SetYaw(cameraNode["Yaw"].as<float>());
+		}
 
 		auto entities = data["Entities"];
 		if (entities)

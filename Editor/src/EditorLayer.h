@@ -57,6 +57,7 @@ namespace Engine
 		Entity m_CameraEntity;
 
         int m_GizmoType = 7; // Default to Translate (ImGuizmo::OPERATION::TRANSLATE)
+        bool m_ShowCameraDebug = false;
         
         //Panels
         SceneHierarchyPanel m_SceneHierarchyPanel;

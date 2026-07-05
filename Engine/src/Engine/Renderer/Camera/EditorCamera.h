@@ -19,7 +19,15 @@ namespace Engine {
 		void OnEvent(Event& e);
 
 		inline float GetDistance() const { return m_Distance; }
-		inline void SetDistance(float distance) { m_Distance = distance; }
+		inline void SetDistance(float distance) { m_Distance = distance; UpdateView(); }
+
+		inline const glm::vec3& GetFocalPoint() const { return m_FocalPoint; }
+		inline void SetFocalPoint(const glm::vec3& focalPoint) { m_FocalPoint = focalPoint; UpdateView(); }
+
+		inline float GetFOV() const { return m_FOV; }
+		inline void SetFOV(float fov) { m_FOV = fov; UpdateProjection(); }
+		inline float GetNearClip() const { return m_NearClip; }
+		inline float GetFarClip() const { return m_FarClip; }
 
 		inline void SetViewportSize(float width, float height) { m_ViewportWidth = width; m_ViewportHeight = height; UpdateProjection(); }
 
@@ -29,7 +37,9 @@ namespace Engine {
 		glm::quat GetOrientation() const;
 
 		float GetPitch() const { return m_Pitch; }
+		inline void SetPitch(float pitch) { m_Pitch = pitch; UpdateView(); }
 		float GetYaw() const { return m_Yaw; }
+		inline void SetYaw(float yaw) { m_Yaw = yaw; UpdateView(); }
 	private:
 		void UpdateProjection();
 		void UpdateView();
